@@ -10,7 +10,15 @@
   <!-- Load your engine from GitHub -->
   <script src="https://raw.githubusercontent.com/shbdanny-stack/qr-engine/main/engine.js"></script>
 </head>
+<body>
 <button id="testButton">Run Supabase Test</button>
+<script>
+  const SUPABASE_URL = "https://shbdanny-stack.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y";
+
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+  
 <script>
   document.getElementById("testButton").addEventListener("click", async () => {
     console.log("Running Supabase test...");
@@ -39,7 +47,6 @@
   });
 </script>
 
-<body>
   <h1>Shiny Happy Engine Loaded</h1>
   <p>If you see this, the page is working. The engine will run in the background.</p>
   
