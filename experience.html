@@ -4,51 +4,55 @@
   <meta charset="UTF-8" />
   <title>Shiny Happy Engine</title>
 
-  <!-- Load Supabase -->
+  <!-- Load Supabase library FIRST -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Load your engine from GitHub -->
+  <!-- Initialize Supabase client -->
+  <script>
+    const SUPABASE_URL = "https://shbdanny-stack.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y";
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
+
+  <!-- Load your engine AFTER Supabase is ready -->
   <script src="https://raw.githubusercontent.com/shbdanny-stack/qr-engine/main/engine.js"></script>
 </head>
+
 <body>
-<button id="testButton">Run Supabase Test</button>
-<script>
-  const SUPABASE_URL = "https://shbdanny-stack.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y";
 
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-</script>
-  
-<script>
-  document.getElementById("testButton").addEventListener("click", async () => {
-    console.log("Running Supabase test...");
+  <button id="testButton">Run Supabase Test</button>
 
-    const { data: insertData, error: insertError } = await supabase
-      .from("test_table")
-      .insert([{ message: "Hello from your live site!" }]);
+  <script>
+    document.getElementById("testButton").addEventListener("click", async () => {
+      console.log("Running Supabase test...");
 
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      return;
-    }
+      const { data: insertData, error: insertError } = await supabase
+        .from("test_table")
+        .insert([{ message: "Hello from your live site!" }]);
 
-    console.log("Insert success:", insertData);
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        return;
+      }
 
-    const { data: readData, error: readError } = await supabase
-      .from("test_table")
-      .select("*");
+      console.log("Insert success:", insertData);
 
-    if (readError) {
-      console.error("Read error:", readError);
-      return;
-    }
+      const { data: readData, error: readError } = await supabase
+        .from("test_table")
+        .select("*");
 
-    console.log("Read success:", readData);
-  });
-</script>
+      if (readError) {
+        console.error("Read error:", readError);
+        return;
+      }
+
+      console.log("Read success:", readData);
+    });
+  </script>
 
   <h1>Shiny Happy Engine Loaded</h1>
   <p>If you see this, the page is working. The engine will run in the background.</p>
-  
+
 </body>
 </html>
