@@ -30,7 +30,12 @@
 
       const { data: insertData, error: insertError } = await client
         .from("test_table")
-        .insert([{ message: "Hello from your live site!" }]);
+        .insert([
+          { 
+            message: "Hello from your live site!",
+            user_id: null
+          }
+        ]);
 
       if (insertError) {
         console.error("Insert error:", insertError);
