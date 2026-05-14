@@ -12,7 +12,8 @@
     const SUPABASE_URL = "https://shbdanny-stack.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y";
 
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // IMPORTANT: rename to avoid collision with global "supabase"
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   </script>
 
   <!-- Load your engine AFTER Supabase is ready -->
@@ -27,7 +28,7 @@
     document.getElementById("testButton").addEventListener("click", async () => {
       console.log("Running Supabase test...");
 
-      const { data: insertData, error: insertError } = await supabase
+      const { data: insertData, error: insertError } = await client
         .from("test_table")
         .insert([{ message: "Hello from your live site!" }]);
 
@@ -38,7 +39,7 @@
 
       console.log("Insert success:", insertData);
 
-      const { data: readData, error: readError } = await supabase
+      const { data: readData, error: readError } = await client
         .from("test_table")
         .select("*");
 
