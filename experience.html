@@ -35,10 +35,18 @@
       font-size: 16px;
       margin-left: 10px;
     }
+    #identityStatus {
+      color: green;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- ⭐ Green message moved OUTSIDE the identity box -->
+  <p id="identityStatus"></p>
 
   <div id="identityBox">
     <h3>Enter your ShinySide ID</h3>
@@ -50,8 +58,6 @@
       <input id="emailInput" placeholder="Email" />
       <button id="emailSubmit">Verify</button>
     </div>
-
-    <p id="identityStatus" style="color: green; margin-top: 10px;"></p>
   </div>
 
   <h1>Shiny Happy Engine Loaded</h1>
@@ -83,8 +89,7 @@
       const ssid = document.getElementById("ssidInput").value.trim();
       if (!ssid) return;
 
-      // Fetch user without .single() to avoid 406 breaking flow
-      const { data: users, error } = await client
+      const { data: users } = await client
         .from("users")
         .select("*")
         .eq("shiny_side_id", ssid);
@@ -102,7 +107,6 @@
           document.getElementById("identityBox").style.display = "none";
         }
       } else {
-        // Create new user
         const { data: newUsers, error: insertErr } = await client
           .from("users")
           .insert([
@@ -120,27 +124,22 @@
           return;
         }
 
-        const newUser = newUsers && newUsers[0] ? newUsers[0] : null;
-        if (!newUser) {
-          alert("Error creating user.");
-          return;
-        }
-
+        const newUser = newUsers[0];
         currentUser = newUser;
-        localStorage.setItem("shiny_user", JSON.stringify(currentUser));
+        localStorage.setItem("shiny_user", JSON.stringify(newUser));
         document.getElementById("identityStatus").innerText =
           "Welcome, " + ssid + "!";
         document.getElementById("identityBox").style.display = "none";
       }
     });
 
-    // Handle email verification for claimed IDs
+    // Handle email verification
     document.getElementById("emailSubmit").addEventListener("click", async () => {
       const ssid = document.getElementById("ssidInput").value.trim();
       const email = document.getElementById("emailInput").value.trim();
       if (!ssid || !email) return;
 
-      const { data: users, error } = await client
+      const { data: users } = await client
         .from("users")
         .select("*")
         .eq("shiny_side_id", ssid)
@@ -160,7 +159,7 @@
     });
   </script>
 
-  <!-- Load Engine LAST so it doesn't stomp identity UI -->
+  <!-- Engine loads LAST -->
   <script src="https://raw.githubusercontent.com/shbdanny-stack/qr-engine/main/engine.js"></script>
 
 </body>
