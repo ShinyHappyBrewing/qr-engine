@@ -268,9 +268,10 @@
       margin-top: 10px;
     }
 
-    /* Modal */
+    /* Modal shared */
 
-    #finishModalBackdrop {
+    #finishModalBackdrop,
+    #scoreModalBackdrop {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.7);
@@ -280,7 +281,8 @@
       z-index: 10;
     }
 
-    #finishModal {
+    #finishModal,
+    .score-modal-inner {
       background: #050608;
       border-radius: 18px;
       padding: 18px 20px 16px;
@@ -292,12 +294,14 @@
         0 18px 40px rgba(0, 0, 0, 0.9);
     }
 
-    #finishModal h3 {
+    #finishModal h3,
+    .score-modal-inner h3 {
       margin: 0 0 8px;
       font-size: 20px;
     }
 
-    #finishModal p {
+    #finishModal p,
+    .score-modal-inner p {
       margin: 0 0 10px;
       font-size: 14px;
       color: rgba(255, 255, 255, 0.8);
@@ -450,6 +454,31 @@
     </div>
   </div>
 
+  <!-- My Score Modal -->
+  <div id="scoreModalBackdrop">
+    <div class="score-modal-inner">
+      <h3>Your Score</h3>
+      <p id="scoreTotal" style="font-size:16px;color:#01a9ce;font-weight:600;">
+        Loading…
+      </p>
+
+      <div id="scoreHistory" style="
+        max-height: 200px;
+        overflow-y: auto;
+        font-size: 14px;
+        color: rgba(255,255,255,0.8);
+        border-top: 1px solid rgba(255,255,255,0.15);
+        padding-top: 10px;
+      ">
+        Loading history…
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+        <button class="secondary-btn" id="scoreCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Finish Visit Modal -->
   <div id="finishModalBackdrop">
     <div id="finishModal">
@@ -560,17 +589,76 @@
       }
     });
 
-    // Leaderboard + My Score buttons (placeholders for now)
+    // Leaderboard placeholder
     document.getElementById("leaderboardBtn").addEventListener("click", () => {
       alert("Leaderboard view is coming next. For now, the engine is tracking everything behind the scenes.");
     });
 
-    document.getElementById("myScoreBtn").addEventListener("click", () => {
+    // My Score modal logic
+    const scoreBackdrop = document.getElementById("scoreModalBackdrop");
+    const scoreTotal = document.getElementById("scoreTotal");
+    const scoreHistory = document.getElementById("scoreHistory");
+
+    document.getElementById("myScoreBtn").addEventListener("click", async () => {
       if (!currentUser) {
         alert("We don’t have a user loaded yet.");
         return;
       }
-      alert("Personal score view is coming next. Your points are being tracked for this ShinySide ID.");
+
+      scoreBackdrop.style.display = "flex";
+      scoreTotal.textContent = "Loading…";
+      scoreHistory.textContent = "Loading history…";
+
+      // Load total points
+      const { data: totalRows, error: totalErr } = await client
+        .from("scores")
+        .select("points")
+        .eq("user_id", currentUser.id);
+
+      if (totalErr) {
+        console.error(totalErr);
+        scoreTotal.textContent = "Error loading score";
+      } else {
+        const total = totalRows.reduce((sum, row) => sum + (row.points || 0), 0);
+        scoreTotal.textContent = `${total} points`;
+      }
+
+      // Load history
+      const { data: historyRows, error: histErr } = await client
+        .from("scores")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .order("created", { ascending: false })
+        .limit(20);
+
+      if (histErr) {
+        console.error(histErr);
+        scoreHistory.textContent = "Error loading history";
+        return;
+      }
+
+      if (!historyRows || historyRows.length === 0) {
+        scoreHistory.textContent = "No points yet — go scan something!";
+        return;
+      }
+
+      scoreHistory.innerHTML = historyRows
+        .map(
+          (row) => `
+            <div style="margin-bottom:8px;">
+              <strong>${row.points} pts</strong>
+              <div style="font-size:12px;opacity:0.7;">
+                ${row.source_type || "unknown"} → ${row.source_id || "n/a"}<br>
+                ${row.created ? new Date(row.created).toLocaleString() : ""}
+              </div>
+            </div>
+          `
+        )
+        .join("");
+    });
+
+    document.getElementById("scoreCloseBtn").addEventListener("click", () => {
+      scoreBackdrop.style.display = "none";
     });
 
     // Finish visit flow
@@ -618,10 +706,16 @@
         "Points saved. See you next time, " + (currentUser.shiny_side_id || "friend") + ".";
     });
 
-    // Close modal on backdrop click
+    // Close modals on backdrop click
     finishBackdrop.addEventListener("click", (e) => {
       if (e.target === finishBackdrop) {
         finishBackdrop.style.display = "none";
+      }
+    });
+
+    scoreBackdrop.addEventListener("click", (e) => {
+      if (e.target === scoreBackdrop) {
+        scoreBackdrop.style.display = "none";
       }
     });
   </script>
