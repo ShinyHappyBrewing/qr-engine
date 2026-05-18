@@ -39,7 +39,6 @@
       overflow-x: hidden;
     }
 
-    /* Watermark logo vibe */
     .watermark {
       position: fixed;
       inset: 0;
@@ -140,8 +139,6 @@
       width: 240px;
     }
 
-    /* Quest Board */
-
     #questBoard {
       display: none;
       margin-top: 10px;
@@ -214,8 +211,6 @@
       color: rgba(255, 255, 255, 0.8);
     }
 
-    /* Action buttons */
-
     .actions-row {
       display: flex;
       flex-wrap: wrap;
@@ -268,10 +263,9 @@
       margin-top: 10px;
     }
 
-    /* Modal shared */
-
     #finishModalBackdrop,
-    #scoreModalBackdrop {
+    #scoreModalBackdrop,
+    #leaderboardModalBackdrop {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.7);
@@ -282,11 +276,12 @@
     }
 
     #finishModal,
-    .score-modal-inner {
+    .score-modal-inner,
+    .leaderboard-modal-inner {
       background: #050608;
       border-radius: 18px;
       padding: 18px 20px 16px;
-      max-width: 360px;
+      max-width: 420px;
       width: 100%;
       border: 1px solid rgba(1, 169, 206, 0.7);
       box-shadow:
@@ -295,13 +290,15 @@
     }
 
     #finishModal h3,
-    .score-modal-inner h3 {
+    .score-modal-inner h3,
+    .leaderboard-modal-inner h3 {
       margin: 0 0 8px;
       font-size: 20px;
     }
 
     #finishModal p,
-    .score-modal-inner p {
+    .score-modal-inner p,
+    .leaderboard-modal-inner p {
       margin: 0 0 10px;
       font-size: 14px;
       color: rgba(255, 255, 255, 0.8);
@@ -336,12 +333,65 @@
       margin-top: 4px;
     }
 
-    /* Small helper text */
-
     .engine-note {
       margin-top: 26px;
       font-size: 13px;
       color: rgba(255, 255, 255, 0.55);
+    }
+
+    .leaderboard-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .leaderboard-tab {
+      flex: 1;
+      text-align: center;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .leaderboard-tab.active {
+      background: var(--sh-blue);
+      color: var(--sh-black);
+      border-color: var(--sh-blue);
+      box-shadow: 0 0 12px rgba(1, 169, 206, 0.8);
+    }
+
+    #leaderboardContent {
+      max-height: 260px;
+      overflow-y: auto;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.85);
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-top: 8px;
+    }
+
+    .leaderboard-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    .leaderboard-name {
+      font-weight: 600;
+    }
+
+    .leaderboard-points {
+      font-weight: 600;
+      color: var(--sh-blue);
+      margin-left: 8px;
+    }
+
+    .leaderboard-meta {
+      font-size: 11px;
+      opacity: 0.7;
     }
 
     @media (max-width: 600px) {
@@ -356,17 +406,14 @@
 </head>
 
 <body>
-  <!-- Watermark logo vibe -->
   <div class="watermark">
     <span>SHINY HAPPY</span>
     <span>BREWING</span>
   </div>
 
   <div id="appContent">
-    <!-- Status line -->
     <p id="identityStatus"></p>
 
-    <!-- Identity box -->
     <div id="identityBox">
       <h3>Enter your ShinySide ID</h3>
       <input id="ssidInput" placeholder="ShinySide ID" />
@@ -379,7 +426,6 @@
       </div>
     </div>
 
-    <!-- Quest Board -->
     <div id="questBoard">
       <div class="hero">
         <h2 class="hero-title" id="heroTitle">Welcome to the ShinySide.</h2>
@@ -479,6 +525,30 @@
     </div>
   </div>
 
+  <!-- Leaderboard Modal -->
+  <div id="leaderboardModalBackdrop">
+    <div class="leaderboard-modal-inner">
+      <h3>Taproom leaderboard</h3>
+      <p style="margin-bottom:8px;">
+        Today, this week, and all‑time — all powered by the same engine you just wired.
+      </p>
+
+      <div class="leaderboard-tabs">
+        <div class="leaderboard-tab active" data-range="today">Today</div>
+        <div class="leaderboard-tab" data-range="week">This week</div>
+        <div class="leaderboard-tab" data-range="all">All‑time</div>
+      </div>
+
+      <div id="leaderboardContent">
+        Loading leaderboard…
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <button class="secondary-btn" id="leaderboardCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Finish Visit Modal -->
   <div id="finishModalBackdrop">
     <div id="finishModal">
@@ -511,7 +581,6 @@
         "Welcome, " + (user.shiny_side_id || "ShinySide guest") + "!";
     }
 
-    // Load saved user on page load
     window.addEventListener("load", () => {
       try {
         const saved = localStorage.getItem("shiny_user");
@@ -526,7 +595,6 @@
       }
     });
 
-    // ShinySide ID submission
     document.getElementById("ssidSubmit").addEventListener("click", async () => {
       const ssid = document.getElementById("ssidInput").value.trim();
       if (!ssid) return;
@@ -568,7 +636,6 @@
       }
     });
 
-    // Email verification for already-claimed IDs
     document.getElementById("emailSubmit").addEventListener("click", async () => {
       const ssid = document.getElementById("ssidInput").value.trim();
       const email = document.getElementById("emailInput").value.trim();
@@ -589,12 +656,7 @@
       }
     });
 
-    // Leaderboard placeholder
-    document.getElementById("leaderboardBtn").addEventListener("click", () => {
-      alert("Leaderboard view is coming next. For now, the engine is tracking everything behind the scenes.");
-    });
-
-    // My Score modal logic
+    // My Score modal
     const scoreBackdrop = document.getElementById("scoreModalBackdrop");
     const scoreTotal = document.getElementById("scoreTotal");
     const scoreHistory = document.getElementById("scoreHistory");
@@ -609,7 +671,6 @@
       scoreTotal.textContent = "Loading…";
       scoreHistory.textContent = "Loading history…";
 
-      // Load total points
       const { data: totalRows, error: totalErr } = await client
         .from("scores")
         .select("points")
@@ -623,7 +684,6 @@
         scoreTotal.textContent = `${total} points`;
       }
 
-      // Load history
       const { data: historyRows, error: histErr } = await client
         .from("scores")
         .select("*")
@@ -659,6 +719,128 @@
 
     document.getElementById("scoreCloseBtn").addEventListener("click", () => {
       scoreBackdrop.style.display = "none";
+    });
+
+    // Leaderboard helpers
+    function startOfTodayISO() {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      return d.toISOString();
+    }
+
+    function startOfWeekISO() {
+      const d = new Date();
+      const day = d.getDay(); // 0 = Sunday
+      const diff = d.getDate() - day + 1; // Monday as start
+      d.setDate(diff);
+      d.setHours(0, 0, 0, 0);
+      return d.toISOString();
+    }
+
+    async function loadLeaderboard(range) {
+      const content = document.getElementById("leaderboardContent");
+      content.textContent = "Loading leaderboard…";
+
+      let query = client.from("scores").select("user_id, points, created");
+
+      if (range === "today") {
+        query = query.gte("created", startOfTodayISO());
+      } else if (range === "week") {
+        query = query.gte("created", startOfWeekISO());
+      }
+
+      const { data: scoreRows, error: scoreErr } = await query;
+
+      if (scoreErr) {
+        console.error(scoreErr);
+        content.textContent = "Error loading leaderboard.";
+        return;
+      }
+
+      if (!scoreRows || scoreRows.length === 0) {
+        content.textContent = "No points yet in this timeframe.";
+        return;
+      }
+
+      const totalsByUser = {};
+      scoreRows.forEach((row) => {
+        if (!row.user_id) return;
+        if (!totalsByUser[row.user_id]) totalsByUser[row.user_id] = 0;
+        totalsByUser[row.user_id] += row.points || 0;
+      });
+
+      const userIds = Object.keys(totalsByUser);
+      if (userIds.length === 0) {
+        content.textContent = "No points yet in this timeframe.";
+        return;
+      }
+
+      const { data: users, error: usersErr } = await client
+        .from("users")
+        .select("id, shiny_side_id")
+        .in("id", userIds);
+
+      if (usersErr) {
+        console.error(usersErr);
+      }
+
+      const nameById = {};
+      (users || []).forEach((u) => {
+        nameById[u.id] = u.shiny_side_id || u.id.slice(0, 8);
+      });
+
+      const rows = userIds
+        .map((id) => ({
+          user_id: id,
+          name: nameById[id] || id.slice(0, 8),
+          points: totalsByUser[id]
+        }))
+        .sort((a, b) => b.points - a.points)
+        .slice(0, 20);
+
+      content.innerHTML = rows
+        .map(
+          (row, index) => `
+          <div class="leaderboard-row">
+            <div>
+              <span class="leaderboard-name">${index + 1}. ${row.name}</span>
+              <div class="leaderboard-meta">
+                ${row.user_id.slice(0, 8)}…
+              </div>
+            </div>
+            <div class="leaderboard-points">${row.points} pts</div>
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    // Leaderboard modal wiring
+    const leaderboardBackdrop = document.getElementById("leaderboardModalBackdrop");
+    const leaderboardTabs = document.querySelectorAll(".leaderboard-tab");
+
+    document.getElementById("leaderboardBtn").addEventListener("click", async () => {
+      leaderboardBackdrop.style.display = "flex";
+      leaderboardTabs.forEach((tab) => {
+        tab.classList.remove("active");
+        if (tab.getAttribute("data-range") === "today") {
+          tab.classList.add("active");
+        }
+      });
+      await loadLeaderboard("today");
+    });
+
+    leaderboardTabs.forEach((tab) => {
+      tab.addEventListener("click", async () => {
+        leaderboardTabs.forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        const range = tab.getAttribute("data-range");
+        await loadLeaderboard(range);
+      });
+    });
+
+    document.getElementById("leaderboardCloseBtn").addEventListener("click", () => {
+      leaderboardBackdrop.style.display = "none";
     });
 
     // Finish visit flow
@@ -718,9 +900,14 @@
         scoreBackdrop.style.display = "none";
       }
     });
+
+    leaderboardBackdrop.addEventListener("click", (e) => {
+      if (e.target === leaderboardBackdrop) {
+        leaderboardBackdrop.style.display = "none";
+      }
+    });
   </script>
 
-  <!-- Engine LAST -->
   <script src="https://raw.githubusercontent.com/shbdanny-stack/qr-engine/main/engine.js"></script>
 </body>
 </html>
