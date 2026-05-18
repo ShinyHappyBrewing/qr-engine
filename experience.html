@@ -86,14 +86,16 @@
       const ssid = document.getElementById("ssidInput").value.trim();
       if (!ssid) return;
 
-      // Look up user
-      const { data: user, error } = await client
+      // Try to fetch user WITHOUT .single() (so 406 doesn't break flow)
+      const { data: users, error } = await client
         .from("users")
         .select("*")
-        .eq("shiny_side_id", ssid)
-        .single();
+        .eq("shiny_side_id", ssid);
+
+      const user = users && users.length > 0 ? users[0] : null;
 
       if (user) {
+        // Existing user
         if (user.claimed) {
           document.getElementById("emailClaimBox").style.display = "block";
         } else {
@@ -104,16 +106,17 @@
           document.getElementById("identityBox").style.display = "none";
         }
       } else {
-        // Create new user (OBJECT, not array) + include name
+        // Create new user
         const { data: newUser, error: insertErr } = await client
           .from("users")
-          .insert({
-            shiny_side_id: ssid,
-            claimed: false,
-            name: ssid   // ⭐ REQUIRED FIX
-          })
-          .select()
-          .single();
+          .insert([
+            {
+              shiny_side_id: ssid,
+              name: ssid,       // required
+              claimed: false    // default
+            }
+          ])
+          .select("*");
 
         if (insertErr) {
           console.error("Insert error:", insertErr);
@@ -121,15 +124,11 @@
           return;
         }
 
-        if (newUser) {
-          currentUser = newUser;
-          localStorage.setItem("shiny_user", JSON.stringify(newUser));
-          document.getElementById("identityStatus").innerText =
-            "Welcome, " + ssid + "!";
-          document.getElementById("identityBox").style.display = "none";
-        } else {
-          alert("Error creating user.");
-        }
+        currentUser = newUser[0];
+        localStorage.setItem("shiny_user", JSON.stringify(currentUser));
+        document.getElementById("identityStatus").innerText =
+          "Welcome, " + ssid + "!";
+        document.getElementById("identityBox").style.display = "none";
       }
     });
 
@@ -139,12 +138,13 @@
       const email = document.getElementById("emailInput").value.trim();
       if (!ssid || !email) return;
 
-      const { data: user, error } = await client
+      const { data: users, error } = await client
         .from("users")
         .select("*")
         .eq("shiny_side_id", ssid)
-        .eq("email", email)
-        .single();
+        .eq("email", email);
+
+      const user = users && users.length > 0 ? users[0] : null;
 
       if (user) {
         currentUser = user;
