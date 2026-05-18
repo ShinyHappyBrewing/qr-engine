@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Shiny Happy QR</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y";
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #000;
+      color: #fff;
+      font-family: "Baloo 2", sans-serif;
+      text-align: center;
+    }
+
+    .card {
+      margin: 0 auto;
+      max-width: 360px;
+      padding: 24px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(1,169,206,0.5);
+      box-shadow: 0 0 20px rgba(1,169,206,0.4);
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #01a9ce;
+    }
+
+    .btn {
+      margin-top: 20px;
+      padding: 12px 20px;
+      border-radius: 999px;
+      background: #01a9ce;
+      color: #000;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(1,169,206,0.7);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2 id="status">Scanning…</h2>
+    <p id="details"></p>
+    <button class="btn" id="backBtn" style="display:none;">Return to Quest Board</button>
+  </div>
+
+  <script>
+    async function main() {
+      const params = new URLSearchParams(window.location.search);
+      const qrId = params.get("id");
+
+      const status = document.getElementById("status");
+      const details = document.getElementById("details");
+      const backBtn = document.getElementById("backBtn");
+
+      if (!qrId) {
+        status.textContent = "Invalid QR code";
+        return;
+      }
+
+      // Load user
+      const saved = localStorage.getItem("shiny_user");
+      if (!saved) {
+        status.textContent = "No active session";
+        details.textContent = "Return to the Quest Board and sign in first.";
+        return;
+      }
+
+      const user = JSON.parse(saved);
+
+      // Award points
+      const { data, error } = await client.rpc("award_points", {
+        p_user_id: user.id,
+        p_source_type: "qr",
+        p_source_id: qrId,
+        p_points: 10
+      });
+
+      if (error) {
+        status.textContent = "Error awarding points";
+        details.textContent = error.message;
+        return;
+      }
+
+      status.textContent = "Points earned!";
+      details.textContent = `You just earned 10 points for scanning: ${qrId}`;
+
+      backBtn.style.display = "inline-block";
+      backBtn.onclick = () => {
+        window.location.href = "experience.html";
+      };
+    }
+
+    main();
+  </script>
+</body>
+</html>
