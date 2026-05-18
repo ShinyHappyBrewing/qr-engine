@@ -63,7 +63,7 @@
   <script>
     let currentUser = null;
 
-    // Load saved user
+    // Load saved user on page load
     window.addEventListener("load", () => {
       try {
         const saved = localStorage.getItem("shiny_user");
@@ -104,12 +104,18 @@
           document.getElementById("identityBox").style.display = "none";
         }
       } else {
-        // Create new user
+        // Create new user (OBJECT, not array)
         const { data: newUser, error: insertErr } = await client
           .from("users")
-          .insert([{ shiny_side_id: ssid, claimed: false }])
+          .insert({ shiny_side_id: ssid, claimed: false })
           .select()
           .single();
+
+        if (insertErr) {
+          console.error("Insert error:", insertErr);
+          alert("Error creating user.");
+          return;
+        }
 
         if (newUser) {
           currentUser = newUser;
@@ -123,10 +129,11 @@
       }
     });
 
-    // Handle email verification
+    // Handle email verification for claimed IDs
     document.getElementById("emailSubmit").addEventListener("click", async () => {
       const ssid = document.getElementById("ssidInput").value.trim();
       const email = document.getElementById("emailInput").value.trim();
+      if (!ssid || !email) return;
 
       const { data: user, error } = await client
         .from("users")
