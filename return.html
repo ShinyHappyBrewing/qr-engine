@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Returning to Shiny Happy</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const client = supabase.createClient(
+      "https://wowdmkxuwysuihgoklki.supabase.co",
+      "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y"
+    );
+
+    async function handleReturn() {
+      // 1. Let Supabase process the magic link
+      const { data, error } = await client.auth.getSession();
+
+      if (error || !data.session) {
+        document.body.innerHTML = "<h2>Login failed. Try again.</h2>";
+        return;
+      }
+
+      const email = data.session.user.email;
+
+      // 2. Look up the user by email
+      const { data: users } = await client
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .limit(1);
+
+      let user = users && users[0];
+
+      // 3. If no user exists yet, create one
+      if (!user) {
+        const { data: newUsers } = await client
+          .from("users")
+          .insert([
+            {
+              shiny_side_id: email.split("@")[0],
+              name: email.split("@")[0],
+              email: email,
+              claimed: true
+            }
+          ])
+          .select("*");
+
+        user = newUsers[0];
+      }
+
+      // 4. Save user locally
+      localStorage.setItem("shiny_user", JSON.stringify(user));
+
+      // 5. Redirect to Quest Board
+      window.location.href = "experience.html";
+    }
+
+    window.onload = handleReturn;
+  </script>
+</head>
+<body style="background:black;color:white;font-family:sans-serif;padding:40px;">
+  <h2>Logging you in…</h2>
+</body>
+</html>
