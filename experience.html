@@ -4,67 +4,483 @@
   <meta charset="UTF-8" />
   <title>Shiny Happy Engine</title>
 
-  <!-- Load Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Rounded, friendly font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600&display=swap" rel="stylesheet">
 
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y";
-
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   </script>
 
   <style>
+    :root {
+      --sh-blue: #01a9ce;
+      --sh-black: #000000;
+      --sh-white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      margin: 0;
       padding: 20px;
+      font-family: "Baloo 2", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--sh-black);
+      color: var(--sh-white);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
     }
-    #identityBox {
-      padding: 15px;
-      border: 2px solid #ccc;
-      margin-bottom: 20px;
-      border-radius: 8px;
+
+    /* Watermark logo vibe */
+    .watermark {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0.06;
+      font-size: 72px;
+      text-align: center;
+      line-height: 1.1;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sh-white);
+      z-index: 0;
     }
-    #identityBox input {
-      padding: 8px;
-      font-size: 16px;
-      width: 200px;
+
+    .watermark span {
+      display: block;
     }
-    #identityBox button {
-      padding: 8px 12px;
-      font-size: 16px;
-      margin-left: 10px;
+
+    #appContent {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
     }
+
     #identityStatus {
-      color: green;
+      color: var(--sh-blue);
+      font-size: 22px;
+      margin-bottom: 16px;
+    }
+
+    #identityBox {
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 0 18px rgba(1, 169, 206, 0.25);
+      margin-bottom: 24px;
+    }
+
+    #identityBox h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    #identityBox input {
+      padding: 10px 12px;
+      font-size: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.7);
+      color: var(--sh-white);
+      outline: none;
+      width: 220px;
+    }
+
+    #identityBox input::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    #identityBox button {
+      padding: 10px 18px;
+      font-size: 16px;
+      border-radius: 999px;
+      border: none;
+      margin-left: 10px;
+      cursor: pointer;
+      background: var(--sh-blue);
+      color: var(--sh-black);
+      font-weight: 600;
+      box-shadow: 0 0 14px rgba(1, 169, 206, 0.6);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+    }
+
+    #identityBox button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 18px rgba(1, 169, 206, 0.9);
+      background: #11b7db;
+    }
+
+    #emailClaimBox {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.2);
+      font-size: 14px;
+    }
+
+    #emailClaimBox p {
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
+
+    #emailClaimBox input {
+      margin-top: 4px;
+      width: 240px;
+    }
+
+    /* Quest Board */
+
+    #questBoard {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .hero {
+      margin-bottom: 22px;
+    }
+
+    .hero-title {
+      font-size: 26px;
+      margin: 0 0 6px;
+      color: var(--sh-white);
+    }
+
+    .hero-subtitle {
+      margin: 0;
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .quest-section-title {
+      margin: 0 0 10px;
       font-size: 18px;
-      margin-bottom: 20px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .quest-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .quest-card {
+      position: relative;
+      padding: 14px 14px 16px;
+      border-radius: 18px;
+      background: radial-gradient(circle at top left, rgba(1, 169, 206, 0.18), rgba(0, 0, 0, 0.95));
+      border: 1px solid rgba(1, 169, 206, 0.5);
+      box-shadow:
+        0 0 18px rgba(1, 169, 206, 0.35),
+        0 10px 24px rgba(0, 0, 0, 0.7);
+      cursor: default;
+      overflow: hidden;
+    }
+
+    .quest-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at top, rgba(1, 169, 206, 0.18), transparent 60%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .quest-card-title {
+      position: relative;
+      font-size: 18px;
+      margin: 0 0 6px;
+      color: var(--sh-white);
+    }
+
+    .quest-card-body {
+      position: relative;
+      margin: 0;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Action buttons */
+
+    .actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, color 0.1s ease;
+      white-space: nowrap;
+    }
+
+    .primary-btn {
+      background: var(--sh-blue);
+      color: var(--sh-black);
+      box-shadow: 0 0 16px rgba(1, 169, 206, 0.8);
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(1, 169, 206, 1);
+      background: #11b7db;
+    }
+
+    .secondary-btn {
+      background: transparent;
+      color: var(--sh-white);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    }
+
+    .secondary-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: 0 0 14px rgba(1, 169, 206, 0.6);
+      border-color: rgba(1, 169, 206, 0.8);
+    }
+
+    .finish-row {
+      margin-top: 10px;
+    }
+
+    /* Modal */
+
+    #finishModalBackdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    #finishModal {
+      background: #050608;
+      border-radius: 18px;
+      padding: 18px 20px 16px;
+      max-width: 360px;
+      width: 100%;
+      border: 1px solid rgba(1, 169, 206, 0.7);
+      box-shadow:
+        0 0 22px rgba(1, 169, 206, 0.7),
+        0 18px 40px rgba(0, 0, 0, 0.9);
+    }
+
+    #finishModal h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    #finishModal p {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    #finishEmailInput {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.8);
+      color: var(--sh-white);
+      outline: none;
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    #finishEmailInput::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .modal-note {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 4px;
+    }
+
+    /* Small helper text */
+
+    .engine-note {
+      margin-top: 26px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 16px;
+      }
+      .watermark {
+        font-size: 46px;
+      }
     }
   </style>
 </head>
 
 <body>
+  <!-- Watermark logo vibe -->
+  <div class="watermark">
+    <span>SHINY HAPPY</span>
+    <span>BREWING</span>
+  </div>
 
-  <!-- ⭐ Green message moved OUTSIDE the identity box -->
-  <p id="identityStatus"></p>
+  <div id="appContent">
+    <!-- Status line -->
+    <p id="identityStatus"></p>
 
-  <div id="identityBox">
-    <h3>Enter your ShinySide ID</h3>
-    <input id="ssidInput" placeholder="ShinySide ID" />
-    <button id="ssidSubmit">Go</button>
+    <!-- Identity box -->
+    <div id="identityBox">
+      <h3>Enter your ShinySide ID</h3>
+      <input id="ssidInput" placeholder="ShinySide ID" />
+      <button id="ssidSubmit">Go</button>
 
-    <div id="emailClaimBox" style="display:none; margin-top:10px;">
-      <p>This ShinySide ID is claimed. Enter your email to continue.</p>
-      <input id="emailInput" placeholder="Email" />
-      <button id="emailSubmit">Verify</button>
+      <div id="emailClaimBox" style="display:none;">
+        <p>This ShinySide ID is already claimed. Enter your email to continue.</p>
+        <input id="emailInput" placeholder="Email" />
+        <button id="emailSubmit">Verify</button>
+      </div>
+    </div>
+
+    <!-- Quest Board -->
+    <div id="questBoard">
+      <div class="hero">
+        <h2 class="hero-title" id="heroTitle">Welcome to the ShinySide.</h2>
+        <p class="hero-subtitle">
+          Earn points just for being here, exploring, playing, and saying yes to weird little adventures.
+        </p>
+      </div>
+
+      <h3 class="quest-section-title">How to earn points today</h3>
+      <div class="quest-grid">
+        <div class="quest-card">
+          <h4 class="quest-card-title">Scan codes around the taproom</h4>
+          <p class="quest-card-body">
+            Every table, corner, and odd little sign is a chance to pick up points. If it has a code, try it.
+          </p>
+        </div>
+
+        <div class="quest-card">
+          <h4 class="quest-card-title">Play games & join in</h4>
+          <p class="quest-card-body">
+            Arcade machines, cornhole, trivia, board games, whatever’s out — if you’re playing, you’re earning.
+          </p>
+        </div>
+
+        <div class="quest-card">
+          <h4 class="quest-card-title">Join a firepit or group</h4>
+          <p class="quest-card-body">
+            Sit with others, share a story, join a group prompt. Community moments are worth extra points.
+          </p>
+        </div>
+
+        <div class="quest-card">
+          <h4 class="quest-card-title">Try featured beers & experiments</h4>
+          <p class="quest-card-body">
+            Seasonal taps, small batches, and weird experiments often come with surprise points attached.
+          </p>
+        </div>
+
+        <div class="quest-card">
+          <h4 class="quest-card-title">Complete mini‑quests</h4>
+          <p class="quest-card-body">
+            Some codes unlock little missions. Follow the prompt, do the thing, collect the glory.
+          </p>
+        </div>
+
+        <div class="quest-card">
+          <h4 class="quest-card-title">Be present, be kind</h4>
+          <p class="quest-card-body">
+            Some points are just for being a good human in the room. Staff can award those on the fly.
+          </p>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="primary-btn" id="leaderboardBtn">
+          🔥 Today’s leaderboard
+        </button>
+        <button class="secondary-btn" id="myScoreBtn">
+          ⭐ My score
+        </button>
+      </div>
+
+      <div class="finish-row">
+        <button class="secondary-btn" id="finishVisitBtn">
+          Save my points & finish my visit
+        </button>
+      </div>
+
+      <p class="engine-note">
+        The Shiny Happy Engine runs quietly in the background, tracking your points as you move through the space.
+      </p>
     </div>
   </div>
 
-  <h1>Shiny Happy Engine Loaded</h1>
-  <p>If you see this, the page is working. The engine will run in the background.</p>
+  <!-- Finish Visit Modal -->
+  <div id="finishModalBackdrop">
+    <div id="finishModal">
+      <h3>Save your points?</h3>
+      <p>
+        Enter your email to claim this ShinySide ID and keep your points for next time.
+      </p>
+      <input id="finishEmailInput" type="email" placeholder="you@example.com" />
+      <div class="modal-actions">
+        <button class="secondary-btn" id="finishCancelBtn">Not now</button>
+        <button class="primary-btn" id="finishConfirmBtn">Save my points</button>
+      </div>
+      <p class="modal-note">
+        We’ll only use this to remember you and your points. No spam, just Shiny Happy things.
+      </p>
+    </div>
+  </div>
 
   <script>
     let currentUser = null;
+
+    function showQuestBoardFor(user) {
+      currentUser = user;
+      localStorage.setItem("shiny_user", JSON.stringify(user));
+      const heroTitle = document.getElementById("heroTitle");
+      heroTitle.textContent = "Hey, " + (user.shiny_side_id || "friend") + ". Let’s earn some points.";
+      document.getElementById("identityBox").style.display = "none";
+      document.getElementById("questBoard").style.display = "block";
+      document.getElementById("identityStatus").textContent =
+        "Welcome, " + (user.shiny_side_id || "ShinySide guest") + "!";
+    }
 
     // Load saved user on page load
     window.addEventListener("load", () => {
@@ -73,10 +489,7 @@
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && parsed.shiny_side_id) {
-            currentUser = parsed;
-            document.getElementById("identityStatus").innerText =
-              "Welcome back, " + currentUser.shiny_side_id + "!";
-            document.getElementById("identityBox").style.display = "none";
+            showQuestBoardFor(parsed);
           }
         }
       } catch (e) {
@@ -84,12 +497,12 @@
       }
     });
 
-    // Handle ShinySide ID submission
+    // ShinySide ID submission
     document.getElementById("ssidSubmit").addEventListener("click", async () => {
       const ssid = document.getElementById("ssidInput").value.trim();
       if (!ssid) return;
 
-      const { data: users } = await client
+      const { data: users, error } = await client
         .from("users")
         .select("*")
         .eq("shiny_side_id", ssid);
@@ -99,12 +512,10 @@
       if (user) {
         if (user.claimed) {
           document.getElementById("emailClaimBox").style.display = "block";
+          document.getElementById("identityStatus").textContent =
+            "This ShinySide ID is claimed. Verify with email to continue.";
         } else {
-          currentUser = user;
-          localStorage.setItem("shiny_user", JSON.stringify(user));
-          document.getElementById("identityStatus").innerText =
-            "Welcome, " + ssid + "!";
-          document.getElementById("identityBox").style.display = "none";
+          showQuestBoardFor(user);
         }
       } else {
         const { data: newUsers, error: insertErr } = await client
@@ -118,28 +529,23 @@
           ])
           .select("*");
 
-        if (insertErr) {
+        if (insertErr || !newUsers || !newUsers[0]) {
           console.error("Insert error:", insertErr);
           alert("Error creating user.");
           return;
         }
 
-        const newUser = newUsers[0];
-        currentUser = newUser;
-        localStorage.setItem("shiny_user", JSON.stringify(newUser));
-        document.getElementById("identityStatus").innerText =
-          "Welcome, " + ssid + "!";
-        document.getElementById("identityBox").style.display = "none";
+        showQuestBoardFor(newUsers[0]);
       }
     });
 
-    // Handle email verification
+    // Email verification for already-claimed IDs
     document.getElementById("emailSubmit").addEventListener("click", async () => {
       const ssid = document.getElementById("ssidInput").value.trim();
       const email = document.getElementById("emailInput").value.trim();
       if (!ssid || !email) return;
 
-      const { data: users } = await client
+      const { data: users, error } = await client
         .from("users")
         .select("*")
         .eq("shiny_side_id", ssid)
@@ -148,19 +554,79 @@
       const user = users && users.length > 0 ? users[0] : null;
 
       if (user) {
-        currentUser = user;
-        localStorage.setItem("shiny_user", JSON.stringify(user));
-        document.getElementById("identityStatus").innerText =
-          "Welcome back, " + ssid + "!";
-        document.getElementById("identityBox").style.display = "none";
+        showQuestBoardFor(user);
       } else {
         alert("Email does not match this ShinySide ID.");
       }
     });
+
+    // Leaderboard + My Score buttons (placeholders for now)
+    document.getElementById("leaderboardBtn").addEventListener("click", () => {
+      alert("Leaderboard view is coming next. For now, the engine is tracking everything behind the scenes.");
+    });
+
+    document.getElementById("myScoreBtn").addEventListener("click", () => {
+      if (!currentUser) {
+        alert("We don’t have a user loaded yet.");
+        return;
+      }
+      alert("Personal score view is coming next. Your points are being tracked for this ShinySide ID.");
+    });
+
+    // Finish visit flow
+    const finishBackdrop = document.getElementById("finishModalBackdrop");
+    const finishEmailInput = document.getElementById("finishEmailInput");
+
+    document.getElementById("finishVisitBtn").addEventListener("click", () => {
+      if (!currentUser) {
+        alert("We don’t have a user loaded yet.");
+        return;
+      }
+      finishEmailInput.value = currentUser.email || "";
+      finishBackdrop.style.display = "flex";
+      finishEmailInput.focus();
+    });
+
+    document.getElementById("finishCancelBtn").addEventListener("click", () => {
+      finishBackdrop.style.display = "none";
+    });
+
+    document.getElementById("finishConfirmBtn").addEventListener("click", async () => {
+      if (!currentUser) return;
+      const email = finishEmailInput.value.trim();
+      if (!email) {
+        alert("Add an email to save your points.");
+        return;
+      }
+
+      const { data, error } = await client
+        .from("users")
+        .update({ email: email, claimed: true })
+        .eq("id", currentUser.id)
+        .select("*");
+
+      if (error || !data || !data[0]) {
+        console.error("Update error:", error);
+        alert("Could not save your email. Try again in a moment.");
+        return;
+      }
+
+      currentUser = data[0];
+      localStorage.setItem("shiny_user", JSON.stringify(currentUser));
+      finishBackdrop.style.display = "none";
+      document.getElementById("identityStatus").textContent =
+        "Points saved. See you next time, " + (currentUser.shiny_side_id || "friend") + ".";
+    });
+
+    // Close modal on backdrop click
+    finishBackdrop.addEventListener("click", (e) => {
+      if (e.target === finishBackdrop) {
+        finishBackdrop.style.display = "none";
+      }
+    });
   </script>
 
-  <!-- Engine loads LAST -->
+  <!-- Engine LAST -->
   <script src="https://raw.githubusercontent.com/shbdanny-stack/qr-engine/main/engine.js"></script>
-
 </body>
 </html>
