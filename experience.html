@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <title>Shiny Happy Engine</title>
 
+  <!-- Mobile viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
   <!-- Rounded, friendly font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,15 +31,21 @@
       box-sizing: border-box;
     }
 
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
       padding: 20px;
       font-family: "Baloo 2", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--sh-black);
       color: var(--sh-white);
       min-height: 100vh;
       position: relative;
-      overflow-x: hidden;
     }
 
     .watermark {
@@ -54,16 +63,20 @@
       text-transform: uppercase;
       color: var(--sh-white);
       z-index: 0;
+      padding: 0 16px;
     }
 
     .watermark span {
       display: block;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     #appContent {
       position: relative;
       z-index: 1;
       max-width: 960px;
+      width: 100%;
       margin: 0 auto;
     }
 
@@ -71,6 +84,8 @@
       color: var(--sh-blue);
       font-size: 22px;
       margin-bottom: 16px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     #identityBox {
@@ -80,6 +95,7 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
       box-shadow: 0 0 18px rgba(1, 169, 206, 0.25);
       margin-bottom: 24px;
+      width: 100%;
     }
 
     #identityBox h3 {
@@ -95,7 +111,12 @@
       background: rgba(0, 0, 0, 0.7);
       color: var(--sh-white);
       outline: none;
+      max-width: 100%;
+    }
+
+    #ssidInput {
       width: 220px;
+      max-width: 100%;
     }
 
     #identityBox input::placeholder {
@@ -114,6 +135,8 @@
       font-weight: 600;
       box-shadow: 0 0 14px rgba(1, 169, 206, 0.6);
       transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+      white-space: nowrap;
+      max-width: 100%;
     }
 
     #identityBox button:hover {
@@ -137,11 +160,13 @@
     #emailClaimBox input {
       margin-top: 4px;
       width: 240px;
+      max-width: 100%;
     }
 
     #questBoard {
       display: none;
       margin-top: 10px;
+      width: 100%;
     }
 
     .hero {
@@ -152,6 +177,8 @@
       font-size: 26px;
       margin: 0 0 6px;
       color: var(--sh-white);
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     .hero-subtitle {
@@ -173,6 +200,7 @@
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 14px;
       margin-bottom: 22px;
+      width: 100%;
     }
 
     .quest-card {
@@ -186,6 +214,7 @@
         0 10px 24px rgba(0, 0, 0, 0.7);
       cursor: default;
       overflow: hidden;
+      width: 100%;
     }
 
     .quest-card::before {
@@ -216,6 +245,7 @@
       flex-wrap: wrap;
       gap: 10px;
       margin-bottom: 18px;
+      width: 100%;
     }
 
     .primary-btn,
@@ -231,6 +261,7 @@
       gap: 6px;
       transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, color 0.1s ease;
       white-space: nowrap;
+      max-width: 100%;
     }
 
     .primary-btn {
@@ -261,6 +292,7 @@
 
     .finish-row {
       margin-top: 10px;
+      width: 100%;
     }
 
     #finishModalBackdrop,
@@ -287,6 +319,7 @@
       box-shadow:
         0 0 22px rgba(1, 169, 206, 0.7),
         0 18px 40px rgba(0, 0, 0, 0.9);
+      margin: 0 16px;
     }
 
     #finishModal h3,
@@ -314,6 +347,7 @@
       outline: none;
       margin-bottom: 10px;
       font-size: 15px;
+      max-width: 100%;
     }
 
     #finishEmailInput::placeholder {
@@ -325,6 +359,7 @@
       justify-content: flex-end;
       gap: 8px;
       margin-top: 4px;
+      flex-wrap: wrap;
     }
 
     .modal-note {
@@ -344,6 +379,7 @@
       gap: 6px;
       margin-bottom: 10px;
       font-size: 13px;
+      width: 100%;
     }
 
     .leaderboard-tab {
@@ -354,6 +390,7 @@
       border: 1px solid rgba(255, 255, 255, 0.25);
       cursor: pointer;
       user-select: none;
+      white-space: nowrap;
     }
 
     .leaderboard-tab.active {
@@ -377,6 +414,7 @@
       justify-content: space-between;
       align-items: baseline;
       margin-bottom: 6px;
+      width: 100%;
     }
 
     .leaderboard-name {
@@ -387,6 +425,7 @@
       font-weight: 600;
       color: var(--sh-blue);
       margin-left: 8px;
+      white-space: nowrap;
     }
 
     .leaderboard-meta {
@@ -398,8 +437,28 @@
       body {
         padding: 16px;
       }
+
       .watermark {
         font-size: 46px;
+      }
+
+      #identityBox {
+        padding: 14px 14px;
+      }
+
+      .actions-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .leaderboard-tabs {
+        flex-direction: row;
       }
     }
   </style>
