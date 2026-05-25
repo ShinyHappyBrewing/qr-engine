@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Shiny Happy Location</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const client = supabase.createClient(
+      "https://wowdmkxuwysuihgoklki.supabase.co",
+      "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y"
+    );
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      background: #000;
+      color: #fff;
+      font-family: "Baloo 2", sans-serif;
+    }
+
+    body {
+      padding: 32px 20px;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      padding: 24px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(1,169,206,0.5);
+      box-shadow: 0 0 20px rgba(1,169,206,0.4);
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      color: #01a9ce;
+      font-size: 26px;
+    }
+
+    p {
+      margin: 0 0 14px;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.4;
+    }
+
+    .btn {
+      margin-top: 16px;
+      padding: 12px 20px;
+      border-radius: 999px;
+      background: #01a9ce;
+      color: #000;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      box-shadow: 0 0 14px rgba(1,169,206,0.7);
+      font-size: 16px;
+    }
+
+    .comment-box {
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      font-size: 15px;
+      resize: none;
+      height: 80px;
+      outline: none;
+    }
+
+    .comments-list {
+      margin-top: 20px;
+      max-height: 260px;
+      overflow-y: auto;
+      border-top: 1px solid rgba(255,255,255,0.2);
+      padding-top: 12px;
+    }
+
+    .comment {
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .comment strong {
+      color: #01a9ce;
+      font-size: 14px;
+    }
+
+    .comment small {
+      display: block;
+      opacity: 0.6;
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    @media (max-width: 480px) {
+      h2 { font-size: 22px; }
+      p { font-size: 15px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2 id="locName">Loading…</h2>
+    <p id="locDesc">Finding this location…</p>
+
+    <p id="pointsStatus"></p>
+
+    <div class="comment-box">
+      <textarea id="commentInput" placeholder="Leave a comment…"></textarea>
+      <button class="btn" id="submitCommentBtn">Post Comment</button>
+    </div>
+
+    <div class="comments-list" id="commentsList">
+      Loading comments…
+    </div>
+
+    <button class="btn" id="backBtn">Return to Quest Board</button>
+  </div>
+
+  <script>
+    let currentUser = null;
+    let currentLocation = null;
+
+    async function loadUser() {
+      const saved = localStorage.getItem("shiny_user");
+      if (!saved) return null;
+      return JSON.parse(saved);
+    }
+
+    async function loadLocation(slug) {
+      const { data, error } = await client
+        .from("locations")
+        .select("*")
+        .eq("slug", slug)
+        .limit(1);
+
+      if (error || !data || !data[0]) return null;
+      return data[0];
+    }
+
+    async function awardPoints(user, location) {
+      const { data, error } = await client.rpc("award_points", {
+        p_user_id: user.id,
+        p_source_type: "location",
+        p_source_id: location.slug,
+        p_points: 10
+      });
+
+      if (error) {
+        document.getElementById("pointsStatus").textContent =
+          "Error awarding points.";
+        return;
+      }
+
+      if (data === "already_scanned_today") {
+        document.getElementById("pointsStatus").textContent =
+          "You already checked in here today.";
+      } else {
+        document.getElementById("pointsStatus").textContent =
+          "You earned 10 points for checking in here!";
+      }
+    }
+
+    async function loadComments(location) {
+      const list = document.getElementById("commentsList");
+      list.textContent = "Loading comments…";
+
+      const { data, error } = await client
+        .from("guestbook_entries")
+        .select("message, created, users(shiny_side_id)")
+        .eq("location_id", location.id)
+        .order("created", { ascending: false });
+
+      if (error) {
+        list.textContent = "Error loading comments.";
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        list.textContent = "No comments yet — be the first!";
+        return;
+      }
+
+      list.innerHTML = data
+        .map(
+          (row) => `
+          <div class="comment">
+            <strong>${row.users?.shiny_side_id || "Guest"}</strong>
+            <p>${row.message}</p>
+            <small>${new Date(row.created).toLocaleString()}</small>
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    async function postComment(user, location, message) {
+      await client.from("guestbook_entries").insert({
+        user_id: user.id,
+        location_id: location.id,
+        message: message
+      });
+    }
+
+    async function main() {
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get("loc");
+
+      const locName = document.getElementById("locName");
+      const locDesc = document.getElementById("locDesc");
+
+      if (!slug) {
+        locName.textContent = "Invalid location";
+        locDesc.textContent = "This QR code is missing a location slug.";
+        return;
+      }
+
+      currentUser = await loadUser();
+      if (!currentUser) {
+        locName.textContent = "No active session";
+        locDesc.textContent = "Return to the Quest Board and sign in first.";
+        return;
+      }
+
+      currentLocation = await loadLocation(slug);
+      if (!currentLocation) {
+        locName.textContent = "Unknown location";
+        locDesc.textContent = "This location does not exist.";
+        return;
+      }
+
+      locName.textContent = currentLocation.name;
+      locDesc.textContent = `You're at ${currentLocation.name}. Say something or see what others wrote.`;
+
+      await awardPoints(currentUser, currentLocation);
+      await loadComments(currentLocation);
+
+      document.getElementById("submitCommentBtn").onclick = async () => {
+        const text = document.getElementById("commentInput").value.trim();
+        if (!text) return;
+
+        await postComment(currentUser, currentLocation, text);
+        document.getElementById("commentInput").value = "";
+        await loadComments(currentLocation);
+      };
+
+      document.getElementById("backBtn").onclick = () => {
+        window.location.href = "experience.html";
+      };
+    }
+
+    main();
+  </script>
+</body>
+</html>
