@@ -164,11 +164,6 @@
       return data;
     }
 
-    /*  
-     * ⭐ FIXED AWARD POINTS FUNCTION ⭐
-     * Matches your SQL function EXACTLY.
-     * Handles all return values safely.
-     */
     async function awardPoints(user, location) {
       const { data, error } = await client.rpc("award_points", {
         p_user_id: user.id,
@@ -178,7 +173,7 @@
       });
 
       if (error) {
-        console.error("RPC Error:", error);
+        console.error("RPC ERROR DETAILS:", error);
         document.getElementById("pointsStatus").textContent =
           "Error awarding points.";
         return;
