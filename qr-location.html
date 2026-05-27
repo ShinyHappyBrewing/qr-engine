@@ -164,6 +164,11 @@
       return data;
     }
 
+    /*  
+     * ⭐ FIXED AWARD POINTS FUNCTION ⭐
+     * Matches your SQL function EXACTLY.
+     * Handles all return values safely.
+     */
     async function awardPoints(user, location) {
       const { data, error } = await client.rpc("award_points", {
         p_user_id: user.id,
@@ -173,17 +178,21 @@
       });
 
       if (error) {
+        console.error("RPC Error:", error);
         document.getElementById("pointsStatus").textContent =
           "Error awarding points.";
         return;
       }
 
-      if (data === "already_scanned_today") {
+      if (data === "already_awarded_today") {
         document.getElementById("pointsStatus").textContent =
           "You already checked in here today.";
-      } else {
+      } else if (data === "success") {
         document.getElementById("pointsStatus").textContent =
           "You earned 10 points for checking in here!";
+      } else {
+        document.getElementById("pointsStatus").textContent =
+          "Error awarding points.";
       }
     }
 
@@ -274,9 +283,9 @@
 
       document.getElementById("backBtn").onclick = () => {
         if (!currentUser) {
-          window.location.href = "index.html"; // send to login if no session
+          window.location.href = "index.html";
         } else {
-          window.location.href = "experience.html"; // quest board (reads from localStorage)
+          window.location.href = "experience.html";
         }
       };
     }
