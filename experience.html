@@ -1,343 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Shiny Happy Engine</title>
-
-  <!-- Mobile viewport -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-
-  <!-- Rounded, friendly font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600&display=swap" rel="stylesheet">
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y";
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  </script>
-
+  <title>Shiny Happy Brewing – ShinySide</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root {
+      --sh-bg: #05060a;
       --sh-blue: #01a9ce;
-      --sh-black: #000000;
-      --sh-white: #ffffff;
+      --sh-white: #fdfdfd;
+      --sh-card: rgba(10, 12, 20, 0.96);
     }
 
     * {
       box-sizing: border-box;
     }
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      max-width: 100%;
-      overflow-x: hidden;
-    }
-
     body {
-      padding: 20px;
-      font-family: "Baloo 2", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--sh-black);
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
       color: var(--sh-white);
       min-height: 100vh;
-      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .watermark {
       position: fixed;
       inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       pointer-events: none;
-      opacity: 0.06;
-      font-size: 72px;
-      text-align: center;
-      line-height: 1.1;
-      letter-spacing: 0.08em;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-weight: 800;
+      font-size: 64px;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: var(--sh-white);
+      color: rgba(15, 23, 42, 0.9);
       z-index: 0;
-      padding: 0 16px;
+      text-align: center;
     }
 
-    .watermark span {
-      display: block;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+    .watermark span:nth-child(2) {
+      letter-spacing: 0.32em;
     }
 
     #appContent {
       position: relative;
       z-index: 1;
-      max-width: 960px;
       width: 100%;
-      margin: 0 auto;
+      max-width: 720px;
     }
 
     #identityStatus {
-      color: var(--sh-blue);
-      font-size: 22px;
-      margin-bottom: 16px;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+      margin: 0 0 12px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+      min-height: 18px;
     }
 
     #identityBox {
       padding: 16px 18px;
-      border-radius: 14px;
-      background: rgba(0, 0, 0, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 0 18px rgba(1, 169, 206, 0.25);
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 0 18px rgba(1, 169, 206, 0.4);
       margin-bottom: 24px;
-      width: 100%;
     }
 
     #identityBox h3 {
-      margin: 0 0 10px;
-      font-size: 20px;
-    }
-
-    #identityBox input {
-      padding: 10px 12px;
-      font-size: 16px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(0, 0, 0, 0.7);
-      color: var(--sh-white);
-      outline: none;
-      max-width: 100%;
-    }
-
-    #ssidInput {
-      width: 220px;
-      max-width: 100%;
-    }
-
-    #identityBox input::placeholder {
-      color: rgba(255, 255, 255, 0.4);
-    }
-
-    #identityBox button {
-      padding: 10px 18px;
-      font-size: 16px;
-      border-radius: 999px;
-      border: none;
-      margin-left: 10px;
-      cursor: pointer;
-      background: var(--sh-blue);
-      color: var(--sh-black);
-      font-weight: 600;
-      box-shadow: 0 0 14px rgba(1, 169, 206, 0.6);
-      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
-      white-space: nowrap;
-      max-width: 100%;
-    }
-
-    #identityBox button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 0 18px rgba(1, 169, 206, 0.9);
-      background: #11b7db;
-    }
-
-    #emailClaimBox {
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px dashed rgba(255, 255, 255, 0.2);
-      font-size: 14px;
-    }
-
-    #emailClaimBox p {
-      margin: 0 0 6px;
-      font-size: 14px;
-    }
-
-    #emailClaimBox input {
-      margin-top: 4px;
-      width: 240px;
-      max-width: 100%;
-    }
-
-    #questBoard {
-      display: none;
-      margin-top: 10px;
-      width: 100%;
-    }
-
-    .hero {
-      margin-bottom: 22px;
-    }
-
-    .hero-title {
-      font-size: 26px;
-      margin: 0 0 6px;
-      color: var(--sh-white);
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-
-    .hero-subtitle {
-      margin: 0;
-      font-size: 16px;
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    .quest-section-title {
-      margin: 0 0 10px;
-      font-size: 18px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.8);
-    }
-
-    .quest-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-      margin-bottom: 22px;
-      width: 100%;
-    }
-
-    .quest-card {
-      position: relative;
-      padding: 14px 14px 16px;
-      border-radius: 18px;
-      background: radial-gradient(circle at top left, rgba(1, 169, 206, 0.18), rgba(0, 0, 0, 0.95));
-      border: 1px solid rgba(1, 169, 206, 0.5);
-      box-shadow:
-        0 0 18px rgba(1, 169, 206, 0.35),
-        0 10px 24px rgba(0, 0, 0, 0.7);
-      cursor: default;
-      overflow: hidden;
-      width: 100%;
-    }
-
-    .quest-card::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      background: radial-gradient(circle at top, rgba(1, 169, 206, 0.18), transparent 60%);
-      opacity: 0.6;
-      pointer-events: none;
-    }
-
-    .quest-card-title {
-      position: relative;
-      font-size: 18px;
-      margin: 0 0 6px;
-      color: var(--sh-white);
-    }
-
-    .quest-card-body {
-      position: relative;
-      margin: 0;
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.8);
-    }
-
-    .actions-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 18px;
-      width: 100%;
-    }
-
-    .primary-btn,
-    .secondary-btn {
-      border-radius: 999px;
-      padding: 10px 18px;
-      font-size: 16px;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, color 0.1s ease;
-      white-space: nowrap;
-      max-width: 100%;
-    }
-
-    .primary-btn {
-      background: var(--sh-blue);
-      color: var(--sh-black);
-      box-shadow: 0 0 16px rgba(1, 169, 206, 0.8);
-    }
-
-    .primary-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 0 20px rgba(1, 169, 206, 1);
-      background: #11b7db;
-    }
-
-    .secondary-btn {
-      background: transparent;
-      color: var(--sh-white);
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-    }
-
-    .secondary-btn:hover {
-      transform: translateY(-1px);
-      background: rgba(255, 255, 255, 0.06);
-      box-shadow: 0 0 14px rgba(1, 169, 206, 0.6);
-      border-color: rgba(1, 169, 206, 0.8);
-    }
-
-    .finish-row {
-      margin-top: 10px;
-      width: 100%;
-    }
-
-    #finishModalBackdrop,
-    #scoreModalBackdrop,
-    #leaderboardModalBackdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-    }
-
-    #finishModal,
-    .score-modal-inner,
-    .leaderboard-modal-inner {
-      background: #050608;
-      border-radius: 18px;
-      padding: 18px 20px 16px;
-      max-width: 420px;
-      width: 100%;
-      border: 1px solid rgba(1, 169, 206, 0.7);
-      box-shadow:
-        0 0 22px rgba(1, 169, 206, 0.7),
-        0 18px 40px rgba(0, 0, 0, 0.9);
-      margin: 0 16px;
-    }
-
-    #finishModal h3,
-    .score-modal-inner h3,
-    .leaderboard-modal-inner h3 {
       margin: 0 0 8px;
       font-size: 20px;
     }
 
-    #finishModal p,
-    .score-modal-inner p,
-    .leaderboard-modal-inner p {
+    #identityBox p {
       margin: 0 0 10px;
       font-size: 14px;
       color: rgba(255, 255, 255, 0.8);
     }
 
-    #finishEmailInput {
+    #ssidInput,
+    #emailInput {
       width: 100%;
       padding: 10px 12px;
       border-radius: 999px;
@@ -347,39 +95,155 @@
       outline: none;
       margin-bottom: 10px;
       font-size: 15px;
-      max-width: 100%;
     }
 
-    #finishEmailInput::placeholder {
+    #ssidInput::placeholder,
+    #emailInput::placeholder {
       color: rgba(255, 255, 255, 0.4);
     }
 
-    .modal-actions {
+    #ssidSubmit,
+    #emailSubmit {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--sh-blue);
+      color: #020617;
+    }
+
+    #questBoard {
+      display: none;
+      padding: 18px 18px 20px;
+      border-radius: 18px;
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 0 18px rgba(1, 169, 206, 0.4);
+    }
+
+    .hero {
+      margin-bottom: 16px;
+    }
+
+    .hero-title {
+      margin: 0 0 6px;
+      font-size: 24px;
+      letter-spacing: 0.03em;
+    }
+
+    .hero-subtitle {
+      margin: 0;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .quest-section-title {
+      margin: 12px 0 10px;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .quest-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .quest-card {
+      padding: 10px 11px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .quest-card-title {
+      margin: 0 0 4px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .quest-card-body {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(226, 232, 240, 0.9);
+    }
+
+    .actions-row {
       display: flex;
-      justify-content: flex-end;
       gap: 8px;
-      margin-top: 4px;
+      margin-top: 10px;
       flex-wrap: wrap;
     }
 
-    .modal-note {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.6);
-      margin-top: 4px;
+    .finish-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 10px;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.96);
+      color: rgba(248, 250, 252, 0.95);
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+      color: #020617;
+      border-color: transparent;
     }
 
     .engine-note {
-      margin-top: 26px;
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.55);
+      margin-top: 12px;
+      font-size: 12px;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
+    /* Modals */
+    #scoreModalBackdrop,
+    #leaderboardModalBackdrop,
+    #finishModalBackdrop,
+    #changeShinyIdModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+
+    .score-modal-inner,
+    .leaderboard-modal-inner,
+    #finishModal,
+    .modal-content {
+      background: var(--sh-card);
+      border-radius: 16px;
+      padding: 16px 18px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      max-width: 420px;
+      width: 100%;
     }
 
     .leaderboard-tabs {
       display: flex;
       gap: 6px;
-      margin-bottom: 10px;
-      font-size: 13px;
-      width: 100%;
+      margin: 10px 0;
     }
 
     .leaderboard-tab {
@@ -387,17 +251,16 @@
       text-align: center;
       padding: 6px 8px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
+      font-size: 13px;
       cursor: pointer;
-      user-select: none;
-      white-space: nowrap;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: rgba(226, 232, 240, 0.9);
     }
 
     .leaderboard-tab.active {
       background: var(--sh-blue);
-      color: var(--sh-black);
-      border-color: var(--sh-blue);
-      box-shadow: 0 0 12px rgba(1, 169, 206, 0.8);
+      color: #020617;
+      border-color: transparent;
     }
 
     #leaderboardContent {
@@ -480,6 +343,19 @@
       min-height: 18px;
     }
 
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .modal-note {
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(148, 163, 184, 0.9);
+    }
+
     @media (max-width: 600px) {
       body {
         padding: 16px;
@@ -510,7 +386,6 @@
     }
   </style>
 </head>
-
 <body>
   <div class="watermark">
     <span>SHINY HAPPY</span>
@@ -541,167 +416,174 @@
       </div>
     </div>
 
-<div id="questBoard">
-  <div class="hero">
-    <h2 class="hero-title" id="heroTitle">Welcome to the ShinySide.</h2>
-    <p class="hero-subtitle">
-      Earn points just for being here, exploring, playing, and saying yes to weird little adventures.
-    </p>
-  </div>
-
-  <h3 class="quest-section-title">How to earn points today</h3>
-  <div class="quest-grid">
-    <div class="quest-card">
-      <h4 class="quest-card-title">Scan codes around the taproom</h4>
-      <p class="quest-card-body">
-        Every table, corner, and odd little sign is a chance to pick up points. If it has a code, try it.
-      </p>
-    </div>
-
-    <div class="quest-card">
-      <h4 class="quest-card-title">Play games & join in</h4>
-      <p class="quest-card-body">
-        Arcade machines, cornhole, trivia, board games, whatever’s out — if you’re playing, you’re earning.
-      </p>
-    </div>
-
-    <div class="quest-card">
-      <h4 class="quest-card-title">Join a firepit or group</h4>
-      <p class="quest-card-body">
-        Sit with others, share a story, join a group prompt. Community moments are worth extra points.
-      </p>
-    </div>
-
-    <div class="quest-card">
-      <h4 class="quest-card-title">Try featured beers & experiments</h4>
-      <p class="quest-card-body">
-        Seasonal taps, small batches, and weird experiments often come with surprise points attached.
-      </p>
-    </div>
-
-    <div class="quest-card">
-      <h4 class="quest-card-title">Complete mini‑quests</h4>
-      <p class="quest-card-body">
-        Some codes unlock little missions. Follow the prompt, do the thing, collect the glory.
-      </p>
-    </div>
-
-    <div class="quest-card">
-      <h4 class="quest-card-title">Be present, be kind</h4>
-      <p class="quest-card-body">
-        Some points are just for being a good human in the room. Staff can award those on the fly.
-      </p>
-    </div>
-  </div>
-
-  <div class="actions-row">
-    <button class="primary-btn" id="leaderboardBtn">
-      🔥 Today’s leaderboard
-    </button>
-    <button class="secondary-btn" id="myScoreBtn">
-      ⭐ My score
-    </button>
-    <button class="secondary-btn" id="changeShinyIdBtn">
-      ✏️ Change ShinySide ID
-    </button>
-  </div>
-
-  <div class="finish-row">
-    <button class="secondary-btn" id="finishVisitBtn">
-      Save my points & finish my visit
-    </button>
-  </div>
-
-  <p class="engine-note">
-    The Shiny Happy Engine runs quietly in the background, tracking your points as you move through the space.
-  </p>
-</div>
-
- <!-- Change ShinySide ID Modal -->
-<div id="changeShinyIdModal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <h3>Change your ShinySide ID</h3>
-    <p>Pick a new ShinySide ID. It must be unique.</p>
-
-    <input id="newShinyIdInput" type="text" placeholder="New ShinySide ID" />
-
-    <p id="changeShinyIdStatus" style="color:red; margin-top:8px;"></p>
-
-    <div class="modal-actions" style="margin-top: 12px; display:flex; gap:10px;">
-      <button id="saveNewShinyIdBtn" class="primary-btn">Save</button>
-      <button id="cancelShinyIdBtn" class="secondary-btn">Cancel</button>
-    </div>
-  </div>
-</div>   
-
-  <!-- My Score Modal -->
-  <div id="scoreModalBackdrop">
-    <div class="score-modal-inner">
-      <h3>Your Score</h3>
-      <p id="scoreTotal" style="font-size:16px;color:#01a9ce;font-weight:600;">
-        Loading…
-      </p>
-
-      <div id="scoreHistory" style="
-        max-height: 200px;
-        overflow-y: auto;
-        font-size: 14px;
-        color: rgba(255,255,255,0.8);
-        border-top: 1px solid rgba(255,255,255,0.15);
-        padding-top: 10px;
-      ">
-        Loading history…
+    <div id="questBoard">
+      <div class="hero">
+        <h2 class="hero-title" id="heroTitle">Welcome to the ShinySide.</h2>
+        <p class="hero-subtitle">
+          Earn points just for being here, exploring, playing, and saying yes to weird little adventures.
+        </p>
       </div>
 
-      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
-        <button class="secondary-btn" id="scoreCloseBtn">Close</button>
+      <h3 class="quest-section-title">How to earn points today</h3>
+      <div class="quest-grid">
+        <div class="quest-card">
+          <h4 class="quest-card-title">Scan codes around the taproom</h4>
+          <p class="quest-card-body">
+            Every table, corner, and odd little sign is a chance to pick up points. If it has a code, try it.
+          </p>
+        </div>
+
+        <div class="quest-card">
+          <h4 class="quest-card-title">Play games & join in</h4>
+          <p class="quest-card-body">
+            Arcade machines, cornhole, trivia, board games, whatever’s out — if you’re playing, you’re earning.
+          </p>
+        </div>
+
+        <div class="quest-card">
+          <h4 class="quest-card-title">Join a firepit or group</h4>
+          <p class="quest-card-body">
+            Sit with others, share a story, join a group prompt. Community moments are worth extra points.
+          </p>
+        </div>
+
+        <div class="quest-card">
+          <h4 class="quest-card-title">Try featured beers & experiments</h4>
+          <p class="quest-card-body">
+            Seasonal taps, small batches, and weird experiments often come with surprise points attached.
+          </p>
+        </div>
+
+        <div class="quest-card">
+          <h4 class="quest-card-title">Complete mini‑quests</h4>
+          <p class="quest-card-body">
+            Some codes unlock little missions. Follow the prompt, do the thing, collect the glory.
+          </p>
+        </div>
+
+        <div class="quest-card">
+          <h4 class="quest-card-title">Be present, be kind</h4>
+          <p class="quest-card-body">
+            Some points are just for being a good human in the room. Staff can award those on the fly.
+          </p>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="primary-btn" id="leaderboardBtn">
+          🔥 Today’s leaderboard
+        </button>
+        <button class="secondary-btn" id="myScoreBtn">
+          ⭐ My score
+        </button>
+        <button class="secondary-btn" id="changeShinyIdBtn">
+          ✏️ Change ShinySide ID
+        </button>
+      </div>
+
+      <div class="finish-row">
+        <button class="secondary-btn" id="finishVisitBtn">
+          Save my points & finish my visit
+        </button>
+      </div>
+
+      <p class="engine-note">
+        The Shiny Happy Engine runs quietly in the background, tracking your points as you move through the space.
+      </p>
+    </div>
+
+    <!-- Change ShinySide ID Modal -->
+    <div id="changeShinyIdModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <h3>Change your ShinySide ID</h3>
+        <p>Pick a new ShinySide ID. It must be unique.</p>
+
+        <input id="newShinyIdInput" type="text" placeholder="New ShinySide ID" />
+
+        <p id="changeShinyIdStatus" style="color:red; margin-top:8px;"></p>
+
+        <div class="modal-actions" style="margin-top: 12px; display:flex; gap:10px;">
+          <button id="saveNewShinyIdBtn" class="primary-btn">Save</button>
+          <button id="cancelShinyIdBtn" class="secondary-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- My Score Modal -->
+    <div id="scoreModalBackdrop">
+      <div class="score-modal-inner">
+        <h3>Your Score</h3>
+        <p id="scoreTotal" style="font-size:16px;color:#01a9ce;font-weight:600;">
+          Loading…
+        </p>
+
+        <div id="scoreHistory" style="
+          max-height: 200px;
+          overflow-y: auto;
+          font-size: 14px;
+          color: rgba(255,255,255,0.8);
+          border-top: 1px solid rgba(255,255,255,0.15);
+          padding-top: 10px;
+        ">
+          Loading history…
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+          <button class="secondary-btn" id="scoreCloseBtn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div id="leaderboardModalBackdrop">
+      <div class="leaderboard-modal-inner">
+        <h3>Taproom leaderboard</h3>
+        <p style="margin-bottom:8px;">
+          Today, this week, and all‑time — all powered by the same engine you just wired.
+        </p>
+
+        <div class="leaderboard-tabs">
+          <div class="leaderboard-tab active" data-range="today">Today</div>
+          <div class="leaderboard-tab" data-range="week">This week</div>
+          <div class="leaderboard-tab" data-range="all">All‑time</div>
+        </div>
+
+        <div id="leaderboardContent">
+          Loading leaderboard…
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+          <button class="secondary-btn" id="leaderboardCloseBtn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finish Visit Modal -->
+    <div id="finishModalBackdrop">
+      <div id="finishModal">
+        <h3>Save your points?</h3>
+        <p>
+          Enter your email to claim this ShinySide ID and keep your points for next time.
+        </p>
+        <input id="finishEmailInput" type="email" placeholder="you@example.com" />
+        <div class="modal-actions">
+          <button class="secondary-btn" id="finishCancelBtn">Not now</button>
+          <button class="primary-btn" id="finishConfirmBtn">Save my points</button>
+        </div>
+        <p class="modal-note">
+          We’ll only use this to remember you and your points. No spam, just Shiny Happy things.
+        </p>
       </div>
     </div>
   </div>
 
-  <!-- Leaderboard Modal -->
-  <div id="leaderboardModalBackdrop">
-    <div class="leaderboard-modal-inner">
-      <h3>Taproom leaderboard</h3>
-      <p style="margin-bottom:8px;">
-        Today, this week, and all‑time — all powered by the same engine you just wired.
-      </p>
-
-      <div class="leaderboard-tabs">
-        <div class="leaderboard-tab active" data-range="today">Today</div>
-        <div class="leaderboard-tab" data-range="week">This week</div>
-        <div class="leaderboard-tab" data-range="all">All‑time</div>
-      </div>
-
-      <div id="leaderboardContent">
-        Loading leaderboard…
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
-        <button class="secondary-btn" id="leaderboardCloseBtn">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Finish Visit Modal -->
-  <div id="finishModalBackdrop">
-    <div id="finishModal">
-      <h3>Save your points?</h3>
-      <p>
-        Enter your email to claim this ShinySide ID and keep your points for next time.
-      </p>
-      <input id="finishEmailInput" type="email" placeholder="you@example.com" />
-      <div class="modal-actions">
-        <button class="secondary-btn" id="finishCancelBtn">Not now</button>
-        <button class="primary-btn" id="finishConfirmBtn">Save my points</button>
-      </div>
-      <p class="modal-note">
-        We’ll only use this to remember you and your points. No spam, just Shiny Happy things.
-      </p>
-    </div>
-  </div>
-
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
+    // TODO: drop in your real Supabase URL + anon key
+    const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_PUBLIC_ANON_KEY";
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     let currentUser = null;
     let engineLoaded = false;
 
@@ -716,8 +598,10 @@
     function showQuestBoardFor(user) {
       currentUser = user;
       localStorage.setItem("shiny_user", JSON.stringify(user));
+
       const heroTitle = document.getElementById("heroTitle");
       heroTitle.textContent = "Hey, " + (user.shiny_side_id || "friend") + ". Let’s earn some points.";
+
       document.getElementById("identityBox").style.display = "none";
       document.getElementById("questBoard").style.display = "block";
       document.getElementById("identityStatus").textContent =
@@ -725,87 +609,70 @@
     }
 
     // --- MAGIC LINK + AUTO-LOGIN BOOTSTRAP + QR-SAFE FLOW ---
-async function bootstrapAuth() {
-  try {
-    const { data: userData } = await client.auth.getUser();
+    async function bootstrapAuth() {
+      try {
+        const { data: userData } = await client.auth.getUser();
 
-    if (userData && userData.user) {
-      const email = userData.user.email;
+        if (userData && userData.user) {
+          const email = userData.user.email;
 
-      const { data: users } = await client
-        .from("users")
-        .select("*")
-        .eq("email", email)
-        .limit(1);
+          const { data: users } = await client
+            .from("users")
+            .select("*")
+            .eq("email", email)
+            .limit(1);
 
-      let user = users && users[0];
+          let user = users && users[0];
 
-      // OPTION C: Auto-generate ShinySide ID if missing
-      if (!user) {
-        // No user record yet → create one from email prefix
-        const baseId = email.split("@")[0];
-        const { data: newUsers } = await client
-          .from("users")
-          .insert([
-            {
-              shiny_side_id: baseId,
-              name: baseId,
-              email: email,
-              claimed: true
+          // Auto-generate ShinySide ID if missing
+          if (!user) {
+            const baseId = email.split("@")[0];
+            const { data: newUsers } = await client
+              .from("users")
+              .insert([
+                {
+                  shiny_side_id: baseId,
+                  name: baseId,
+                  email: email,
+                  claimed: true
+                }
+              ])
+              .select("*");
+            user = newUsers && newUsers[0];
+          } else if (!user.shiny_side_id) {
+            const baseId = email.split("@")[0];
+            const { data: updatedUsers } = await client
+              .from("users")
+              .update({
+                shiny_side_id: baseId,
+                name: baseId
+              })
+              .eq("id", user.id)
+              .select("*");
+
+            if (updatedUsers && updatedUsers[0]) {
+              user = updatedUsers[0];
             }
-          ])
-          .select("*");
-        user = newUsers && newUsers[0];
-      } else if (!user.shiny_side_id) {
-        // User exists but has no ShinySide ID → auto-fill it
-        const baseId = email.split("@")[0];
-        const { data: updatedUsers } = await client
-          .from("users")
-          .update({
-            shiny_side_id: baseId,
-            name: baseId
-          })
-          .eq("id", user.id)
-          .select("*");
+          }
 
-        if (updatedUsers && updatedUsers[0]) {
-          user = updatedUsers[0];
+          if (user) {
+            document.getElementById("loginPanel").style.display = "none";
+            document.getElementById("identityBox").style.display = "block";
+            showQuestBoardFor(user);
+            loadEngine(); // QR engine only runs when user is truly logged in
+            return;
+          }
         }
-      }
-
-      if (user) {
-        document.getElementById("loginPanel").style.display = "none";
-        document.getElementById("identityBox").style.display = "block";
-        showQuestBoardFor(user);
-        loadEngine(); // QR engine only runs when user is truly logged in
-        return;
-      }
-    }
-  } catch (e) {
-    console.error("Auth bootstrap error:", e);
-  }
-
-  // No Supabase user → show login panel
-  document.getElementById("loginPanel").style.display = "block";
-  document.getElementById("identityBox").style.display = "none";
-  document.getElementById("questBoard").style.display = "none";
-  document.getElementById("identityStatus").textContent =
-    "Log in to earn points for this check‑in.";
-}
-
-
-        // No Supabase auth user → show login panel, hide quest UI, do NOT load engine yet
-        document.getElementById("loginPanel").style.display = "block";
-        document.getElementById("identityBox").style.display = "none";
-        document.getElementById("questBoard").style.display = "none";
-        document.getElementById("identityStatus").textContent =
-          "Log in to earn points for this check‑in.";
       } catch (e) {
         console.error("Auth bootstrap error:", e);
-        document.getElementById("loginPanel").style.display = "block";
-        document.getElementById("identityBox").style.display = "none";
-        document.getElementById("questBoard").style.display = "none";
       }
+
+      // No Supabase user → show login panel
+      document.getElementById("loginPanel").style.display = "block";
+      document.getElementById("identityBox").style.display = "none";
+      document.getElementById("questBoard").style.display = "none";
+      document.getElementById("identityStatus").textContent =
+        "Log in to earn points for this check‑in.";
     }
 
     window.addEventListener("load", bootstrapAuth);
@@ -863,6 +730,7 @@ async function bootstrapAuth() {
             "This ShinySide ID is claimed. Verify with email to continue.";
         } else {
           showQuestBoardFor(user);
+          loadEngine();
         }
       } else {
         const { data: newUsers, error: insertErr } = await client
@@ -883,6 +751,7 @@ async function bootstrapAuth() {
         }
 
         showQuestBoardFor(newUsers[0]);
+        loadEngine();
       }
     });
 
@@ -901,6 +770,7 @@ async function bootstrapAuth() {
 
       if (user) {
         showQuestBoardFor(user);
+        loadEngine();
       } else {
         alert("Email does not match this ShinySide ID.");
       }
@@ -1153,6 +1023,70 @@ async function bootstrapAuth() {
       }
     });
 
+    // --- Change ShinySide ID modal wiring ---
+    const changeShinyIdModal = document.getElementById("changeShinyIdModal");
+    const newShinyIdInput = document.getElementById("newShinyIdInput");
+    const changeShinyIdStatus = document.getElementById("changeShinyIdStatus");
+
+    document.getElementById("changeShinyIdBtn").addEventListener("click", () => {
+      if (!currentUser) {
+        alert("We don’t have a user loaded yet.");
+        return;
+      }
+      newShinyIdInput.value = currentUser.shiny_side_id || "";
+      changeShinyIdStatus.textContent = "";
+      changeShinyIdModal.style.display = "flex";
+      newShinyIdInput.focus();
+    });
+
+    document.getElementById("cancelShinyIdBtn").addEventListener("click", () => {
+      changeShinyIdModal.style.display = "none";
+    });
+
+    document.getElementById("saveNewShinyIdBtn").addEventListener("click", async () => {
+      if (!currentUser) return;
+      const newId = newShinyIdInput.value.trim();
+      if (!newId) {
+        changeShinyIdStatus.textContent = "ShinySide ID cannot be empty.";
+        return;
+      }
+
+      // Check uniqueness
+      const { data: existing, error: existingErr } = await client
+        .from("users")
+        .select("id")
+        .eq("shiny_side_id", newId)
+        .neq("id", currentUser.id);
+
+      if (existingErr) {
+        console.error(existingErr);
+        changeShinyIdStatus.textContent = "Error checking ID. Try again.";
+        return;
+      }
+
+      if (existing && existing.length > 0) {
+        changeShinyIdStatus.textContent = "That ShinySide ID is already taken.";
+        return;
+      }
+
+      const { data, error } = await client
+        .from("users")
+        .update({ shiny_side_id: newId })
+        .eq("id", currentUser.id)
+        .select("*");
+
+      if (error || !data || !data[0]) {
+        console.error(error);
+        changeShinyIdStatus.textContent = "Could not update ID. Try again.";
+        return;
+      }
+
+      currentUser = data[0];
+      localStorage.setItem("shiny_user", JSON.stringify(currentUser));
+      showQuestBoardFor(currentUser);
+      changeShinyIdModal.style.display = "none";
+    });
+
     // --- Close modals on backdrop click ---
     finishBackdrop.addEventListener("click", (e) => {
       if (e.target === finishBackdrop) {
@@ -1169,6 +1103,12 @@ async function bootstrapAuth() {
     leaderboardBackdrop.addEventListener("click", (e) => {
       if (e.target === leaderboardBackdrop) {
         leaderboardBackdrop.style.display = "none";
+      }
+    });
+
+    changeShinyIdModal.addEventListener("click", (e) => {
+      if (e.target === changeShinyIdModal) {
+        changeShinyIdModal.style.display = "none";
       }
     });
   </script>
