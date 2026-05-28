@@ -603,7 +603,8 @@ const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
 
 
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+window.client = supabaseClient;
 
     let currentUser = null;
     let engineLoaded = false;
