@@ -6,8 +6,8 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase (pin to stable version) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
   <script>
     const client = supabase.createClient(
       "https://wowdmkxuwysuihgoklki.supabase.co",
@@ -117,7 +117,6 @@
       margin-top: 2px;
     }
 
-    /* LOGIN PANEL */
     #loginPanel {
       margin-top: 20px;
       padding: 16px;
@@ -143,11 +142,6 @@
       color: #01a9ce;
       min-height: 18px;
     }
-
-    @media (max-width: 480px) {
-      h2 { font-size: 22px; }
-      p { font-size: 15px; }
-    }
   </style>
 </head>
 
@@ -158,7 +152,6 @@
 
     <p id="pointsStatus"></p>
 
-    <!-- LOGIN PANEL -->
     <div id="loginPanel">
       <p>Log in to earn points for this check‑in.</p>
       <input id="loginEmail" type="email" placeholder="you@example.com" />
@@ -190,7 +183,7 @@
     async function loadLocation(slug) {
       const { data, error } = await client
         .from("locations")
-        .select("*")
+        .select("id, slug, name, type")   // FIXED — no wildcard
         .eq("slug", slug)
         .single();
 
@@ -291,14 +284,12 @@
       locName.textContent = currentLocation.name;
       locDesc.textContent = `You're at ${currentLocation.name}. Say something or see what others wrote.`;
 
-      // If NOT logged in → show login panel
       if (!currentUser) {
         document.getElementById("loginPanel").style.display = "block";
         document.getElementById("commentBox").style.display = "none";
         document.getElementById("pointsStatus").textContent =
           "Log in to earn points for this check‑in.";
       } else {
-        // Logged in → award points + allow comments
         await awardPoints(currentUser, currentLocation);
         document.getElementById("commentBox").style.display = "block";
       }
@@ -320,7 +311,6 @@
       };
     }
 
-    // LOGIN BUTTON HANDLER
     document.getElementById("loginButton").onclick = async () => {
       const email = document.getElementById("loginEmail").value.trim();
       const status = document.getElementById("loginStatus");
