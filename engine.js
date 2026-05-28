@@ -35,7 +35,7 @@ async function addScore(user_id, source_type, source_id, points) {
         points,
       },
     ])
-    .select()
+    .select("id, user_id, source_type, source_id, points, created_at")
     .single();
 
   if (error) {
