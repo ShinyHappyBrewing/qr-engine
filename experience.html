@@ -617,72 +617,22 @@
   </p>
 </div>
 
+ <!-- Change ShinySide ID Modal -->
+<div id="changeShinyIdModal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <h3>Change your ShinySide ID</h3>
+    <p>Pick a new ShinySide ID. It must be unique.</p>
 
-      <h3 class="quest-section-title">How to earn points today</h3>
-      <div class="quest-grid">
-        <div class="quest-card">
-          <h4 class="quest-card-title">Scan codes around the taproom</h4>
-          <p class="quest-card-body">
-            Every table, corner, and odd little sign is a chance to pick up points. If it has a code, try it.
-          </p>
-        </div>
+    <input id="newShinyIdInput" type="text" placeholder="New ShinySide ID" />
 
-        <div class="quest-card">
-          <h4 class="quest-card-title">Play games & join in</h4>
-          <p class="quest-card-body">
-            Arcade machines, cornhole, trivia, board games, whatever’s out — if you’re playing, you’re earning.
-          </p>
-        </div>
+    <p id="changeShinyIdStatus" style="color:red; margin-top:8px;"></p>
 
-        <div class="quest-card">
-          <h4 class="quest-card-title">Join a firepit or group</h4>
-          <p class="quest-card-body">
-            Sit with others, share a story, join a group prompt. Community moments are worth extra points.
-          </p>
-        </div>
-
-        <div class="quest-card">
-          <h4 class="quest-card-title">Try featured beers & experiments</h4>
-          <p class="quest-card-body">
-            Seasonal taps, small batches, and weird experiments often come with surprise points attached.
-          </p>
-        </div>
-
-        <div class="quest-card">
-          <h4 class="quest-card-title">Complete mini‑quests</h4>
-          <p class="quest-card-body">
-            Some codes unlock little missions. Follow the prompt, do the thing, collect the glory.
-          </p>
-        </div>
-
-        <div class="quest-card">
-          <h4 class="quest-card-title">Be present, be kind</h4>
-          <p class="quest-card-body">
-            Some points are just for being a good human in the room. Staff can award those on the fly.
-          </p>
-        </div>
-      </div>
-
-      <div class="actions-row">
-        <button class="primary-btn" id="leaderboardBtn">
-          🔥 Today’s leaderboard
-        </button>
-        <button class="secondary-btn" id="myScoreBtn">
-          ⭐ My score
-        </button>
-      </div>
-
-      <div class="finish-row">
-        <button class="secondary-btn" id="finishVisitBtn">
-          Save my points & finish my visit
-        </button>
-      </div>
-
-      <p class="engine-note">
-        The Shiny Happy Engine runs quietly in the background, tracking your points as you move through the space.
-      </p>
+    <div class="modal-actions" style="margin-top: 12px; display:flex; gap:10px;">
+      <button id="saveNewShinyIdBtn" class="primary-btn">Save</button>
+      <button id="cancelShinyIdBtn" class="secondary-btn">Cancel</button>
     </div>
   </div>
+</div>   
 
   <!-- My Score Modal -->
   <div id="scoreModalBackdrop">
