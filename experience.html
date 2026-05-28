@@ -706,45 +706,74 @@
     }
 
     // --- MAGIC LINK + AUTO-LOGIN BOOTSTRAP + QR-SAFE FLOW ---
-    async function bootstrapAuth() {
-      try {
-        const { data: userData } = await client.auth.getUser();
+async function bootstrapAuth() {
+  try {
+    const { data: userData } = await client.auth.getUser();
 
-        if (userData && userData.user) {
-          const email = userData.user.email;
+    if (userData && userData.user) {
+      const email = userData.user.email;
 
-          const { data: users } = await client
-            .from("users")
-            .select("*")
-            .eq("email", email)
-            .limit(1);
+      const { data: users } = await client
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .limit(1);
 
-          let user = users && users[0];
+      let user = users && users[0];
 
-          if (!user) {
-            const baseId = email.split("@")[0];
-            const { data: newUsers } = await client
-              .from("users")
-              .insert([
-                {
-                  shiny_side_id: baseId,
-                  name: baseId,
-                  email: email,
-                  claimed: true
-                }
-              ])
-              .select("*");
-            user = newUsers && newUsers[0];
-          }
+      // OPTION C: Auto-generate ShinySide ID if missing
+      if (!user) {
+        // No user record yet → create one from email prefix
+        const baseId = email.split("@")[0];
+        const { data: newUsers } = await client
+          .from("users")
+          .insert([
+            {
+              shiny_side_id: baseId,
+              name: baseId,
+              email: email,
+              claimed: true
+            }
+          ])
+          .select("*");
+        user = newUsers && newUsers[0];
+      } else if (!user.shiny_side_id) {
+        // User exists but has no ShinySide ID → auto-fill it
+        const baseId = email.split("@")[0];
+        const { data: updatedUsers } = await client
+          .from("users")
+          .update({
+            shiny_side_id: baseId,
+            name: baseId
+          })
+          .eq("id", user.id)
+          .select("*");
 
-          if (user) {
-            document.getElementById("loginPanel").style.display = "none";
-            document.getElementById("identityBox").style.display = "block";
-            showQuestBoardFor(user);
-            loadEngine(); // QR engine only runs when user is truly logged in
-            return;
-          }
+        if (updatedUsers && updatedUsers[0]) {
+          user = updatedUsers[0];
         }
+      }
+
+      if (user) {
+        document.getElementById("loginPanel").style.display = "none";
+        document.getElementById("identityBox").style.display = "block";
+        showQuestBoardFor(user);
+        loadEngine(); // QR engine only runs when user is truly logged in
+        return;
+      }
+    }
+  } catch (e) {
+    console.error("Auth bootstrap error:", e);
+  }
+
+  // No Supabase user → show login panel
+  document.getElementById("loginPanel").style.display = "block";
+  document.getElementById("identityBox").style.display = "none";
+  document.getElementById("questBoard").style.display = "none";
+  document.getElementById("identityStatus").textContent =
+    "Log in to earn points for this check‑in.";
+}
+
 
         // No Supabase auth user → show login panel, hide quest UI, do NOT load engine yet
         document.getElementById("loginPanel").style.display = "block";
