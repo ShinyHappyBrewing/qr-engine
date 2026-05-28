@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Shiny Happy Brewing – ShinySide</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000">
   <style>
     :root {
       --sh-bg: #05060a;
@@ -16,18 +17,36 @@
       box-sizing: border-box;
     }
 
-    body {
-      margin: 0;
-      padding: 24px;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Segoe UI", sans-serif;
-      background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
-      color: var(--sh-white);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+body {
+  margin: 0;
+  padding: 24px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", sans-serif;
+
+  /* Your original gradient background */
+  background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+
+  /* Text color stays the same */
+  color: var(--sh-white);
+
+  /* Layout */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  /* Mobile safe-area fallback */
+  background-color: #000;
+}
+
+/* Additional safe-area support for iOS */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    background-color: #000;
+  }
+}
 
     .watermark {
       position: fixed;
