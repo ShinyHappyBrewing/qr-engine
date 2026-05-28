@@ -433,6 +433,53 @@
       opacity: 0.7;
     }
 
+    /* Login panel */
+    #loginPanel {
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 0 18px rgba(1, 169, 206, 0.4);
+      margin-bottom: 24px;
+      width: 100%;
+      display: none;
+    }
+
+    #loginPanel h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    #loginPanel p {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    #loginEmail {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(0, 0, 0, 0.8);
+      color: var(--sh-white);
+      outline: none;
+      margin-bottom: 10px;
+      font-size: 15px;
+      max-width: 100%;
+    }
+
+    #loginEmail::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    #loginStatus {
+      font-size: 13px;
+      color: var(--sh-blue);
+      margin-top: 4px;
+      min-height: 18px;
+    }
+
     @media (max-width: 600px) {
       body {
         padding: 16px;
@@ -472,6 +519,15 @@
 
   <div id="appContent">
     <p id="identityStatus"></p>
+
+    <!-- Inline login panel for QR + magic link -->
+    <div id="loginPanel">
+      <h3>Log in to Shiny Happy</h3>
+      <p>Enter your email to earn points for this check‑in and save your progress.</p>
+      <input id="loginEmail" type="email" placeholder="you@example.com" />
+      <button class="primary-btn" id="loginButton">Send magic link</button>
+      <p id="loginStatus"></p>
+    </div>
 
     <div id="identityBox">
       <h3>Enter your ShinySide ID</h3>
@@ -628,6 +684,15 @@
 
   <script>
     let currentUser = null;
+    let engineLoaded = false;
+
+    function loadEngine() {
+      if (engineLoaded) return;
+      const s = document.createElement("script");
+      s.src = "https://raw.githubusercontent.com/shbdanny-stack/qr-engine/main/engine.js";
+      document.body.appendChild(s);
+      engineLoaded = true;
+    }
 
     function showQuestBoardFor(user) {
       currentUser = user;
@@ -640,13 +705,13 @@
         "Welcome, " + (user.shiny_side_id || "ShinySide guest") + "!";
     }
 
-    // --- MAGIC LINK + AUTO-LOGIN BOOTSTRAP ---
+    // --- MAGIC LINK + AUTO-LOGIN BOOTSTRAP + QR-SAFE FLOW ---
     async function bootstrapAuth() {
-      // 1) If Supabase has a session, use it first (cross-device magic link)
       try {
-        const { data: sessionData } = await client.auth.getSession();
-        if (sessionData && sessionData.session && sessionData.session.user) {
-          const email = sessionData.session.user.email;
+        const { data: userData } = await client.auth.getUser();
+
+        if (userData && userData.user) {
+          const email = userData.user.email;
 
           const { data: users } = await client
             .from("users")
@@ -656,7 +721,6 @@
 
           let user = users && users[0];
 
-          // If no user yet, create one from email prefix
           if (!user) {
             const baseId = email.split("@")[0];
             const { data: newUsers } = await client
@@ -674,29 +738,63 @@
           }
 
           if (user) {
+            document.getElementById("loginPanel").style.display = "none";
+            document.getElementById("identityBox").style.display = "block";
             showQuestBoardFor(user);
-            return; // Session-based auto-login wins
+            loadEngine(); // QR engine only runs when user is truly logged in
+            return;
           }
         }
+
+        // No Supabase auth user → show login panel, hide quest UI, do NOT load engine yet
+        document.getElementById("loginPanel").style.display = "block";
+        document.getElementById("identityBox").style.display = "none";
+        document.getElementById("questBoard").style.display = "none";
+        document.getElementById("identityStatus").textContent =
+          "Log in to earn points for this check‑in.";
       } catch (e) {
         console.error("Auth bootstrap error:", e);
-      }
-
-      // 2) Fallback: localStorage-based auto-login (same device)
-      try {
-        const saved = localStorage.getItem("shiny_user");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && parsed.shiny_side_id) {
-            showQuestBoardFor(parsed);
-          }
-        }
-      } catch (e) {
-        localStorage.removeItem("shiny_user");
+        document.getElementById("loginPanel").style.display = "block";
+        document.getElementById("identityBox").style.display = "none";
+        document.getElementById("questBoard").style.display = "none";
       }
     }
 
     window.addEventListener("load", bootstrapAuth);
+
+    // --- Inline login magic link for QR flow ---
+    document.getElementById("loginButton").addEventListener("click", async () => {
+      const email = document.getElementById("loginEmail").value.trim();
+      const statusEl = document.getElementById("loginStatus");
+
+      if (!email) {
+        statusEl.textContent = "Please enter an email.";
+        return;
+      }
+
+      statusEl.textContent = "Sending magic link…";
+
+      try {
+        const redirectUrl = window.location.href;
+
+        const { error } = await client.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: redirectUrl
+          }
+        });
+
+        if (error) {
+          console.error(error);
+          statusEl.textContent = "Error sending magic link. Try again.";
+        } else {
+          statusEl.textContent = "Magic link sent! Check your email and tap the link to continue.";
+        }
+      } catch (e) {
+        console.error("Magic link error:", e);
+        statusEl.textContent = "Could not send magic link right now.";
+      }
+    });
 
     // --- Identity entry (ShinySide ID) ---
     document.getElementById("ssidSubmit").addEventListener("click", async () => {
@@ -994,7 +1092,7 @@
         await client.auth.signInWithOtp({
           email: email,
           options: {
-            emailRedirectTo: "https://shbdanny-stack.github.io/qr-engine/experience.html"
+            emailRedirectTo: window.location.href
           }
         });
 
@@ -1026,7 +1124,5 @@
       }
     });
   </script>
-
-  <script src="https://raw.githubusercontent.com/shbdanny-stack/qr-engine/main/engine.js"></script>
 </body>
 </html>
