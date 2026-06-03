@@ -406,102 +406,97 @@
   <div id="appContent">
     <p id="identityStatus"></p>
 
-    <!-- Inline login panel for QR + magic link -->
-    <div id="loginPanel">
-      <h3>Log in to Shiny Happy</h3>
-      <p>Enter your email to earn points for this check‑in and save your progress.</p>
-      <input id="loginEmail" type="email" placeholder="you@example.com" />
-      <button class="primary-btn" id="loginButton">Send magic link</button>
-      <p id="loginStatus"></p>
-    </div>
+   <!-- Inline login panel for QR + magic link -->
+<div id="loginPanel" style="display:none;">
+  <h3>Log in to Shiny Happy</h3>
+  <p>Enter your email to earn points for this check‑in and save your progress.</p>
+  <input id="loginEmail" type="email" placeholder="you@example.com" />
+  <button class="primary-btn" id="loginButton">Send magic link</button>
+  <p id="loginStatus"></p>
+</div>
 
-    <div id="identityBox">
-      <h3>Enter your ShinySide ID</h3>
-      <input id="ssidInput" placeholder="ShinySide ID" />
-      <button id="ssidSubmit">Go</button>
+<!-- ShinySide ID chooser -->
+<div id="identityBox" style="display:none;">
+  <h3>Enter your ShinySide ID</h3>
+  <input id="shinySideIdInput" placeholder="ShinySide ID" />
+  <button id="goButton">Go</button>
+  <p id="identityStatus"></p>
 
-      <div id="emailClaimBox" style="display:none;">
-        <p>This ShinySide ID is already claimed. Enter your email to continue.</p>
-        <input id="emailInput" placeholder="Email" />
-        <button id="emailSubmit">Verify</button>
-      </div>
-    </div>
+  <div id="emailClaimBox" style="display:none;">
+    <p>This ShinySide ID is already claimed. Enter your email to continue.</p>
+    <input id="emailInput" placeholder="Email" />
+    <button id="emailSubmit">Verify</button>
+  </div>
+</div>
 
-    <div id="questBoard">
-      <div class="hero">
-        <h2 class="hero-title" id="heroTitle">Welcome to the ShinySide.</h2>
-        <p class="hero-subtitle">
-          Earn points just for being here, exploring, playing, and saying yes to weird little adventures.
-        </p>
-      </div>
+<!-- Quest Board -->
+<div id="questBoard" style="display:none;">
+  <div class="hero">
+    <h2 class="hero-title" id="heroTitle">Welcome to the ShinySide.</h2>
+    <p class="hero-subtitle">
+      Earn points just for being here, exploring, playing, and saying yes to weird little adventures.
+    </p>
+  </div>
 
-      <h3 class="quest-section-title">How to earn points today</h3>
-      <div class="quest-grid">
-        <div class="quest-card">
-          <h4 class="quest-card-title">Scan codes around the taproom</h4>
-          <p class="quest-card-body">
-            Every table, corner, and odd little sign is a chance to pick up points. If it has a code, try it.
-          </p>
-        </div>
-
-        <div class="quest-card">
-          <h4 class="quest-card-title">Play games & join in</h4>
-          <p class="quest-card-body">
-            Arcade machines, cornhole, trivia, board games, whatever’s out — if you’re playing, you’re earning.
-          </p>
-        </div>
-
-        <div class="quest-card">
-          <h4 class="quest-card-title">Join a firepit or group</h4>
-          <p class="quest-card-body">
-            Sit with others, share a story, join a group prompt. Community moments are worth extra points.
-          </p>
-        </div>
-
-        <div class="quest-card">
-          <h4 class="quest-card-title">Try featured beers & experiments</h4>
-          <p class="quest-card-body">
-            Seasonal taps, small batches, and weird experiments often come with surprise points attached.
-          </p>
-        </div>
-
-        <div class="quest-card">
-          <h4 class="quest-card-title">Complete mini‑quests</h4>
-          <p class="quest-card-body">
-            Some codes unlock little missions. Follow the prompt, do the thing, collect the glory.
-          </p>
-        </div>
-
-        <div class="quest-card">
-          <h4 class="quest-card-title">Be present, be kind</h4>
-          <p class="quest-card-body">
-            Some points are just for being a good human in the room. Staff can award those on the fly.
-          </p>
-        </div>
-      </div>
-
-      <div class="actions-row">
-        <button class="primary-btn" id="leaderboardBtn">
-          🔥 Today’s leaderboard
-        </button>
-        <button class="secondary-btn" id="myScoreBtn">
-          ⭐ My score
-        </button>
-        <button class="secondary-btn" id="changeShinyIdBtn">
-          ✏️ Change ShinySide ID
-        </button>
-      </div>
-
-      <div class="finish-row">
-        <button class="secondary-btn" id="finishVisitBtn">
-          Save my points & finish my visit
-        </button>
-      </div>
-
-      <p class="engine-note">
-        The Shiny Happy Engine runs quietly in the background, tracking your points as you move through the space.
+  <h3 class="quest-section-title">How to earn points today</h3>
+  <div class="quest-grid">
+    <div class="quest-card">
+      <h4 class="quest-card-title">Scan codes around the taproom</h4>
+      <p class="quest-card-body">
+        Every table, corner, and odd little sign is a chance to pick up points. If it has a code, try it.
       </p>
     </div>
+
+    <div class="quest-card">
+      <h4 class="quest-card-title">Play games & join in</h4>
+      <p class="quest-card-body">
+        Arcade machines, cornhole, trivia, board games, whatever’s out — if you’re playing, you’re earning.
+      </p>
+    </div>
+
+    <div class="quest-card">
+      <h4 class="quest-card-title">Join a firepit or group</h4>
+      <p class="quest-card-body">
+        Sit with others, share a story, join a group prompt. Community moments are worth extra points.
+      </p>
+    </div>
+
+    <div class="quest-card">
+      <h4 class="quest-card-title">Try featured beers & experiments</h4>
+      <p class="quest-card-body">
+        Seasonal taps, small batches, and weird experiments often come with surprise points attached.
+      </p>
+    </div>
+
+    <div class="quest-card">
+      <h4 class="quest-card-title">Complete mini‑quests</h4>
+      <p class="quest-card-body">
+        Some codes unlock little missions. Follow the prompt, do the thing, collect the glory.
+      </p>
+    </div>
+
+    <div class="quest-card">
+      <h4 class="quest-card-title">Be present, be kind</h4>
+      <p class="quest-card-body">
+        Some points are just for being a good human in the room. Staff can award those on the fly.
+      </p>
+    </div>
+  </div>
+
+  <div class="actions-row">
+    <button class="primary-btn" id="leaderboardBtn">🔥 Today’s leaderboard</button>
+    <button class="secondary-btn" id="myScoreBtn">⭐ My score</button>
+    <button class="secondary-btn" id="changeShinyIdBtn">✏️ Change ShinySide ID</button>
+  </div>
+
+  <div class="finish-row">
+    <button class="secondary-btn" id="finishVisitBtn">Save my points & finish my visit</button>
+  </div>
+
+  <p class="engine-note">
+    The Shiny Happy Engine runs quietly in the background, tracking your points as you move through the space.
+  </p>
+</div>
 
     <!-- Change ShinySide ID Modal -->
     <div id="changeShinyIdModal" class="modal" style="display:none;">
