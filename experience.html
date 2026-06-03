@@ -723,49 +723,51 @@ async function bootstrapAuth() {
       }
     });
 
-    // --- Identity entry (ShinySide ID) ---
-    document.getElementById("ssidSubmit").addEventListener("click", async () => {
-      const ssid = document.getElementById("ssidInput").value.trim();
-      if (!ssid) return;
+// --- Identity entry (ShinySide ID) ---
+document.getElementById("goButton").addEventListener("click", async () => {
+  const ssid = document.getElementById("shinySideIdInput").value.trim();
+  if (!ssid) return;
 
-      const { data: users, error } = await client
-        .from("users")
-        .select("*")
-        .eq("shiny_side_id", ssid);
+  const { data: users } = await client
+    .from("users")
+    .select("*")
+    .eq("shiny_side_id", ssid)
+    .limit(1);
 
-      const user = users && users.length > 0 ? users[0] : null;
+  const user = users && users.length > 0 ? users[0] : null;
 
-      if (user) {
-        if (user.claimed) {
-          document.getElementById("emailClaimBox").style.display = "block";
-          document.getElementById("identityStatus").textContent =
-            "This ShinySide ID is claimed. Verify with email to continue.";
-        } else {
-          showQuestBoardFor(user);
-          loadEngine();
+  if (user) {
+    if (user.claimed) {
+      document.getElementById("emailClaimBox").style.display = "block";
+      document.getElementById("identityStatus").textContent =
+        "This ShinySide ID is claimed. Verify with email to continue.";
+    } else {
+      showQuestBoardFor(user);
+      loadEngine();
+    }
+  } else {
+    const { data: newUsers, error: insertErr } = await client
+      .from("users")
+      .insert([
+        {
+          shiny_side_id: ssid,
+          name: ssid,
+          claimed: false
         }
-      } else {
-        const { data: newUsers, error: insertErr } = await client
-          .from("users")
-          .insert([
-            {
-              shiny_side_id: ssid,
-              name: ssid,
-              claimed: false
-            }
-          ])
-          .select("*");
+      ])
+      .select("*");
 
-        if (insertErr || !newUsers || !newUsers[0]) {
-          console.error("Insert error:", insertErr);
-          alert("Error creating user.");
-          return;
-        }
+    if (insertErr || !newUsers || !newUsers[0]) {
+      console.error("Insert error:", insertErr);
+      alert("Error creating user.");
+      return;
+    }
 
-        showQuestBoardFor(newUsers[0]);
-        loadEngine();
-      }
-    });
+    showQuestBoardFor(newUsers[0]);
+    loadEngine();
+  }
+});
+
 
     document.getElementById("emailSubmit").addEventListener("click", async () => {
       const ssid = document.getElementById("ssidInput").value.trim();
