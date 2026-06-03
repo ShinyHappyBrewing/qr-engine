@@ -632,6 +632,8 @@ window.client = supabaseClient;
         "Welcome, " + (user.shiny_side_id || "ShinySide guest") + "!";
     }
 
+   
+    /*
     // --- MAGIC LINK + AUTO-LOGIN BOOTSTRAP + QR-SAFE FLOW ---
     async function bootstrapAuth() {
       try {
@@ -734,6 +736,16 @@ window.client = supabaseClient;
         statusEl.textContent = "Could not send magic link right now.";
       }
     });
+    */
+
+    // TEMPORARY: show login panel on page load now that old auth is disabled
+window.addEventListener("load", () => {
+  document.getElementById("loginPanel").style.display = "block";
+  document.getElementById("identityBox").style.display = "none";
+  document.getElementById("questBoard").style.display = "none";
+  document.getElementById("identityStatus").textContent =
+    "Log in to earn points for this check‑in.";
+});
 
     // --- Identity entry (ShinySide ID) ---
     document.getElementById("ssidSubmit").addEventListener("click", async () => {
