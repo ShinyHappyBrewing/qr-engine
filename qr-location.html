@@ -6,13 +6,13 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
-  <!-- Supabase (pin to stable version) -->
+  <!-- Supabase (stable version) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
   <script>
-    const client = supabase.createClient(
-      "https://wowdmkxuwysuihgoklki.supabase.co",
-      "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y"
-    );
+    const SUPABASE_URL = "https://wowdmxkuwysuihgoklki.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publisable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y";
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.client = client;
   </script>
 
   <style>
@@ -42,301 +42,144 @@
       max-width: 420px;
       padding: 24px;
       border-radius: 18px;
+      border: 1px solid rgba(169,206,0,0.5);
       background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(1,169,206,0.5);
-      box-shadow: 0 0 20px rgba(1,169,206,0.4);
+      box-shadow: 0 0 20px rgba(169,206,0,0.4);
     }
 
-    h2 {
-      margin: 0 0 10px;
-      color: #01a9ce;
-      font-size: 26px;
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      color: var(--sh-white);
     }
 
     p {
-      margin: 0 0 14px;
-      color: rgba(255,255,255,0.85);
-      line-height: 1.4;
+      font-size: 1rem;
+      color: var(--sh-white);
+      margin-bottom: 1.5rem;
     }
 
-    .btn {
-      margin-top: 16px;
-      padding: 12px 20px;
-      border-radius: 999px;
-      background: #01a9ce;
-      color: #000;
-      font-weight: 600;
+    button {
+      background: var(--sh-blue);
+      color: var(--sh-white);
       border: none;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
       cursor: pointer;
-      width: 100%;
-      box-shadow: 0 0 14px rgba(1,169,206,0.7);
-      font-size: 16px;
+      transition: background 0.3s ease;
     }
 
-    .comment-box {
-      margin-top: 20px;
-      width: 100%;
+    button:hover {
+      background: var(--sh-white);
+      color: var(--sh-blue);
     }
 
-    textarea {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.3);
-      background: rgba(0,0,0,0.7);
-      color: #fff;
-      font-size: 15px;
-      resize: none;
-      height: 80px;
-      outline: none;
-    }
-
-    .comments-list {
-      margin-top: 20px;
-      max-height: 260px;
-      overflow-y: auto;
-      border-top: 1px solid rgba(255,255,255,0.2);
-      padding-top: 12px;
+    .comments {
+      margin-top: 2rem;
+      text-align: left;
     }
 
     .comment {
-      margin-bottom: 14px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
     }
 
     .comment strong {
-      color: #01a9ce;
-      font-size: 14px;
-    }
-
-    .comment small {
-      display: block;
-      opacity: 0.6;
-      font-size: 11px;
-      margin-top: 2px;
-    }
-
-    #loginPanel {
-      margin-top: 20px;
-      padding: 16px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(1,169,206,0.5);
-      display: none;
-    }
-
-    #loginPanel input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.3);
-      background: rgba(0,0,0,0.7);
-      color: #fff;
-      font-size: 15px;
-      margin-bottom: 10px;
-    }
-
-    #loginStatus {
-      font-size: 14px;
-      color: #01a9ce;
-      min-height: 18px;
+      color: var(--sh-blue);
     }
   </style>
 </head>
 
 <body>
   <div class="card">
-    <h2 id="locName">Loading…</h2>
-    <p id="locDesc">Finding this location…</p>
+    <h1 id="locationName">Loading Location...</h1>
+    <p id="locationDesc">Please wait while we fetch details.</p>
+    <button id="claimPoints">Claim Points</button>
 
-    <p id="pointsStatus"></p>
-
-    <div id="loginPanel">
-      <p>Log in to earn points for this check‑in.</p>
-      <input id="loginEmail" type="email" placeholder="you@example.com" />
-      <button class="btn" id="loginButton">Send Magic Link</button>
-      <p id="loginStatus"></p>
+    <div class="comments" id="commentsSection">
+      <h2>Guestbook</h2>
+      <div id="commentsList"></div>
     </div>
-
-    <div class="comment-box" id="commentBox" style="display:none;">
-      <textarea id="commentInput" placeholder="Leave a comment…"></textarea>
-      <button class="btn" id="submitCommentBtn">Post Comment</button>
-    </div>
-
-    <div class="comments-list" id="commentsList">
-      Loading comments…
-    </div>
-
-    <button class="btn" id="backBtn">Return to Quest Board</button>
   </div>
 
+  <!-- Engine -->
+  <script src="engine.js"></script>
+
   <script>
-    let currentUser = null;
-    let currentLocation = null;
+    const urlParams = new URLSearchParams(window.location.search);
+    const locSlug = urlParams.get("loc");
 
-    async function loadUser() {
-      const { data } = await client.auth.getUser();
-      return data?.user || null;
-    }
+    async function loadLocation() {
+      try {
+        const { data, error } = await client
+          .from("locations")
+          .select("*")
+          .eq("slug", locSlug)
+          .single();
 
-    async function loadLocation(slug) {
-      const { data, error } = await client
-        .from("locations")
-        .select("id, slug, name, type")   // FIXED — no wildcard
-        .eq("slug", slug)
-        .single();
-
-      if (error || !data) return null;
-      return data;
-    }
-
-    async function awardPoints(user, location) {
-      const { data, error } = await client.rpc("award_points", {
-        p_user_id: user.id,
-        p_source_type: "location",
-        p_source_id: location.slug,
-        p_points: 10
-      });
-
-      if (error) {
-        console.error("RPC ERROR:", error);
-        document.getElementById("pointsStatus").textContent =
-          "Error awarding points.";
-        return;
-      }
-
-      if (data === "already_awarded_today") {
-        document.getElementById("pointsStatus").textContent =
-          "You already checked in here today.";
-      } else if (data === "success") {
-        document.getElementById("pointsStatus").textContent =
-          "You earned 10 points for checking in here!";
-      } else {
-        document.getElementById("pointsStatus").textContent =
-          "Error awarding points.";
-      }
-    }
-
-    async function loadComments(location) {
-      const list = document.getElementById("commentsList");
-      list.textContent = "Loading comments…";
-
-      const { data, error } = await client
-        .from("guestbook_entries")
-        .select("message, created, users(shiny_side_id)")
-        .eq("location_id", location.id)
-        .order("created", { ascending: false });
-
-      if (error) {
-        list.textContent = "Error loading comments.";
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        list.textContent = "No comments yet — be the first!";
-        return;
-      }
-
-      list.innerHTML = data
-        .map(
-          (row) => `
-          <div class="comment">
-            <strong>${row.users?.shiny_side_id || "Guest"}</strong>
-            <p>${row.message}</p>
-            <small>${new Date(row.created).toLocaleString()}</small>
-          </div>
-        `
-        )
-        .join("");
-    }
-
-    async function postComment(user, location, message) {
-      await client.from("guestbook_entries").insert({
-        user_id: user.id,
-        location_id: location.id,
-        message: message
-      });
-    }
-
-    async function main() {
-      const params = new URLSearchParams(window.location.search);
-      const slug = params.get("loc");
-
-      const locName = document.getElementById("locName");
-      const locDesc = document.getElementById("locDesc");
-
-      if (!slug) {
-        locName.textContent = "Invalid location";
-        locDesc.textContent = "This QR code is missing a location slug.";
-        return;
-      }
-
-      currentUser = await loadUser();
-
-      currentLocation = await loadLocation(slug);
-      if (!currentLocation) {
-        locName.textContent = "Unknown location";
-        locDesc.textContent = "This location does not exist.";
-        return;
-      }
-
-      locName.textContent = currentLocation.name;
-      locDesc.textContent = `You're at ${currentLocation.name}. Say something or see what others wrote.`;
-
-      if (!currentUser) {
-        document.getElementById("loginPanel").style.display = "block";
-        document.getElementById("commentBox").style.display = "none";
-        document.getElementById("pointsStatus").textContent =
-          "Log in to earn points for this check‑in.";
-      } else {
-        await awardPoints(currentUser, currentLocation);
-        document.getElementById("commentBox").style.display = "block";
-      }
-
-      await loadComments(currentLocation);
-
-      document.getElementById("submitCommentBtn").onclick = async () => {
-        const text = document.getElementById("commentInput").value.trim();
-        if (!text || !currentUser) return;
-
-        await postComment(currentUser, currentLocation, text);
-        document.getElementById("commentInput").value = "";
-        await loadComments(currentLocation);
-      };
-
-      document.getElementById("backBtn").onclick = () => {
-window.location.href =
-  "https://shinyhappybrewing.github.io/qr-engine/experience.html";
-      };
-    }
-
-    document.getElementById("loginButton").onclick = async () => {
-      const email = document.getElementById("loginEmail").value.trim();
-      const status = document.getElementById("loginStatus");
-
-      if (!email) {
-        status.textContent = "Enter an email.";
-        return;
-      }
-
-      status.textContent = "Sending magic link…";
-
-      const { error } = await client.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.href
+        if (error) {
+          console.error("Error loading location:", error);
+          document.getElementById("locationName").textContent = "Location not found.";
+          return;
         }
-      });
 
-      if (error) {
-        status.textContent = "Error sending magic link.";
-      } else {
-        status.textContent = "Magic link sent! Check your email.";
+        document.getElementById("locationName").textContent = data.name;
+        document.getElementById("locationDesc").textContent = data.description || "Enjoy your visit!";
+      } catch (err) {
+        console.error("Error:", err);
       }
-    };
+    }
 
-    main();
+    async function loadComments() {
+      try {
+        const { data, error } = await client
+          .from("guestbook_entries")
+          .select("*")
+          .eq("location_slug", locSlug)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error loading comments:", error);
+          return;
+        }
+
+        const list = document.getElementById("commentsList");
+        list.innerHTML = "";
+        data.forEach(entry => {
+          const div = document.createElement("div");
+          div.className = "comment";
+          div.innerHTML = `<strong>${entry.shiny_side_id}</strong>: ${entry.comment}`;
+          list.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error:", err);
+      }
+    }
+
+    document.getElementById("claimPoints").addEventListener("click", async () => {
+      try {
+        const payload = {
+          source_type: "location",
+          source_id: locSlug,
+          points: 10
+        };
+
+        const result = await window.runExperience(payload);
+        console.log("Points awarded:", result);
+
+        // Reload comments after awarding points
+        await loadComments();
+      } catch (err) {
+        console.error("Error running experience:", err);
+      }
+    });
+
+    // Initialize
+    loadLocation();
+    loadComments();
   </script>
 </body>
 </html>
