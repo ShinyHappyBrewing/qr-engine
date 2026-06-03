@@ -17,36 +17,27 @@
       box-sizing: border-box;
     }
 
-body {
-  margin: 0;
-  padding: 24px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-    "Segoe UI", sans-serif;
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+      color: var(--sh-white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #000;
+    }
 
-  /* Your original gradient background */
-  background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
-
-  /* Text color stays the same */
-  color: var(--sh-white);
-
-  /* Layout */
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  /* Mobile safe-area fallback */
-  background-color: #000;
-}
-
-/* Additional safe-area support for iOS */
-@supports (padding: env(safe-area-inset-top)) {
-  body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    background-color: #000;
-  }
-}
+    @supports (padding: env(safe-area-inset-top)) {
+      body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        background-color: #000;
+      }
+    }
 
     .watermark {
       position: fixed;
@@ -233,7 +224,6 @@ body {
       color: rgba(148, 163, 184, 0.9);
     }
 
-    /* Modals */
     #scoreModalBackdrop,
     #leaderboardModalBackdrop,
     #finishModalBackdrop,
@@ -407,7 +397,7 @@ body {
 </head>
 <body>
   <div id="overlayContainer"></div>
-  
+
   <div class="watermark">
     <span>SHINY HAPPY</span>
     <span>BREWING</span>
@@ -600,13 +590,12 @@ body {
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-// TODO: drop in your real Supabase URL + anon key
-const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
+    // Supabase client
+    const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
 
-
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-window.client = supabaseClient;
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.client = client;
 
     let currentUser = null;
     let engineLoaded = false;
@@ -614,7 +603,7 @@ window.client = supabaseClient;
     function loadEngine() {
       if (engineLoaded) return;
       const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/gh/ShinyHappyBrewing/qr-engine/engine.js?v=20240528";
+      s.src = "https://cdn.jsdelivr.net/gh/ShinyHappyBrewing/qr-engine/engine.js?v=20240528";
       document.body.appendChild(s);
       engineLoaded = true;
     }
@@ -632,8 +621,6 @@ window.client = supabaseClient;
         "Welcome, " + (user.shiny_side_id || "ShinySide guest") + "!";
     }
 
-   
-    /*
     // --- MAGIC LINK + AUTO-LOGIN BOOTSTRAP + QR-SAFE FLOW ---
     async function bootstrapAuth() {
       try {
@@ -736,18 +723,7 @@ window.client = supabaseClient;
         statusEl.textContent = "Could not send magic link right now.";
       }
     });
-    */
 
-    // TEMPORARY: show login panel on page load now that old auth is disabled
-window.addEventListener("load", () => {
-  document.getElementById("loginPanel").style.display = "block";
-  document.getElementById("identityBox").style.display = "none";
-  document.getElementById("questBoard").style.display = "none";
-  document.getElementById("identityStatus").textContent =
-    "Log in to earn points for this check‑in.";
-});
-
-    /*
     // --- Identity entry (ShinySide ID) ---
     document.getElementById("ssidSubmit").addEventListener("click", async () => {
       const ssid = document.getElementById("ssidInput").value.trim();
@@ -812,7 +788,6 @@ window.addEventListener("load", () => {
         alert("Email does not match this ShinySide ID.");
       }
     });
-    */
 
     // --- My Score modal ---
     const scoreBackdrop = document.getElementById("scoreModalBackdrop");
