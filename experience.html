@@ -725,7 +725,7 @@ async function bootstrapAuth() {
 
 // --- Identity entry (ShinySide ID) ---
 document.getElementById("goButton").addEventListener("click", async () => {
-  const ssid = document.getElementById("shinySideIdInput").value.trim();
+const ssid = document.getElementById("shinySideIdInput").value.trim();
   if (!ssid) return;
 
   const { data: users } = await client
