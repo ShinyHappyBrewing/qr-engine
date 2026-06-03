@@ -621,7 +621,6 @@ async function bootstrapAuth() {
   try {
     const { data: userData } = await client.auth.getUser();
 
-    // If Supabase session exists → load user by email
     if (userData && userData.user) {
       const email = userData.user.email;
 
@@ -662,6 +661,7 @@ async function bootstrapAuth() {
         if (updatedUsers && updatedUsers[0]) {
           user = updatedUsers[0];
         }
+      }
 
       // If user exists → load quest board + engine
       if (user) {
@@ -670,7 +670,7 @@ async function bootstrapAuth() {
         document.getElementById("questBoard").style.display = "block";
 
         showQuestBoardFor(user);
-        loadEngine(); // QR engine only runs when user is truly logged in
+        loadEngine();
         return;
       }
     }
@@ -685,18 +685,7 @@ async function bootstrapAuth() {
   document.getElementById("identityStatus").textContent =
     "Pick a ShinySide ID to get started.";
 }
-        }
-      } catch (e) {
-        console.error("Auth bootstrap error:", e);
-      }
 
-      // No Supabase user → show login panel
-      document.getElementById("loginPanel").style.display = "block";
-      document.getElementById("identityBox").style.display = "none";
-      document.getElementById("questBoard").style.display = "none";
-      document.getElementById("identityStatus").textContent =
-        "Log in to earn points for this check‑in.";
-    }
 
     window.addEventListener("load", bootstrapAuth);
 
