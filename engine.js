@@ -8,17 +8,184 @@ if (!window.client) {
 // Use the same client everywhere
 const client = window.client;
 
-// -----------------------------
-// SCORE ENGINE
-// -----------------------------
+// ----------------------------------------------------------
+// SHINYSIDE ID MODAL LOGIC
+// ----------------------------------------------------------
 
-/**
- * Add a score entry for a user.
- * @param {string} user_id - UUID from users table
- * @param {string} source_type - e.g. "cornhole", "trivia", "guestbook"
- * @param {string|null} source_id - optional specific game/round/id
- * @param {number} points - integer points to award
- */
+function showShinySideModal() {
+  // Check if user already has a ShinySide ID stored
+  const existingID = localStorage.getItem("shiny_side_id");
+  if (existingID) {
+    console.log("Existing ShinySide ID found:", existingID);
+    return Promise.resolve(existingID);
+  }
+
+  return new Promise((resolve) => {
+    // Create overlay
+    const overlay = document.createElement("div");
+    overlay.id = "shinySideOverlay";
+    overlay.style.position = "fixed";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.background = "rgba(0,0,0,0.8)";
+    overlay.style.display = "flex";
+    overlay.style.alignItems = "center";
+    overlay.style.justifyContent = "center";
+    overlay.style.zIndex = "9999";
+
+    // Modal container
+    const modal = document.createElement("div");
+    modal.id = "shinySideModal";
+    modal.style.background = "var(--sh-card)";
+    modal.style.color = "var(--sh-white)";
+    modal.style.padding = "2rem";
+    modal.style.borderRadius = "12px";
+    modal.style.boxShadow = "0 0 20px rgba(255,255,255,0.2)";
+    modal.style.textAlign = "center";
+    modal.style.width = "90%";
+    modal.style.maxWidth = "400px";
+
+    // Title
+    const title = document.createElement("h2");
+    title.textContent = "Choose Your ShinySide ID";
+    title.style.marginBottom = "1rem";
+    modal.appendChild(title);
+
+    // Input
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Enter your ShinySide ID";
+    input.style.width = "100%";
+    input.style.padding = "0.75rem";
+    input.style.border = "2px solid var(--sh-blue)";
+    input.style.borderRadius = "8px";
+    input.style.marginBottom = "1rem";
+    input.style.fontSize = "1rem";
+    input.style.textAlign = "center";
+    modal.appendChild(input);
+
+    // Availability indicator
+    const indicator = document.createElement("div");
+    indicator.style.marginBottom = "1rem";
+    indicator.style.fontSize = "0.9rem";
+    modal.appendChild(indicator);
+
+    // Suggestions
+    const suggestions = document.createElement("div");
+    suggestions.style.display = "flex";
+    suggestions.style.flexWrap = "wrap";
+    suggestions.style.justifyContent = "center";
+    suggestions.style.gap = "0.5rem";
+    const suggestionList = [
+      "ShinyHero",
+      "GoldenHop",
+      "BrewMaster",
+      "HappyTraveler",
+      "LuckyPour"
+    ];
+    suggestionList.forEach((s) => {
+      const btn = document.createElement("button");
+      btn.textContent = s;
+      btn.style.background = "var(--sh-blue)";
+      btn.style.color = "var(--sh-white)";
+      btn.style.border = "none";
+      btn.style.borderRadius = "6px";
+      btn.style.padding = "0.5rem 1rem";
+      btn.style.cursor = "pointer";
+      btn.onclick = () => {
+        input.value = s;
+        checkAvailability(s);
+      };
+      suggestions.appendChild(btn);
+    });
+    modal.appendChild(suggestions);
+
+    // Check availability function
+    async function checkAvailability(id) {
+      indicator.textContent = "Checking availability...";
+      const { data, error } = await client
+        .from("users")
+        .select("shiny_side_id")
+        .eq("shiny_side_id", id)
+        .single();
+
+      if (error && error.code === "PGRST116") {
+        indicator.textContent = "✅ Available!";
+        indicator.style.color = "var(--sh-blue)";
+        return true;
+      } else if (!data) {
+        indicator.textContent = "✅ Available!";
+        indicator.style.color = "var(--sh-blue)";
+        return true;
+      } else {
+        indicator.textContent = "❌ Already taken.";
+        indicator.style.color = "red";
+        return false;
+      }
+    }
+
+    // Button
+    const button = document.createElement("button");
+    button.textContent = "Confirm";
+    button.style.background = "var(--sh-blue)";
+    button.style.color = "var(--sh-white)";
+    button.style.border = "none";
+    button.style.borderRadius = "8px";
+    button.style.padding = "0.75rem 2rem";
+    button.style.cursor = "pointer";
+    button.style.fontSize = "1rem";
+    modal.appendChild(button);
+
+    // Handle confirm
+    button.onclick = async () => {
+      const id = input.value.trim();
+      if (!id) {
+        indicator.textContent = "Please enter an ID.";
+        indicator.style.color = "red";
+        return;
+      }
+      const available = await checkAvailability(id);
+      if (!available) return;
+
+      // Save to localStorage
+      localStorage.setItem("shiny_side_id", id);
+
+      // Insert temporary user record
+      const { data, error } = await client
+        .from("users")
+        .insert([{ shiny_side_id: id, claimed: false }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating temporary user:", error);
+        indicator.textContent = "Error creating user.";
+        indicator.style.color = "red";
+        return;
+      }
+
+      // Animate success
+      modal.style.border = "2px solid var(--sh-blue)";
+      modal.style.boxShadow = "0 0 20px var(--sh-blue)";
+      title.textContent = `Welcome to the ShinySide, ${id}!`;
+      indicator.textContent = "✨ ID created successfully!";
+      setTimeout(() => {
+        overlay.remove();
+        resolve(data);
+      }, 1000);
+    };
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+  });
+}
+
+// ----------------------------------------------------------
+// SCORE ENGINE
+// ----------------------------------------------------------
+
 async function addScore(user_id, source_type, source_id, points) {
   if (!user_id) {
     console.error("addScore called without user_id");
@@ -27,14 +194,7 @@ async function addScore(user_id, source_type, source_id, points) {
 
   const { data, error } = await client
     .from("scores")
-    .insert([
-      {
-        user_id,
-        source_type,
-        source_id,
-        points,
-      },
-    ])
+    .insert([{ user_id, source_type, source_id, points }])
     .select("id, user_id, source_type, source_id, points, created_at")
     .single();
 
@@ -47,156 +207,20 @@ async function addScore(user_id, source_type, source_id, points) {
   return data;
 }
 
-/**
- * Get total points for a user (all time).
- * @param {string} user_id
- */
-async function getTotalPoints(user_id) {
-  if (!user_id) {
-    console.error("getTotalPoints called without user_id");
-    return 0;
-  }
+// ----------------------------------------------------------
+// EXPERIENCE RUNNER
+// ----------------------------------------------------------
 
-  const { data, error } = await client
-    .from("scores")
-    .select("points")
-    .eq("user_id", user_id);
-
-  if (error) {
-    console.error("Error fetching total points:", error);
-    return 0;
-  }
-
-  const total = (data || []).reduce((sum, row) => sum + (row.points || 0), 0);
-  console.log("Total points for user", user_id, "=", total);
-  return total;
-}
-
-/**
- * Get all‑time leaderboard (top N users).
- * Joins users + scores and aggregates.
- * @param {number} limit
- */
-async function getAllTimeLeaderboard(limit = 10) {
-  const { data, error } = await client.rpc("get_all_time_leaderboard", {
-    limit_count: limit,
-  });
-
-  if (error) {
-    console.error("Error fetching all‑time leaderboard:", error);
-    return [];
-  }
-
-  console.log("All‑time leaderboard:", data);
-  return data;
-}
-
-/**
- * Get daily leaderboard (top N users for today).
- * @param {number} limit
- */
-async function getDailyLeaderboard(limit = 10) {
-  const { data, error } = await client.rpc("get_daily_leaderboard", {
-    limit_count: limit,
-  });
-
-  if (error) {
-    console.error("Error fetching daily leaderboard:", error);
-    return [];
-  }
-
-  console.log("Daily leaderboard:", data);
-  return data;
-}
-
-// -----------------------------
-// ACTIVITY / EXPERIENCE HOOKS
-// -----------------------------
-
-/**
- * Log a generic activity and optionally award points.
- * This is the function your QR experiences can call.
- *
- * @param {object} options
- *  - user_id: string (required)
- *  - source_type: string (required)
- *  - source_id: string|null
- *  - points: number (optional, default 0)
- *  - payload: any (optional, for future logging)
- */
-async function logActivity(options) {
-  const {
-    user_id,
-    source_type,
-    source_id = null,
-    points = 0,
-    payload = null,
-  } = options || {};
-
-  if (!user_id || !source_type) {
-    console.error("logActivity missing user_id or source_type", options);
-    return;
-  }
-
-  console.log("Logging activity:", options);
-
-  // 1) Award points if any
-  let scoreRow = null;
-  if (points && points !== 0) {
-    scoreRow = await addScore(user_id, source_type, source_id, points);
-  }
-
-  // 2) (Optional) In the future, you can also log payloads to another table
-
-  return {
-    scoreRow,
-  };
-}
-
-// -----------------------------
-// PUBLIC ENTRY POINT
-// -----------------------------
-
-/**
- * Main entry point called from outside (e.g. iframe, QR, HubSpot, etc.)
- * This is where you wire specific experiences to scoring.
- *
- * Example payload shape (you can evolve this over time):
- * {
- *   user_id: "uuid-from-users-table",
- *   experience: "cornhole",
- *   round_id: "abc123",
- *   points: 50
- * }
- */
 window.runExperience = async function (payload) {
-  console.log("Running experience with payload:", payload);
+  console.log("Running experience:", payload);
 
-  if (!payload || !payload.user_id || !payload.experience) {
-    console.error("runExperience missing required fields (user_id, experience). Payload:", payload);
-    return;
-  }
+  // Ensure ShinySide ID exists
+  const userData = await showShinySideModal();
+  const shinySideID = userData.shiny_side_id;
 
-  const user_id = payload.user_id;
-  const source_type = payload.experience;
-  const source_id = payload.round_id || null;
-  const points = payload.points || 0;
+  // Award points after ID selection
+  const score = await addScore(userData.id, payload.source_type, payload.source_id, payload.points);
 
-  // Log activity + award points
-  await logActivity({
-    user_id,
-    source_type,
-    source_id,
-    points,
-    payload,
-  });
-
-  // Optionally, you can fetch and log updated totals:
-  const total = await getTotalPoints(user_id);
-  console.log(`User ${user_id} now has total points:`, total);
-
-  // In the future, you can also:
-  // - Update on‑screen UI
-  // - Trigger confetti
-  // - Show rank, etc.
+  console.log("Experience complete for:", shinySideID);
+  return score;
 };
