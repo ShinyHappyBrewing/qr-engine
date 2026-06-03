@@ -8,107 +8,192 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
   <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
   <script>
-    const client = supabase.createClient(
-      "https://wowdmkxuwysuihgoklki.supabase.co",
-      "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y"
-    );
-
-    async function handleReturn() {
-      // 1. Let Supabase process the magic link
-      const { data, error } = await client.auth.getSession();
-
-      if (error || !data.session) {
-        document.getElementById("status").textContent = "Login failed. Try again.";
-        return;
-      }
-
-      const email = data.session.user.email;
-
-      // 2. Look up the user by email
-      const { data: users } = await client
-        .from("users")
-        .select("*")
-        .eq("email", email)
-        .limit(1);
-
-      let user = users && users[0];
-
-      // 3. If no user exists yet, create one
-      if (!user) {
-        const base = email.split("@")[0];
-        const { data: newUsers } = await client
-          .from("users")
-          .insert([
-            {
-              shiny_side_id: base,
-              name: base,
-              email: email,
-              claimed: true
-            }
-          ])
-          .select("*");
-
-        user = newUsers[0];
-      }
-
-      // 4. Save user locally
-      localStorage.setItem("shiny_user", JSON.stringify(user));
-
-      // 5. Redirect to Quest Board
-      window.location.href = "experience.html";
-    }
-
-    window.onload = handleReturn;
+    const SUPABASE_URL = "https://wowdmxkuwysuihgoklki.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publisable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y";
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.client = client;
   </script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     html, body {
       margin: 0;
       padding: 0;
       width: 100%;
-      max-width: 100%;
-      overflow-x: hidden;
+      height: 100%;
       background: #000;
-      color: #fff;
+      color: var(--sh-white);
       font-family: "Baloo 2", sans-serif;
-    }
-
-    body {
-      padding: 40px 20px;
-      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    .card {
+      background: var(--sh-card);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      color: var(--sh-white);
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+      color: var(--sh-white);
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid var(--sh-blue);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 1rem;
       text-align: center;
     }
 
-    h2 {
-      margin: 0;
-      font-size: 26px;
-      color: #01a9ce;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+    button {
+      background: var(--sh-blue);
+      color: var(--sh-white);
+      border: none;
+      border-radius: 8px;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
     }
 
-    @media (max-width: 480px) {
-      body {
-        padding: 30px 16px;
-      }
+    button:hover {
+      background: var(--sh-white);
+      color: var(--sh-blue);
+    }
 
-      h2 {
-        font-size: 22px;
-      }
+    #status {
+      margin-top: 1rem;
+      font-size: 0.9rem;
     }
   </style>
 </head>
 
 <body>
-  <h2 id="status">Logging you in…</h2>
+  <div class="card">
+    <h1>Welcome Back to the ShinySide</h1>
+    <p>Enter your email to save your points and claim your ShinySide ID.</p>
+    <input type="email" id="emailInput" placeholder="Enter your email" />
+    <button id="savePoints">Save Points</button>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    async function handleReturn() {
+      try {
+        // Process Supabase magic link
+        const { data, error } = await client.auth.getSession();
+        if (error || !data.session) {
+          document.getElementById("status").textContent = "Login failed. Try again.";
+          return;
+        }
+
+        const email = data.session.user.email;
+        const shinySideID = localStorage.getItem("shiny_side_id");
+
+        if (!shinySideID) {
+          document.getElementById("status").textContent = "No ShinySide ID found. Please scan again.";
+          return;
+        }
+
+        // Look up user by ShinySide ID
+        const { data: users } = await client
+          .from("users")
+          .select("*")
+          .eq("shiny_side_id", shinySideID)
+          .limit(1);
+
+        let user = users && users[0];
+
+        // If user exists, update with email and claim
+        if (user) {
+          const { error: updateError } = await client
+            .from("users")
+            .update({ email: email, claimed: true })
+            .eq("shiny_side_id", shinySideID);
+
+          if (updateError) {
+            console.error("Error updating user:", updateError);
+            document.getElementById("status").textContent = "Error saving your points.";
+            return;
+          }
+
+          document.getElementById("status").textContent = "✨ Points saved! Your ShinySide ID is now claimed.";
+          setTimeout(() => {
+            window.location.href = "experience.html";
+          }, 1500);
+        } else {
+          // Create new user if not found
+          const base = email.split("@")[0];
+          const { error: insertError } = await client
+            .from("users")
+            .insert([{ shiny_side_id: base, name: base, email: email, claimed: true }]);
+
+          if (insertError) {
+            console.error("Error creating user:", insertError);
+            document.getElementById("status").textContent = "Error creating user.";
+            return;
+          }
+
+          localStorage.setItem("shiny_side_id", base);
+          document.getElementById("status").textContent = "✨ Welcome! Your ShinySide ID is now claimed.";
+          setTimeout(() => {
+            window.location.href = "experience.html";
+          }, 1500);
+        }
+      } catch (err) {
+        console.error("Error handling return:", err);
+        document.getElementById("status").textContent = "Unexpected error. Try again.";
+      }
+    }
+
+    document.getElementById("savePoints").addEventListener("click", async () => {
+      const emailInput = document.getElementById("emailInput").value.trim();
+      if (!emailInput) {
+        document.getElementById("status").textContent = "Please enter your email.";
+        return;
+      }
+
+      // Simulate claiming without magic link
+      const shinySideID = localStorage.getItem("shiny_side_id");
+      if (!shinySideID) {
+        document.getElementById("status").textContent = "No ShinySide ID found.";
+        return;
+      }
+
+      const { error } = await client
+        .from("users")
+        .update({ email: emailInput, claimed: true })
+        .eq("shiny_side_id", shinySideID);
+
+      if (error) {
+        console.error("Error claiming ID:", error);
+        document.getElementById("status").textContent = "Error saving your points.";
+        return;
+      }
+
+      document.getElementById("status").textContent = "✨ Points saved! Your ShinySide ID is now claimed.";
+      setTimeout(() => {
+        window.location.href = "experience.html";
+      }, 1500);
+    });
+
+    // Auto-run if magic link present
+    handleReturn();
+  </script>
 </body>
 </html>
