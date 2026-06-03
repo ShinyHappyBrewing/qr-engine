@@ -621,60 +621,76 @@
         "Welcome, " + (user.shiny_side_id || "ShinySide guest") + "!";
     }
 
-    // --- MAGIC LINK + AUTO-LOGIN BOOTSTRAP + QR-SAFE FLOW ---
-    async function bootstrapAuth() {
-      try {
-        const { data: userData } = await client.auth.getUser();
+// --- MAGIC LINK + AUTO-LOGIN BOOTSTRAP + QR-SAFE FLOW ---
+async function bootstrapAuth() {
+  try {
+    const { data: userData } = await client.auth.getUser();
 
-        if (userData && userData.user) {
-          const email = userData.user.email;
+    // If Supabase session exists → load user by email
+    if (userData && userData.user) {
+      const email = userData.user.email;
 
-          const { data: users } = await client
-            .from("users")
-            .select("*")
-            .eq("email", email)
-            .limit(1);
+      const { data: users } = await client
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .limit(1);
 
-          let user = users && users[0];
+      let user = users && users[0];
 
-          // Auto-generate ShinySide ID if missing
-          if (!user) {
-            const baseId = email.split("@")[0];
-            const { data: newUsers } = await client
-              .from("users")
-              .insert([
-                {
-                  shiny_side_id: baseId,
-                  name: baseId,
-                  email: email,
-                  claimed: true
-                }
-              ])
-              .select("*");
-            user = newUsers && newUsers[0];
-          } else if (!user.shiny_side_id) {
-            const baseId = email.split("@")[0];
-            const { data: updatedUsers } = await client
-              .from("users")
-              .update({
-                shiny_side_id: baseId,
-                name: baseId
-              })
-              .eq("id", user.id)
-              .select("*");
-
-            if (updatedUsers && updatedUsers[0]) {
-              user = updatedUsers[0];
+      // Auto-generate ShinySide ID if missing
+      if (!user) {
+        const baseId = email.split("@")[0];
+        const { data: newUsers } = await client
+          .from("users")
+          .insert([
+            {
+              shiny_side_id: baseId,
+              name: baseId,
+              email: email,
+              claimed: true
             }
-          }
+          ])
+          .select("*");
+        user = newUsers && newUsers[0];
+      } else if (!user.shiny_side_id) {
+        const baseId = email.split("@")[0];
+        const { data: updatedUsers } = await client
+          .from("users")
+          .update({
+            shiny_side_id: baseId,
+            name: baseId
+          })
+          .eq("id", user.id)
+          .select("*");
 
-          if (user) {
-            document.getElementById("loginPanel").style.display = "none";
-            document.getElementById("identityBox").style.display = "block";
-            showQuestBoardFor(user);
-            loadEngine(); // QR engine only runs when user is truly logged in
-            return;
-          }
+        if (updatedUsers && updatedUsers[0]) {
+          user = updatedUsers[0];
+        }
+      }
+
+      // If user exists → load quest board + engine
+      if (user) {
+        document.getElementById("loginPanel").style.display = "none";
+        document.getElementById("identityBox").style.display = "none";
+        document.getElementById("questBoard").style.display = "block";
+
+        showQuestBoardFor(user);
+        loadEngine(); // QR engine only runs when user is truly logged in
+        return;
+      }
+    }
+  } catch (e) {
+    console.error("Auth bootstrap error:", e);
+  }
+
+  // --- NO SESSION → SHOW SHINYSIDE ID FIRST ---
+  document.getElementById("loginPanel").style.display = "none";
+  document.getElementById("identityBox").style.display = "block";
+  document.getElementById("questBoard").style.display = "none";
+  document.getElementById("identityStatus").textContent =
+    "Pick a ShinySide ID to get started.";
+}
         }
       } catch (e) {
         console.error("Auth bootstrap error:", e);
