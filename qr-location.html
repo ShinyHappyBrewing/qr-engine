@@ -6,7 +6,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
-  <!-- Supabase (stable version) -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
   <script>
     const SUPABASE_URL = "https://wowdmxkuwysuihgoklki.supabase.co";
@@ -90,6 +90,29 @@
     .comment strong {
       color: var(--sh-blue);
     }
+
+    /* Beer Toast */
+    .beer-toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      font-size: 1.2rem;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
+      animation: fadeInOut 3s ease;
+      z-index: 9999;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(20px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(20px); }
+    }
   </style>
 </head>
 
@@ -102,6 +125,9 @@
     <div class="comments" id="commentsSection">
       <h2>Guestbook</h2>
       <div id="commentsList"></div>
+
+      <textarea id="newComment" placeholder="Leave a comment..." style="width:100%;height:80px;margin-top:10px;border-radius:8px;padding:8px;"></textarea>
+      <button id="postComment" style="margin-top:10px;">Post Comment</button>
     </div>
   </div>
 
@@ -111,73 +137,107 @@
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const locSlug = urlParams.get("loc");
+    const shinySideId = localStorage.getItem("shiny_side_id");
+
+    function showBeerToast(points) {
+      const toast = document.createElement("div");
+      toast.className = "beer-toast";
+      toast.textContent = `🍺 +${points} points! Cheers!`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
 
     async function loadLocation() {
-      try {
-        const { data, error } = await client
-          .from("locations")
-          .select("*")
-          .eq("slug", locSlug)
-          .single();
+      const { data, error } = await client
+        .from("locations")
+        .select("*")
+        .eq("slug", locSlug)
+        .single();
 
-        if (error) {
-          console.error("Error loading location:", error);
-          document.getElementById("locationName").textContent = "Location not found.";
-          return;
-        }
-
-        document.getElementById("locationName").textContent = data.name;
-        document.getElementById("locationDesc").textContent = data.description || "Enjoy your visit!";
-      } catch (err) {
-        console.error("Error:", err);
+      if (error || !data) {
+        document.getElementById("locationName").textContent = "Location not found.";
+        return;
       }
+
+      document.getElementById("locationName").textContent = data.name;
+      document.getElementById("locationDesc").textContent = data.description || "Enjoy your visit!";
     }
 
     async function loadComments() {
-      try {
-        const { data, error } = await client
-          .from("guestbook_entries")
-          .select("*")
-          .eq("location_slug", locSlug)
-          .order("created_at", { ascending: false });
+      const { data, error } = await client
+        .from("guestbook_entries")
+        .select("*")
+        .eq("location_slug", locSlug)
+        .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Error loading comments:", error);
-          return;
-        }
+      const list = document.getElementById("commentsList");
+      list.innerHTML = "";
 
-        const list = document.getElementById("commentsList");
-        list.innerHTML = "";
-        data.forEach(entry => {
-          const div = document.createElement("div");
-          div.className = "comment";
-          div.innerHTML = `<strong>${entry.shiny_side_id}</strong>: ${entry.comment}`;
-          list.appendChild(div);
-        });
-      } catch (err) {
-        console.error("Error:", err);
+      if (!data) return;
+
+      data.forEach(entry => {
+        const div = document.createElement("div");
+        div.className = "comment";
+        div.innerHTML = `<strong>${entry.shiny_side_id}</strong>: ${entry.comment}`;
+        list.appendChild(div);
+      });
+    }
+
+    async function hasCooldown() {
+      const today = new Date().toISOString().split("T")[0];
+
+      const { data } = await client
+        .from("scores")
+        .select("*")
+        .eq("shiny_side_id", shinySideId)
+        .eq("source_id", locSlug)
+        .gte("created_at", today + "T00:00:00");
+
+      return data && data.length > 0;
+    }
+
+    async function awardPoints() {
+      if (!shinySideId) {
+        alert("You must choose a ShinySide ID first!");
+        return;
+      }
+
+      const cooldown = await hasCooldown();
+      if (cooldown) {
+        alert("You've already claimed points for this location today!");
+        return;
+      }
+
+      const { error } = await client.from("scores").insert({
+        shiny_side_id: shinySideId,
+        source_type: "location_scan",
+        source_id: locSlug,
+        points: 10
+      });
+
+      if (!error) {
+        showBeerToast(10);
+        loadComments();
       }
     }
 
-    document.getElementById("claimPoints").addEventListener("click", async () => {
-      try {
-        const payload = {
-          source_type: "location",
-          source_id: locSlug,
-          points: 10
-        };
+    async function postComment() {
+      const text = document.getElementById("newComment").value.trim();
+      if (!text) return;
 
-        const result = await window.runExperience(payload);
-        console.log("Points awarded:", result);
+      await client.from("guestbook_entries").insert({
+        shiny_side_id: shinySideId,
+        location_slug: locSlug,
+        comment: text
+      });
 
-        // Reload comments after awarding points
-        await loadComments();
-      } catch (err) {
-        console.error("Error running experience:", err);
-      }
-    });
+      document.getElementById("newComment").value = "";
+      loadComments();
+    }
 
-    // Initialize
+    document.getElementById("claimPoints").addEventListener("click", awardPoints);
+    document.getElementById("postComment").addEventListener("click", postComment);
+
     loadLocation();
     loadComments();
   </script>
