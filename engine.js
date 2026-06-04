@@ -1,3 +1,10 @@
+// Prevent double-loading of engine.js
+if (window.__engineLoaded) {
+  console.log("Engine already loaded, skipping duplicate execution.");
+  return;
+}
+window.__engineLoaded = true;
+
 console.log("Engine loaded");
 
 // --- Safety check: Supabase client from experience.html ---
