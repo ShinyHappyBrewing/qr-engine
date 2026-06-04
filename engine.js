@@ -10,7 +10,7 @@ console.log("Engine loaded");
 // --- Initialize Supabase client (single source of truth) ---
 if (!window.client) {
   window.client = supabase.createClient(
-    "https://wowdmxkuwysuihgoklki.supabase.co",
+    "https://wowdmkxuwysuihgoklki.supabase.co",
     "sb_publisable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y"
   );
 }
