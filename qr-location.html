@@ -6,11 +6,11 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
 
-<!-- Engine (handles Supabase initialization and logic) -->
-<script src="engine.js?v=2"></script>
+  <!-- Engine (Supabase client init) -->
+  <script src="engine.js?v=2"></script>
 
   <style>
     * { box-sizing: border-box; }
@@ -128,9 +128,6 @@
     </div>
   </div>
 
-  <!-- Engine -->
-  <script src="engine.js"></script>
-
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const locSlug = urlParams.get("loc");
@@ -144,6 +141,9 @@
       setTimeout(() => toast.remove(), 3000);
     }
 
+    // ---------------------------
+    // LOAD LOCATION
+    // ---------------------------
     async function loadLocation() {
       const { data, error } = await client
         .from("locations")
@@ -156,16 +156,24 @@
         return;
       }
 
+      window.currentLocation = data;
+
       document.getElementById("locationName").textContent = data.name;
-      document.getElementById("locationDesc").textContent = data.description || "Enjoy your visit!";
+      document.getElementById("locationDesc").textContent =
+        data.description || "Enjoy your visit!";
     }
 
+    // ---------------------------
+    // LOAD COMMENTS (FIXED)
+    // ---------------------------
     async function loadComments() {
+      if (!window.currentLocation) return;
+
       const { data, error } = await client
         .from("guestbook_entries")
         .select("*")
-        .eq("location_slug", locSlug)
-        .order("created_at", { ascending: false });
+        .eq("location_id", window.currentLocation.id)
+        .order("created", { ascending: false });
 
       const list = document.getElementById("commentsList");
       list.innerHTML = "";
@@ -175,24 +183,30 @@
       data.forEach(entry => {
         const div = document.createElement("div");
         div.className = "comment";
-        div.innerHTML = `<strong>${entry.shiny_side_id}</strong>: ${entry.comment}`;
+        div.innerHTML = `<strong>${entry.user_id || "Guest"}</strong>: ${entry.message}`;
         list.appendChild(div);
       });
     }
 
+    // ---------------------------
+    // COOLDOWN CHECK (FIXED)
+    // ---------------------------
     async function hasCooldown() {
       const today = new Date().toISOString().split("T")[0];
 
       const { data } = await client
         .from("scores")
         .select("*")
-        .eq("shiny_side_id", shinySideId)
+        .eq("user_id", shinySideId)
         .eq("source_id", locSlug)
-        .gte("created_at", today + "T00:00:00");
+        .gte("created", today + "T00:00:00");
 
       return data && data.length > 0;
     }
 
+    // ---------------------------
+    // AWARD POINTS (FIXED)
+    // ---------------------------
     async function awardPoints() {
       if (!shinySideId) {
         alert("You must choose a ShinySide ID first!");
@@ -206,7 +220,7 @@
       }
 
       const { error } = await client.from("scores").insert({
-        shiny_side_id: shinySideId,
+        user_id: shinySideId,
         source_type: "location_scan",
         source_id: locSlug,
         points: 10
@@ -218,14 +232,17 @@
       }
     }
 
+    // ---------------------------
+    // POST COMMENT (FIXED)
+    // ---------------------------
     async function postComment() {
       const text = document.getElementById("newComment").value.trim();
-      if (!text) return;
+      if (!text || !window.currentLocation) return;
 
       await client.from("guestbook_entries").insert({
-        shiny_side_id: shinySideId,
-        location_slug: locSlug,
-        comment: text
+        user_id: shinySideId,
+        location_id: window.currentLocation.id,
+        message: text
       });
 
       document.getElementById("newComment").value = "";
@@ -235,8 +252,7 @@
     document.getElementById("claimPoints").addEventListener("click", awardPoints);
     document.getElementById("postComment").addEventListener("click", postComment);
 
-    loadLocation();
-    loadComments();
+    loadLocation().then(loadComments);
   </script>
 </body>
 </html>
