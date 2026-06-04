@@ -7,13 +7,16 @@ if (window.__engineLoaded) {
 
 console.log("Engine loaded");
 
-// --- Safety check: Supabase client from experience.html ---
+// --- Initialize Supabase client (single source of truth) ---
 if (!window.client) {
-  console.error("Supabase client not found. Make sure experience.html initializes `client` first.");
+  window.client = supabase.createClient(
+    "https://wowdmxkuwysuihgoklki.supabase.co",
+    "sb_publisable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y"
+  );
 }
 
 // Use the same client everywhere
-let client = window.client || null;
+const client = window.client;
 
 // ----------------------------------------------------------
 // SHINYSIDE ID MODAL LOGIC (ORIGINAL + FIXED + PRESERVED)
