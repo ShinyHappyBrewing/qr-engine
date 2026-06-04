@@ -6,14 +6,10 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
-  <script>
-    const SUPABASE_URL = "https://wowdmxkuwysuihgoklki.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publisable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y";
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    window.client = client;
-  </script>
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
+<!-- Engine (handles Supabase initialization and logic) -->
+<script src="engine.js"></script>
 
   <style>
     * { box-sizing: border-box; }
