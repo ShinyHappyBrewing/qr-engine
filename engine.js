@@ -13,7 +13,7 @@ if (!window.client) {
 }
 
 // Use the same client everywhere
-const client = window.client;
+let client = window.client || null;
 
 // ----------------------------------------------------------
 // SHINYSIDE ID MODAL LOGIC (ORIGINAL + FIXED + PRESERVED)
