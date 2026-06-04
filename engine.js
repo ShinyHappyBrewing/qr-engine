@@ -1,9 +1,9 @@
 // Prevent double-loading of engine.js
 if (window.__engineLoaded) {
   console.log("Engine already loaded, skipping duplicate execution.");
-  return;
+} else {
+  window.__engineLoaded = true;
 }
-window.__engineLoaded = true;
 
 console.log("Engine loaded");
 
