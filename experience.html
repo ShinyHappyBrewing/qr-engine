@@ -626,6 +626,26 @@
 
 // --- MAGIC LINK + AUTO-LOGIN BOOTSTRAP + QR-SAFE FLOW ---
 async function bootstrapAuth() {
+  // --- LOCALSTORAGE AUTO-LOGIN (Fix for QR return flow) ---
+const storedId = localStorage.getItem("shiny_side_id");
+if (storedId) {
+  try {
+    const { data: storedUsers } = await client
+      .from("users")
+      .select("*")
+      .eq("shiny_side_id", storedId)
+      .limit(1);
+
+    if (storedUsers && storedUsers[0]) {
+      showQuestBoardFor(storedUsers[0]);
+      loadEngine();
+      return; // stop bootstrapAuth here
+    }
+  } catch (e) {
+    console.error("LocalStorage auto-login error:", e);
+  }
+}
+
   try {
     const { data: userData } = await client.auth.getUser();
 
