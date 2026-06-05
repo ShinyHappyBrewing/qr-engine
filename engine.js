@@ -30,9 +30,22 @@ function showShinySideModal() {
   // runExperience() expects an object with shiny_side_id and id.
   // We now return { shiny_side_id: existingID } so nothing breaks.
   if (existingID) {
-    console.log("Existing ShinySide ID found:", existingID);
-    return Promise.resolve({ shiny_side_id: existingID });
+  // Check if this ID actually exists in the database
+  const { data, error } = await client
+    .from("users")
+    .select("*")
+    .eq("shiny_side_id", existingID)
+    .single();
+
+  if (data) {
+    console.log("Valid ShinySide ID found:", existingID);
+    return data; // includes id (UUID) and shiny_side_id
   }
+
+  // If it doesn't exist, clear it and force modal
+  console.warn("Stale ShinySide ID removed:", existingID);
+  localStorage.removeItem("shiny_side_id");
+}
 
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
