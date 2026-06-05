@@ -814,10 +814,10 @@ document.getElementById("emailSubmit").addEventListener("click", async () => {
       scoreTotal.textContent = "Loading…";
       scoreHistory.textContent = "Loading history…";
 
-      const { data: totalRows, error: totalErr } = await client
-        .from("scores")
-        .select("points")
-        .eq("user_id", currentUser.id);
+     const { data: totalRows, error: totalErr } = await client
+  .from("scores")
+  .select("points")
+  .eq("user_id", currentUser.shiny_side_id);
 
       if (totalErr) {
         console.error(totalErr);
@@ -828,11 +828,11 @@ document.getElementById("emailSubmit").addEventListener("click", async () => {
       }
 
       const { data: historyRows, error: histErr } = await client
-        .from("scores")
-        .select("*")
-        .eq("user_id", currentUser.id)
-        .order("created", { ascending: false })
-        .limit(20);
+  .from("scores")
+  .select("*")
+  .eq("user_id", currentUser.shiny_side_id)
+  .order("created", { ascending: false })
+  .limit(20);
 
       if (histErr) {
         console.error(histErr);
