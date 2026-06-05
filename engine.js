@@ -11,7 +11,7 @@ console.log("Engine loaded");
 if (!window.client) {
   window.client = supabase.createClient(
     "https://wowdmkxuwysuihgoklki.supabase.co",
-    "sb_publisable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y"
+    "sb_publishable_nlHqvZhnjR3PO-HsqgY2qw_aCw2yF4Y"
   );
 }
 
