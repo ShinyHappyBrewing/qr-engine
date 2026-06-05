@@ -19,33 +19,29 @@ if (!window.client) {
 const client = window.client;
 
 // ----------------------------------------------------------
-// SHINYSIDE ID MODAL LOGIC (ORIGINAL + FIXED + PRESERVED)
+// SHINYSIDE ID MODAL LOGIC (FINAL)
 // ----------------------------------------------------------
 
-function showShinySideModal() {
+async function showShinySideModal() {
   const existingID = localStorage.getItem("shiny_side_id");
 
-  // IMPORTANT FIX:
-  // Your original code returned ONLY the string ID.
-  // runExperience() expects an object with shiny_side_id and id.
-  // We now return { shiny_side_id: existingID } so nothing breaks.
   if (existingID) {
-  // Check if this ID actually exists in the database
-  const { data, error } = await client
-    .from("users")
-    .select("*")
-    .eq("shiny_side_id", existingID)
-    .single();
+    // Check if this ID actually exists in the database
+    const { data, error } = await client
+      .from("users")
+      .select("*")
+      .eq("shiny_side_id", existingID)
+      .single();
 
-  if (data) {
-    console.log("Valid ShinySide ID found:", existingID);
-    return data; // includes id (UUID) and shiny_side_id
+    if (data) {
+      console.log("Valid ShinySide ID found:", existingID);
+      return data; // includes id (UUID), shiny_side_id, claimed, etc.
+    }
+
+    // If it doesn't exist, clear it and force modal
+    console.warn("Stale ShinySide ID removed:", existingID);
+    localStorage.removeItem("shiny_side_id");
   }
-
-  // If it doesn't exist, clear it and force modal
-  console.warn("Stale ShinySide ID removed:", existingID);
-  localStorage.removeItem("shiny_side_id");
-}
 
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
@@ -183,7 +179,7 @@ function showShinySideModal() {
       indicator.textContent = "✨ ID created successfully!";
       setTimeout(() => {
         overlay.remove();
-        resolve(data);
+        resolve(data); // full user row, including shiny_side_id
       }, 1000);
     };
 
@@ -193,8 +189,9 @@ function showShinySideModal() {
 }
 
 // ----------------------------------------------------------
-// SCORE ENGINE (ORIGINAL + PRESERVED)
+// SCORE ENGINE (FINAL)
 // ----------------------------------------------------------
+// NOTE: scores.user_id is now TEXT and stores shiny_side_id
 
 async function addScore(user_id, source_type, source_id, points) {
   if (!user_id) {
@@ -205,7 +202,7 @@ async function addScore(user_id, source_type, source_id, points) {
   const { data, error } = await client
     .from("scores")
     .insert([{ user_id, source_type, source_id, points }])
-    .select("id, user_id, source_type, source_id, points, created_at")
+    .select("id, user_id, source_type, source_id, points, created")
     .single();
 
   if (error) {
@@ -218,8 +215,9 @@ async function addScore(user_id, source_type, source_id, points) {
 }
 
 // ----------------------------------------------------------
-// EXPERIENCE RUNNER (ORIGINAL + PRESERVED)
+// EXPERIENCE RUNNER (FINAL)
 // ----------------------------------------------------------
+// Uses shiny_side_id as the identity key everywhere
 
 window.runExperience = async function (payload) {
   console.log("Running experience:", payload);
@@ -228,7 +226,7 @@ window.runExperience = async function (payload) {
   const shinySideID = userData.shiny_side_id;
 
   const score = await addScore(
-    userData.id,
+    shinySideID,
     payload.source_type,
     payload.source_id,
     payload.points
@@ -239,7 +237,7 @@ window.runExperience = async function (payload) {
 };
 
 // ----------------------------------------------------------
-// NEW GLOBAL HELPERS (ADDED — NOTHING REMOVED)
+// NEW GLOBAL HELPERS (PRESERVED)
 // ----------------------------------------------------------
 
 // Get current ShinySide ID
@@ -270,15 +268,17 @@ window.showBeerToast = function (points) {
 };
 
 // Cooldown checker
+// Uses scores.user_id (text shiny_side_id) and scores.created
+
 window.hasScanCooldown = async function (shinySideId, sourceId) {
   const today = new Date().toISOString().split("T")[0];
 
   const { data } = await client
     .from("scores")
     .select("*")
-    .eq("shiny_side_id", shinySideId)
+    .eq("user_id", shinySideId)
     .eq("source_id", sourceId)
-    .gte("created_at", today + "T00:00:00");
+    .gte("created", today + "T00:00:00");
 
   return data && data.length > 0;
 };
