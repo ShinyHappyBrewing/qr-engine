@@ -290,8 +290,13 @@
     }
 
     .leaderboard-name {
-      font-weight: 600;
-    }
+  font-weight: 600;
+  white-space: normal;       /* allow wrapping */
+  overflow: visible;         /* no clipping */
+  text-overflow: unset;      /* no ellipsis */
+  word-break: break-word;    /* wrap long IDs cleanly */
+  max-width: 200px;          /* keeps layout tidy */
+}
 
     .leaderboard-points {
       font-weight: 600;
