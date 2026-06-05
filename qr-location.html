@@ -9,7 +9,7 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7"></script>
 
-  <!-- Engine (Supabase client init) -->
+  <!-- Engine (Supabase client init + ShinySide ID modal + scoring) -->
   <script src="engine.js?v=2"></script>
 
   <style>
@@ -39,9 +39,12 @@
       max-width: 420px;
       padding: 24px;
       border-radius: 18px;
-      border: 1px solid rgba(169,206,0,0.5);
+
+      /* UPDATED TO BRAND BLUE */
+      border: 2px solid #01A9CE;
+
       background: rgba(255,255,255,0.05);
-      box-shadow: 0 0 20px rgba(169,206,0,0.4);
+      box-shadow: 0 0 20px rgba(1,169,206,0.4);
     }
 
     h1 {
@@ -57,8 +60,8 @@
     }
 
     button {
-      background: var(--sh-blue);
-      color: var(--sh-white);
+      background: #01A9CE;
+      color: #fff;
       border: none;
       border-radius: 8px;
       padding: 0.75rem 1.5rem;
@@ -68,8 +71,8 @@
     }
 
     button:hover {
-      background: var(--sh-white);
-      color: var(--sh-blue);
+      background: #fff;
+      color: #01A9CE;
     }
 
     .comments {
@@ -85,7 +88,7 @@
     }
 
     .comment strong {
-      color: var(--sh-blue);
+      color: #01A9CE;
     }
 
     /* Beer Toast */
@@ -131,14 +134,14 @@
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const locSlug = urlParams.get("loc");
-    const shinySideId = localStorage.getItem("shiny_side_id");
 
-    function showBeerToast(points) {
-      const toast = document.createElement("div");
-      toast.className = "beer-toast";
-      toast.textContent = `🍺 +${points} points! Cheers!`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
+    // Always force ShinySide ID modal BEFORE anything else
+    let shinySideId = null;
+
+    async function ensureShinySideId() {
+      const userData = await showShinySideModal();
+      shinySideId = userData.shiny_side_id;
+      return shinySideId;
     }
 
     // ---------------------------
@@ -164,7 +167,7 @@
     }
 
     // ---------------------------
-    // LOAD COMMENTS (FIXED)
+    // LOAD COMMENTS — FIXED TO SHOW SHINYSIDE ID
     // ---------------------------
     async function loadComments() {
       if (!window.currentLocation) return;
@@ -183,13 +186,17 @@
       data.forEach(entry => {
         const div = document.createElement("div");
         div.className = "comment";
-        div.innerHTML = `<strong>${entry.user_id || "Guest"}</strong>: ${entry.message}`;
+
+        // FIX: Show ShinySide ID instead of UUID
+        const displayName = entry.user_id || "Guest";
+
+        div.innerHTML = `<strong>${displayName}</strong>: ${entry.message}`;
         list.appendChild(div);
       });
     }
 
     // ---------------------------
-    // COOLDOWN CHECK (FIXED)
+    // COOLDOWN CHECK
     // ---------------------------
     async function hasCooldown() {
       const today = new Date().toISOString().split("T")[0];
@@ -205,12 +212,11 @@
     }
 
     // ---------------------------
-    // AWARD POINTS (FIXED)
+    // AWARD POINTS — FIXED TO USE ENGINE.JS
     // ---------------------------
     async function awardPoints() {
       if (!shinySideId) {
-        alert("You must choose a ShinySide ID first!");
-        return;
+        await ensureShinySideId();
       }
 
       const cooldown = await hasCooldown();
@@ -219,28 +225,30 @@
         return;
       }
 
-      const { error } = await client.from("scores").insert({
-        user_id: shinySideId,
+      // Use your engine.js scoring system
+      await window.runExperience({
         source_type: "location_scan",
         source_id: locSlug,
         points: 10
       });
 
-      if (!error) {
-        showBeerToast(10);
-        loadComments();
-      }
+      window.showBeerToast(10);
+      loadComments();
     }
 
     // ---------------------------
-    // POST COMMENT (FIXED)
+    // POST COMMENT — FIXED
     // ---------------------------
     async function postComment() {
+      if (!shinySideId) {
+        await ensureShinySideId();
+      }
+
       const text = document.getElementById("newComment").value.trim();
       if (!text || !window.currentLocation) return;
 
       await client.from("guestbook_entries").insert({
-        user_id: shinySideId,
+        user_id: shinySideId, // FIXED
         location_id: window.currentLocation.id,
         message: text
       });
@@ -249,10 +257,16 @@
       loadComments();
     }
 
+    // ---------------------------
+    // INIT
+    // ---------------------------
     document.getElementById("claimPoints").addEventListener("click", awardPoints);
     document.getElementById("postComment").addEventListener("click", postComment);
 
-    loadLocation().then(loadComments);
+    // Force ShinySide ID modal BEFORE loading anything else
+    ensureShinySideId().then(() => {
+      loadLocation().then(loadComments);
+    });
   </script>
 </body>
 </html>
