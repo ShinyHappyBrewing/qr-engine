@@ -919,9 +919,9 @@ document.getElementById("emailSubmit").addEventListener("click", async () => {
       }
 
       const { data: users, error: usersErr } = await client
-        .from("users")
-        .select("id, shiny_side_id")
-        .in("id", userIds);
+  .from("users")
+  .select("shiny_side_id")
+  .in("shiny_side_id", userIds);
 
       if (usersErr) {
         console.error(usersErr);
