@@ -1041,10 +1041,10 @@ document.getElementById("emailSubmit").addEventListener("click", async () => {
 
       // 1) Update user record with email + claimed
       const { data, error } = await client
-        .from("users")
-        .update({ email: email, claimed: true })
-        .eq("id", currentUser.id)
-        .select("*");
+  .from("users")
+  .update({ email: email, claimed: true })
+  .eq("shiny_side_id", currentUser.shiny_side_id)
+  .select("*");
 
       if (error || !data || !data[0]) {
         console.error("Update error:", error);
