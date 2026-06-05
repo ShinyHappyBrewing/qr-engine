@@ -191,7 +191,16 @@
 
         const displayName = entry.user_id || "Guest";
 
-        div.innerHTML = `<strong>${displayName}</strong>: ${entry.message}`;
+        const timestamp = new Date(entry.created).toLocaleString([], {
+  dateStyle: "short",
+  timeStyle: "short"
+});
+
+div.innerHTML = `
+  <strong>${displayName}</strong>
+  <span style="opacity:0.7;font-size:0.8rem;"> • ${timestamp}</span>
+  <br>${entry.message}
+`;
         list.appendChild(div);
       });
     }
