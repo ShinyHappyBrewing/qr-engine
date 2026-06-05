@@ -766,13 +766,22 @@ document.getElementById("goButton").addEventListener("click", async () => {
 
   if (user) {
     if (user.claimed) {
-      document.getElementById("emailClaimBox").style.display = "block";
-      document.getElementById("identityStatus").textContent =
-        "This ShinySide ID is claimed. Verify with email to continue.";
-    } else {
-      showQuestBoardFor(user);
-      loadEngine();
-    }
+  if (!user.email) {
+    // Claimed but no email yet → send to finish-visit modal
+    currentUser = user;
+    localStorage.setItem("shiny_side_id", ssid);
+    document.getElementById("finishEmailInput").value = "";
+    document.getElementById("finishModalBackdrop").style.display = "flex";
+  } else {
+    // Email exists → show email verification box
+    document.getElementById("emailClaimBox").style.display = "block";
+    document.getElementById("identityStatus").textContent =
+      "This ShinySide ID is claimed. Verify with email to continue.";
+  }
+} else {
+  showQuestBoardFor(user);
+  loadEngine();
+}
   } else {
     const { data: newUsers, error: insertErr } = await client
       .from("users")
@@ -812,11 +821,12 @@ document.getElementById("emailSubmit").addEventListener("click", async () => {
   const user = users && users.length > 0 ? users[0] : null;
 
   if (user) {
-    showQuestBoardFor(user);
-    loadEngine();
-  } else {
-    alert("Email does not match this ShinySide ID.");
-  }
+  localStorage.setItem("shiny_side_id", ssid);
+  showQuestBoardFor(user);
+  loadEngine();
+} else {
+  alert("Email does not match this ShinySide ID.");
+}
 });
 
     // --- My Score modal ---
@@ -1045,6 +1055,7 @@ document.getElementById("emailSubmit").addEventListener("click", async () => {
 
       currentUser = data[0];
       localStorage.setItem("shiny_user", JSON.stringify(currentUser));
+      localStorage.setItem("shiny_side_id", currentUser.shiny_side_id);
 
       // 2) Send magic link that comes back to THIS page
       try {
