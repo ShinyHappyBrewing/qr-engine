@@ -929,15 +929,15 @@ document.getElementById("emailSubmit").addEventListener("click", async () => {
 
       const nameById = {};
       (users || []).forEach((u) => {
-        nameById[u.id] = u.shiny_side_id || u.id.slice(0, 8);
+        nameById[u.shiny_side_id] = u.shiny_side_id;
       });
 
       const rows = userIds
         .map((id) => ({
-          user_id: id,
-          name: nameById[id] || id.slice(0, 8),
-          points: totalsByUser[id]
-        }))
+  user_id: id,
+  name: nameById[id] || id,
+  points: totalsByUser[id]
+}))
         .sort((a, b) => b.points - a.points)
         .slice(0, 20);
 
@@ -947,9 +947,7 @@ document.getElementById("emailSubmit").addEventListener("click", async () => {
           <div class="leaderboard-row">
             <div>
               <span class="leaderboard-name">${index + 1}. ${row.name}</span>
-              <div class="leaderboard-meta">
-                ${row.user_id.slice(0, 8)}…
-              </div>
+            
             </div>
             <div class="leaderboard-points">${row.points} pts</div>
           </div>
