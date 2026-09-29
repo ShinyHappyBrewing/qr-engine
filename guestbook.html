@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shiny Happy Guestbook</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --blue: #00A9CE;
+      --black: #0d0d0d;
+      --black-alt: #161616;
+      --white: #f3f3f3;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Mono", monospace;
+      background: radial-gradient(circle at top, #222 0, var(--black-alt) 40%, var(--black) 100%);
+      color: var(--white);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 8px 12px;
+      background: var(--black-alt);
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
+    header .brand {
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--blue);
+    }
+    header .status {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    .tabs {
+      display: flex;
+      background: #111;
+      border-bottom: 1px solid #333;
+    }
+    .tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      font-size: 13px;
+      cursor: pointer;
+      border-right: 1px solid #222;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .tab:last-child { border-right: none; }
+    .tab.active {
+      background: var(--black-alt);
+      color: var(--blue);
+      font-weight: bold;
+    }
+    .chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px 70px;
+    }
+    .message {
+      margin-bottom: 8px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+      position: relative;
+    }
+    .message .meta {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-bottom: 2px;
+    }
+    .message .username {
+      color: var(--blue);
+      font-weight: bold;
+    }
+    .message .content {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .message .admin-actions {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      display: flex;
+      gap: 4px;
+    }
+    .admin-btn {
+      font-size: 10px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      border: 1px solid #444;
+      background: #111;
+      color: var(--white);
+      cursor: pointer;
+    }
+    .admin-btn.delete { border-color: #ff4b4b; color: #ffaaaa; }
+    .admin-btn.block { border-color: #ffaa00; color: #ffdd99; }
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--black-alt);
+      border-top: 1px solid #333;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+    .input-row {
+      display: flex;
+      gap: 6px;
+    }
+    .input-row input {
+      flex: 1;
+      padding: 6px 8px;
+      border-radius: 3px;
+      border: 1px solid #333;
+      background: #111;
+      color: var(--white);
+      font-size: 13px;
+    }
+    .send-btn {
+      padding: 6px 10px;
+      border-radius: 3px;
+      border: 1px solid var(--blue);
+      background: var(--blue);
+      color: var(--black);
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+      min-width: 80px;
+    }
+    .send-btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .cooldown {
+      font-size: 11px;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Shiny Happy Brewing // Guestbook</div>
+    <div class="status" id="status">Connecting…</div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-room="main_lobby">📍 Main Lobby</div>
+    <div class="tab" data-room="taproom">🍻 Taproom</div>
+    <div class="tab" data-room="event_room">🎉 Event Room</div>
+    <div class="tab" data-room="beer_garden">🌿 Beer Garden</div>
+  </div>
+
+  <div class="chat-container" id="chat"></div>
+
+  <div class="footer">
+    <div class="footer-top">
+      <span id="handle-display"></span>
+      <button id="change-handle-btn">Change Shinyside ID</button>
+    </div>
+    <div class="input-row">
+      <input type="text" id="message-input" placeholder="Leave a note…" />
+      <button class="send-btn" id="send-btn">Send</button>
+    </div>
+    <div class="cooldown" id="cooldown-text"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
+    const SUPABASE_ANON_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const chatEl = document.getElementById("chat");
+    const tabs = document.querySelectorAll(".tab");
+    const statusEl = document.getElementById("status");
+    const handleDisplayEl = document.getElementById("handle-display");
+    const changeHandleBtn = document.getElementById("change-handle-btn");
+    const messageInput = document.getElementById("message-input");
+    const sendBtn = document.getElementById("send-btn");
+    const cooldownText = document.getElementById("cooldown-text");
+
+    let currentRoom = "main_lobby";
+    let shinysideId = null;
+    let isAdmin = false;
+    let cooldownTimer = null;
+    let cooldownRemaining = 0;
+
+    // --- DAILY ICEBREAKER SYSTEM ---
+    const ICEBREAKERS = [
+      "What beer are you starting with today?",
+      "If you could name a Shiny Happy beer, what would you call it?",
+      "What’s the best thing you’ve done today?",
+      "What band should we play next?",
+      "What’s your go-to comfort food?",
+      "What’s a random fun fact about you?",
+      "If you could teleport anywhere right now, where would you go?",
+      "What’s a movie you think everyone should watch?",
+      "What’s your favorite fall activity?",
+      "What’s something you’re looking forward to?"
+    ];
+    function getRandomIcebreaker() {
+      return ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
+    }
+
+    function initHandle() {
+      const stored = localStorage.getItem("shinyside_id");
+      shinysideId = stored || "guest_" + Math.floor(Math.random() * 9999);
+      localStorage.setItem("shinyside_id", shinysideId);
+      handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
+    }
+
+    function promptHandle() {
+      const next = prompt("Choose your Shinyside ID:", shinysideId);
+      if (next && next.trim()) {
+        shinysideId = next.trim();
+        localStorage.setItem("shinyside_id", shinysideId);
+        handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
+      }
+    }
+
+    function initAdminMode() {
+      const params = new URLSearchParams(window.location.search);
+      isAdmin = params.get("admin") === "true";
+      if (isAdmin) statusEl.textContent = "Connected // ADMIN MODE";
+    }
+
+    changeHandleBtn.addEventListener("click", promptHandle);
+
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        currentRoom = tab.dataset.room;
+        loadMessages();
+      });
+    });
+
+    function get24hCutoffISO() {
+      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      return cutoff.toISOString();
+    }
+
+    async function loadMessages() {
+      chatEl.innerHTML = "";
+      const cutoff = get24hCutoffISO();
+
+      const { data } = await supabaseClient
+        .from("guestbook_messages")
+        .select("*")
+        .eq("room", currentRoom)
+        .eq("is_deleted", false)
+        .gte("created_at", cutoff)
+        .order("created_at", { ascending: true });
+
+      data.forEach(renderMessage);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    async function maybePostDailyIcebreaker() {
+      const cutoff = get24hCutoffISO();
+
+      const { data } = await supabaseClient
+        .from("guestbook_messages")
+        .select("*")
+        .eq("room", currentRoom)
+        .gte("created_at", cutoff)
+        .limit(1);
+
+      if (!data || data.length === 0) {
+        await supabaseClient.from("guestbook_messages").insert({
+          room: currentRoom,
+          username: "ShinyBot",
+          content: getRandomIcebreaker()
+        });
+      }
+    }
+
+    function renderMessage(msg) {
+      const el = document.createElement("div");
+      el.className = "message";
+      el.dataset.id = msg.id;
+      el.dataset.username = msg.username;
+
+      el.innerHTML = `
+        <div class="meta">
+          <span class="username">${msg.username}</span> //
+          <span>${new Date(msg.created_at).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</span>
+        </div>
+        <div class="content">${msg.content}</div>
+      `;
+
+      if (isAdmin) {
+        const actions = document.createElement("div");
+        actions.className = "admin-actions";
+
+        const del = document.createElement("button");
+        del.className = "admin-btn delete";
+        del.textContent = "Delete";
+        del.onclick = () => adminDeleteMessage(msg.id);
+
+        const block = document.createElement("button");
+        block.className = "admin-btn block";
+        block.textContent = "Block";
+        block.onclick = () => adminBlockUser(msg.username);
+
+        actions.appendChild(del);
+        actions.appendChild(block);
+        el.appendChild(actions);
+      }
+
+      chatEl.appendChild(el);
+    }
+
+    function subscribeRealtime() {
+      const channel = supabaseClient.channel("guestbook_channel");
+
+      channel.on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "guestbook_messages" },
+        payload => {
+          const msg = payload.new;
+          if (msg.room === currentRoom && !msg.is_deleted) {
+            renderMessage(msg);
+            chatEl.scrollTop = chatEl.scrollHeight;
+          }
+        }
+      );
+
+      channel.on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "guestbook_messages" },
+        payload => {
+          const msg = payload.new;
+          if (msg.is_deleted) {
+            const el = chatEl.querySelector(`[data-id="${msg.id}"]`);
+            if (el) el.remove();
+          }
+        }
+      );
+
+      channel.subscribe();
+    }
+
+    async function isUserBlocked(username) {
+      const nowISO = new Date().toISOString();
+      const { data } = await supabaseClient
+        .from("blocked_handles")
+        .select("*")
+        .eq("username", username)
+        .gte("blocked_until", nowISO)
+        .limit(1);
+
+      return data && data.length > 0;
+    }
+
+    async function sendMessage() {
+      const content = messageInput.value.trim();
+      if (!content) return;
+
+      if (await isUserBlocked(shinysideId)) {
+        alert("You are muted for the rest of the day.");
+        return;
+      }
+
+      sendBtn.disabled = true;
+
+      await supabaseClient.from("guestbook_messages").insert({
+        room: currentRoom,
+        username: shinysideId,
+        content
+      });
+
+      messageInput.value = "";
+      startCooldown();
+    }
+
+    function startCooldown() {
+      cooldownRemaining = 10;
+      cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
+
+      cooldownTimer = setInterval(() => {
+        cooldownRemaining--;
+        if (cooldownRemaining <= 0) {
+          clearInterval(cooldownTimer);
+          cooldownText.textContent = "";
+          sendBtn.disabled = false;
+        } else {
+          cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
+        }
+      }, 1000);
+    }
+
+    async function adminDeleteMessage(id) {
+      await supabaseClient
+        .from("guestbook_messages")
+        .update({ is_deleted: true })
+        .eq("id", id);
+    }
+
+    async function adminBlockUser(username) {
+      const until = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      await supabaseClient.from("blocked_handles").insert({
+        username,
+        blocked_until: until,
+        reason: "Admin mute"
+      });
+
+      document.querySelectorAll(`[data-username="${username}"]`).forEach(el => el.remove());
+    }
+
+    (async function boot() {
+      initHandle();
+      initAdminMode();
+      await loadMessages();
+      await maybePostDailyIcebreaker();
+      subscribeRealtime();
+    })();
+  </script>
+</body>
+</html>
