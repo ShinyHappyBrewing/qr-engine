@@ -414,20 +414,51 @@
       }, 1000);
     }
 
-    async function adminDeleteMessage(id) {
-      await supabase
-        .from("guestbook_messages")
-        .update({ is_deleted: true })
-        .eq("id", id);
+async function adminDeleteMessage(id) {
+  try {
+    const res = await fetch(
+      "https://wowdmkxuwysuihgoklki.supabase.co/functions/v1/admin-delete-message",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      }
+    );
+
+    if (!res.ok) {
+      alert("Error deleting message");
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Error deleting message");
+  }
+}
+
+async function adminBlockUser(username) {
+  try {
+    const res = await fetch(
+      "https://wowdmkxuwysuihgoklki.supabase.co/functions/v1/admin-block-user",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username })
+      }
+    );
+
+    if (!res.ok) {
+      alert("Error blocking user");
+      return;
     }
 
-    async function adminBlockUser(username) {
-      const until = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      await supabase.from("blocked_handles").insert({
-        username,
-        blocked_until: until,
-        reason: "Admin mute"
-      });
+    document
+      .querySelectorAll(`[data-username="${username}"]`)
+      .forEach(el => el.remove());
+  } catch (err) {
+    console.error(err);
+    alert("Error blocking user");
+  }
+}
 
       document
         .querySelectorAll(`[data-username="${username}"]`)
