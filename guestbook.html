@@ -422,7 +422,9 @@ async function adminDeleteMessage(id) {
       "https://wowdmkxuwysuihgoklki.supabase.co/functions/v1/admin-delete-message",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({ id })
       }
     );
@@ -433,8 +435,10 @@ async function adminDeleteMessage(id) {
       return;
     }
 
+    // Remove deleted message from UI
     const el = document.querySelector(`[data-id="${id}"]`);
     if (el) el.remove();
+
   } catch (err) {
     console.error("Delete error:", err);
     alert("Error deleting message");
@@ -447,7 +451,9 @@ async function adminBlockUser(username) {
       "https://wowdmkxuwysuihgoklki.supabase.co/functions/v1/admin-block-user",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({ username })
       }
     );
@@ -458,14 +464,18 @@ async function adminBlockUser(username) {
       return;
     }
 
+    // Remove all messages from that user
     document
       .querySelectorAll(`[data-username="${username}"]`)
       .forEach(el => el.remove());
+
   } catch (err) {
     console.error("Block error:", err);
     alert("Error blocking user");
   }
 }
+
+// --- BOOTSTRAP ---
 
 (async function boot() {
   initHandle();
@@ -476,6 +486,8 @@ async function adminBlockUser(username) {
   statusEl.textContent = "Connected";
   sendBtn.disabled = false;
 })();
+
+// --- EVENT LISTENERS ---
 
 changeHandleBtn.addEventListener("click", promptHandle);
 sendBtn.addEventListener("click", sendMessage);
