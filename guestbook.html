@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Shiny Happy Guestbook</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     :root {
       --blue: #00A9CE;
@@ -158,6 +159,7 @@
     }
   </style>
 </head>
+
 <body>
   <header>
     <div class="brand">Shiny Happy Brewing // Guestbook</div>
@@ -185,13 +187,15 @@
     <div class="cooldown" id="cooldown-text"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
+  <!-- ⭐ CLEAN MODERN SUPABASE SCRIPT ⭐ -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
     const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
     const SUPABASE_ANON_KEY =
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const chatEl = document.getElementById("chat");
     const tabs = document.querySelectorAll(".tab");
@@ -208,7 +212,6 @@
     let cooldownTimer = null;
     let cooldownRemaining = 0;
 
-    // --- DAILY ICEBREAKER SYSTEM ---
     const ICEBREAKERS = [
       "What beer are you starting with today?",
       "If you could name a Shiny Happy beer, what would you call it?",
@@ -221,9 +224,8 @@
       "What’s your favorite fall activity?",
       "What’s something you’re looking forward to?"
     ];
-    function getRandomIcebreaker() {
-      return ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
-    }
+    const getRandomIcebreaker = () =>
+      ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
 
     function initHandle() {
       const stored = localStorage.getItem("shinyside_id");
@@ -247,8 +249,6 @@
       if (isAdmin) statusEl.textContent = "Connected // ADMIN MODE";
     }
 
-    changeHandleBtn.addEventListener("click", promptHandle);
-
     tabs.forEach(tab => {
       tab.addEventListener("click", () => {
         tabs.forEach(t => t.classList.remove("active"));
@@ -258,16 +258,14 @@
       });
     });
 
-    function get24hCutoffISO() {
-      const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      return cutoff.toISOString();
-    }
+    const get24hCutoffISO = () =>
+      new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
     async function loadMessages() {
       chatEl.innerHTML = "";
       const cutoff = get24hCutoffISO();
 
-      const { data } = await supabaseClient
+      const { data } = await supabase
         .from("guestbook_messages")
         .select("*")
         .eq("room", currentRoom)
@@ -282,7 +280,7 @@
     async function maybePostDailyIcebreaker() {
       const cutoff = get24hCutoffISO();
 
-      const { data } = await supabaseClient
+      const { data } = await supabase
         .from("guestbook_messages")
         .select("*")
         .eq("room", currentRoom)
@@ -290,7 +288,7 @@
         .limit(1);
 
       if (!data || data.length === 0) {
-        await supabaseClient.from("guestbook_messages").insert({
+        await supabase.from("guestbook_messages").insert({
           room: currentRoom,
           username: "ShinyBot",
           content: getRandomIcebreaker()
@@ -307,7 +305,10 @@
       el.innerHTML = `
         <div class="meta">
           <span class="username">${msg.username}</span> //
-          <span>${new Date(msg.created_at).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</span>
+          <span>${new Date(msg.created_at).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+          })}</span>
         </div>
         <div class="content">${msg.content}</div>
       `;
@@ -335,7 +336,7 @@
     }
 
     function subscribeRealtime() {
-      const channel = supabaseClient.channel("guestbook_channel");
+      const channel = supabase.channel("guestbook_channel");
 
       channel.on(
         "postgres_changes",
@@ -366,7 +367,7 @@
 
     async function isUserBlocked(username) {
       const nowISO = new Date().toISOString();
-      const { data } = await supabaseClient
+      const { data } = await supabase
         .from("blocked_handles")
         .select("*")
         .eq("username", username)
@@ -387,7 +388,7 @@
 
       sendBtn.disabled = true;
 
-      await supabaseClient.from("guestbook_messages").insert({
+      await supabase.from("guestbook_messages").insert({
         room: currentRoom,
         username: shinysideId,
         content
@@ -414,7 +415,7 @@
     }
 
     async function adminDeleteMessage(id) {
-      await supabaseClient
+      await supabase
         .from("guestbook_messages")
         .update({ is_deleted: true })
         .eq("id", id);
@@ -422,13 +423,15 @@
 
     async function adminBlockUser(username) {
       const until = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      await supabaseClient.from("blocked_handles").insert({
+      await supabase.from("blocked_handles").insert({
         username,
         blocked_until: until,
         reason: "Admin mute"
       });
 
-      document.querySelectorAll(`[data-username="${username}"]`).forEach(el => el.remove());
+      document
+        .querySelectorAll(`[data-username="${username}"]`)
+        .forEach(el => el.remove());
     }
 
     (async function boot() {
@@ -437,32 +440,12 @@
       await loadMessages();
       await maybePostDailyIcebreaker();
       subscribeRealtime();
+      statusEl.textContent = "Connected";
+      sendBtn.disabled = false;
     })();
+
+    changeHandleBtn.addEventListener("click", promptHandle);
+    sendBtn.addEventListener("click", sendMessage);
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="engine.js"></script>
-
-<script>
-  const supabaseUrl = "https://wowdmkxuwysuihgoklki.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
-
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-  async function boot() {
-    try {
-      document.getElementById("status").innerText = "Connected";
-
-      await loadMessages("main_lobby");
-      subscribeToRoom("main_lobby");
-
-      document.getElementById("send-btn").disabled = false;
-    } catch (err) {
-      console.error(err);
-      document.getElementById("status").innerText = "Error";
-    }
-  }
-
-  boot();
-</script>
 </body>
 </html>
