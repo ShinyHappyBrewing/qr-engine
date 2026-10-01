@@ -296,123 +296,125 @@
       }
     }
 
-    function renderMessage(msg) {
-      const el = document.createElement("div");
-      el.className = "message";
-      el.dataset.id = msg.id;
-      el.dataset.username = msg.username;
+   function renderMessage(msg) {
+  const el = document.createElement("div");
+  el.className = "message";
+  el.dataset.id = msg.id;
+  el.dataset.username = msg.username;
 
-      el.innerHTML = `
-        <div class="meta">
-          <span class="username">${msg.username}</span> //
-          <span>${new Date(msg.created_at).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit"
-          })}</span>
-        </div>
-        <div class="content">${msg.content}</div>
-      `;
+  el.innerHTML = `
+    <div class="meta">
+      <span class="username">${msg.username}</span> //
+      <span>${new Date(msg.created_at).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}</span>
+    </div>
+    <div class="content">${msg.content}</div>
+  `;
 
-      if (isAdmin) {
-        const actions = document.createElement("div");
-        actions.className = "admin-actions";
+  if (isAdmin) {
+    const actions = document.createElement("div");
+    actions.className = "admin-actions";
 
-        const del = document.createElement("button");
-        del.className = "admin-btn delete";
-        del.textContent = "Delete";
-        del.onclick = () => adminDeleteMessage(msg.id);
+    const del = document.createElement("button");
+    del.className = "admin-btn delete";
+    del.textContent = "Delete";
+    del.onclick = () => adminDeleteMessage(msg.id);
 
-        const block = document.createElement("button");
-        block.className = "admin-btn block";
-        block.textContent = "Block";
-        block.onclick = () => adminBlockUser(msg.username);
+    const block = document.createElement("button");
+    block.className = "admin-btn block";
+    block.textContent = "Block";
+    block.onclick = () => adminBlockUser(msg.username);
 
-        actions.appendChild(del);
-        actions.appendChild(block);
-        el.appendChild(actions);
+    actions.appendChild(del);
+    actions.appendChild(block);
+    el.appendChild(actions);
+  }
+
+  chatEl.appendChild(el);
+}
+
+function subscribeRealtime() {
+  const channel = supabase.channel("guestbook_channel");
+
+  channel.on(
+    "postgres_changes",
+    { event: "INSERT", schema: "public", table: "guestbook_messages" },
+    payload => {
+      const msg = payload.new;
+      if (msg.room === currentRoom && !msg.is_deleted) {
+        renderMessage(msg);
+        chatEl.scrollTop = chatEl.scrollHeight;
       }
-
-      chatEl.appendChild(el);
     }
+  );
 
-    function subscribeRealtime() {
-      const channel = supabase.channel("guestbook_channel");
-
-      channel.on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "guestbook_messages" },
-        payload => {
-          const msg = payload.new;
-          if (msg.room === currentRoom && !msg.is_deleted) {
-            renderMessage(msg);
-            chatEl.scrollTop = chatEl.scrollHeight;
-          }
-        }
-      );
-
-      channel.on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "guestbook_messages" },
-        payload => {
-          const msg = payload.new;
-          if (msg.is_deleted) {
-            const el = chatEl.querySelector(`[data-id="${msg.id}"]`);
-            if (el) el.remove();
-          }
-        }
-      );
-
-      channel.subscribe();
-    }
-
-    async function isUserBlocked(username) {
-      const nowISO = new Date().toISOString();
-      const { data } = await supabase
-        .from("blocked_handles")
-        .select("*")
-        .eq("username", username)
-        .gte("blocked_until", nowISO)
-        .limit(1);
-
-      return data && data.length > 0;
-    }
-
-    async function sendMessage() {
-      const content = messageInput.value.trim();
-      if (!content) return;
-
-      if (await isUserBlocked(shinysideId)) {
-        alert("You are muted for the rest of the day.");
-        return;
+  channel.on(
+    "postgres_changes",
+    { event: "UPDATE", schema: "public", table: "guestbook_messages" },
+    payload => {
+      const msg = payload.new;
+      if (msg.is_deleted) {
+        const el = chatEl.querySelector(`[data-id="${msg.id}"]`);
+        if (el) el.remove();
       }
-
-      sendBtn.disabled = true;
-
-      await supabase.from("guestbook_messages").insert({
-        room: currentRoom,
-        username: shinysideId,
-        content
-      });
-
-      messageInput.value = "";
-      startCooldown();
     }
+  );
 
-    function startCooldown() {
-      cooldownRemaining = 10;
+  channel.subscribe();
+}
+
+async function isUserBlocked(username) {
+  const nowISO = new Date().toISOString();
+  const { data } = await supabase
+    .from("blocked_handles")
+    .select("*")
+    .eq("username", username)
+    .gte("blocked_until", nowISO)
+    .limit(1);
+
+  return data && data.length > 0;
+}
+
+async function sendMessage() {
+  const content = messageInput.value.trim();
+  if (!content) return;
+
+  if (await isUserBlocked(shinysideId)) {
+    alert("You are muted for the rest of the day.");
+    return;
+  }
+
+  sendBtn.disabled = true;
+
+  await supabase.from("guestbook_messages").insert({
+    room: currentRoom,
+    username: shinysideId,
+    content
+  });
+
+  messageInput.value = "";
+  startCooldown();
+}
+
+function startCooldown() {
+  cooldownRemaining = 10;
+  cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
+
+  cooldownTimer = setInterval(() => {
+    cooldownRemaining--;
+    if (cooldownRemaining <= 0) {
+      clearInterval(cooldownTimer);
+      cooldownText.textContent = "";
+      sendBtn.disabled = false;
+    } else {
       cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
-
-      cooldownTimer = setInterval(() => {
-        cooldownRemaining--;
-        if (cooldownRemaining <= 0) {
-          clearInterval(cooldownTimer);
-          cooldownText.textContent = "";
-          sendBtn.disabled = false;
-        } else {
-          cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
-        }
-      }, 1000);
     }
+  }, 1000);
+}
+
+// --- SECURE ADMIN ACTIONS VIA EDGE FUNCTIONS ---
 
 async function adminDeleteMessage(id) {
   try {
@@ -426,11 +428,15 @@ async function adminDeleteMessage(id) {
     );
 
     if (!res.ok) {
+      console.error("Delete failed:", await res.text());
       alert("Error deleting message");
       return;
     }
+
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (el) el.remove();
   } catch (err) {
-    console.error(err);
+    console.error("Delete error:", err);
     alert("Error deleting message");
   }
 }
@@ -447,6 +453,7 @@ async function adminBlockUser(username) {
     );
 
     if (!res.ok) {
+      console.error("Block failed:", await res.text());
       alert("Error blocking user");
       return;
     }
@@ -455,28 +462,23 @@ async function adminBlockUser(username) {
       .querySelectorAll(`[data-username="${username}"]`)
       .forEach(el => el.remove());
   } catch (err) {
-    console.error(err);
+    console.error("Block error:", err);
     alert("Error blocking user");
   }
 }
 
-      document
-        .querySelectorAll(`[data-username="${username}"]`)
-        .forEach(el => el.remove());
-    }
+(async function boot() {
+  initHandle();
+  initAdminMode();
+  await loadMessages();
+  await maybePostDailyIcebreaker();
+  subscribeRealtime();
+  statusEl.textContent = "Connected";
+  sendBtn.disabled = false;
+})();
 
-    (async function boot() {
-      initHandle();
-      initAdminMode();
-      await loadMessages();
-      await maybePostDailyIcebreaker();
-      subscribeRealtime();
-      statusEl.textContent = "Connected";
-      sendBtn.disabled = false;
-    })();
-
-    changeHandleBtn.addEventListener("click", promptHandle);
-    sendBtn.addEventListener("click", sendMessage);
+changeHandleBtn.addEventListener("click", promptHandle);
+sendBtn.addEventListener("click", sendMessage);
   </script>
 </body>
 </html>
