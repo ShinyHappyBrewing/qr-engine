@@ -11,7 +11,6 @@
       --black: #0d0d0d;
       --black-alt: #161616;
       --white: #f3f3f3;
-      --footer-height: 0px;
     }
     * { box-sizing: border-box; }
     html, body { width: 100%; height: 100%; }
@@ -38,19 +37,9 @@
       gap: 8px;
       font-size: 14px;
     }
-    header .brand {
-      font-weight: bold;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--blue);
-    }
+    header .brand { font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
     header .status { font-size: 12px; opacity: 0.8; white-space: nowrap; }
-    .tabs {
-      display: flex;
-      flex: 0 0 auto;
-      background: #111;
-      border-bottom: 1px solid #333;
-    }
+    .tabs { display: flex; flex: 0 0 auto; background: #111; border-bottom: 1px solid #333; }
     .tab {
       flex: 1 1 0;
       min-width: 0;
@@ -84,13 +73,7 @@
     .message .meta { font-size: 11px; opacity: 0.7; margin-bottom: 2px; }
     .message .username { color: var(--blue); font-weight: bold; }
     .message .content { white-space: pre-wrap; overflow-wrap: anywhere; }
-    .message .admin-actions {
-      position: absolute;
-      top: 4px;
-      right: 6px;
-      display: flex;
-      gap: 4px;
-    }
+    .message .admin-actions { position: absolute; top: 4px; right: 6px; display: flex; gap: 4px; }
     .admin-btn {
       font-size: 10px;
       padding: 2px 4px;
@@ -113,13 +96,7 @@
       flex-direction: column;
       gap: 6px;
     }
-    .footer-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-    }
+    .footer-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; }
     .input-row { display: flex; gap: 6px; }
     .input-row input {
       flex: 1;
@@ -147,6 +124,27 @@
     }
     .send-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
     .cooldown { font-size: 11px; opacity: 0.7; min-height: 13px; }
+    .toast {
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      top: max(12px, env(safe-area-inset-top));
+      width: min( calc(100vw - 32px), 520px );
+      padding: 12px 16px;
+      border: 1px solid #ff7777;
+      border-radius: 6px;
+      background: #351919;
+      color: #fff;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.4;
+      opacity: 0;
+      transform: translate(-50%, -10px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+    .toast.visible { opacity: 1; transform: translate(-50%, 0); }
     @media (max-width: 560px) {
       header { align-items: flex-start; }
       header .brand { font-size: 11px; letter-spacing: 0.04em; }
@@ -154,6 +152,7 @@
       .tabs { overflow-x: auto; }
       .tab { flex: 0 0 auto; min-width: 25%; font-size: 10px; padding: 10px 5px; }
     }
+    @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
   </style>
 </head>
 
@@ -183,6 +182,7 @@
     </div>
     <div class="cooldown" id="cooldown-text" aria-live="polite"></div>
   </div>
+  <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -200,6 +200,7 @@
     const sendBtn = document.getElementById("send-btn");
     const cooldownText = document.getElementById("cooldown-text");
     const footer = document.getElementById("footer");
+    const toastEl = document.getElementById("toast");
 
     let currentRoom = "main_lobby";
     let shinysideId = null;
@@ -207,6 +208,7 @@
     let cooldownTimer = null;
     let cooldownRemaining = 0;
     let isSending = false;
+    let toastTimer = null;
 
     const ICEBREAKERS = [
       "What beer are you starting with today?",
@@ -222,39 +224,88 @@
     ];
     const getRandomIcebreaker = () => ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
 
-    // Basic client-side screening. This is a deterrent, not a substitute for
-    // server-side moderation: users can bypass all browser-only checks.
+    // Client-side screening is a practical first line of moderation, not a
+    // guarantee: context, new slang, other languages, and novel evasion can
+    // require human review. Keep these terms in lower case and add local needs.
     const blockedTerms = [
-      "fuck", "shit", "bitch", "bastard", "asshole", "cunt", "damn",
-      "porn", "nude", "nudes", "blowjob", "handjob", "orgasm",
-      "nazi", "heil hitler", "white power", "kill yourself", "kys",
-      "i will kill", "i'll kill", "shoot you", "bomb threat", "rape"
+      // Profanity, insults, and common spelling variants.
+      "fuck", "fucking", "fucker", "motherfucker", "shit", "bullshit", "bitch", "bitches",
+      "bastard", "asshole", "arsehole", "dickhead", "dick", "cock", "cunt", "twat",
+      "piss off", "damn you", "goddamn", "motherfucking", "son of a bitch", "piece of shit",
+      "fuck you", "go to hell", "eat shit", "kiss my ass",
+      // Sexual harassment / explicit sexual language / solicitation.
+      "porn", "porno", "pornography", "xxx", "nsfw", "nude", "nudes", "naked pics",
+      "send nudes", "sex tape", "blowjob", "handjob", "rimjob", "deepthroat", "orgasm",
+      "masturbate", "masturbation", "cumshot", "semen", "dildo", "vibrator", "hentai",
+      "onlyfans", "hook up", "hookup", "suck my", "show me your body", "send me pics",
+      "sexual favors", "sexual favor", "rape", "molest", "groping", "pedo", "pedophile",
+      "child porn", "underage sex", "incest", "prostitute", "whore", "slut", "skank",
+      // Threats, violent intent, and encouragement of self-harm.
+      "kill yourself", "kys", "go kill yourself", "end your life", "you should die", "i hope you die",
+      "i will kill", "i'll kill", "im going to kill", "i am going to kill", "kill you", "shoot you",
+      "stab you", "bomb threat", "blow you up", "burn your house", "i will hurt you", "i'll hurt you",
+      "death threat", "hang yourself", "cut yourself", "self harm", "suicide is the answer",
+      // Hate symbols, racist slogans, and targeted identity-based abuse.
+      "nazi", "nazis", "heil hitler", "white power", "white supremacy", "white supremacist",
+      "gas the jews", "gas jews", "jews control", "jewish control", "race war", "ethnic cleansing",
+      "racial purity", "go back to your country", "go back where you came from", "you don't belong here",
+      "all muslims are terrorists", "all immigrants are criminals", "immigrants are vermin",
+      // Common English-language racial / ethnic / religious slurs. This list is
+      // deliberately used only for detection and rejection, never displayed.
+      "nigger", "niggers", "nigga", "niggas", "chink", "chinks", "gook", "gooks",
+      "spic", "spics", "wetback", "wetbacks", "kike", "kikes", "raghead", "ragheads",
+      "towelhead", "towelheads", "paki", "pakis", "coon", "coons", "porch monkey",
+      "sand nigger", "jigaboo", "negro", "beaner", "beaners", "cracker", "zipperhead",
+      "faggot", "faggots", "dyke", "tranny", " shemale", "retard", "retarded",
+      // Harassment / demeaning attacks and common abusive commands.
+      "worthless piece of", "you are disgusting", "nobody likes you", "shut up loser",
+      "go die", "you are ugly", "stupid bitch", "dumb bitch", "fat pig", "subhuman",
+      "vermin", "filthy animal", "rape you", "i want to rape"
     ];
-    const normalizeForModeration = value => value
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[0@]/g, "o")
-      .replace(/[1!|]/g, "i")
-      .replace(/[3]/g, "e")
-      .replace(/[4@]/g, "a")
-      .replace(/[5$]/g, "s")
-      .replace(/[7]/g, "t")
-      .replace(/[\u200B-\u200D\uFEFF]/g, "")
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
-    const containsBlockedContent = value => {
+
+    function showToast(message, duration = 3500) {
+      clearTimeout(toastTimer);
+      toastEl.textContent = message;
+      toastEl.classList.add("visible");
+      toastTimer = setTimeout(() => toastEl.classList.remove("visible"), duration);
+    }
+
+    function normalizeForModeration(value) {
+      return value
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[0]/g, "o")
+        .replace(/[@]/g, "a")
+        .replace(/[1!|]/g, "i")
+        .replace(/[3]/g, "e")
+        .replace(/[4]/g, "a")
+        .replace(/[5$]/g, "s")
+        .replace(/[7+]/g, "t")
+        .replace(/[8]/g, "b")
+        .replace(/[\u200B-\u200D\uFEFF]/g, "");
+    }
+
+    function termToPattern(term) {
+      const normalized = normalizeForModeration(term).trim();
+      return normalized.split(/\s+/).map(word =>
+        [...word].map(char => `${char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}+`).join("[^a-z0-9]*")
+      ).join("[^a-z0-9]+");
+    }
+
+    const blockedPatterns = blockedTerms
+      .map(term => term.trim())
+      .filter(Boolean)
+      .map(term => new RegExp(`(?:^|[^a-z0-9])${termToPattern(term)}(?:$|[^a-z0-9])`, "i"));
+
+    function containsBlockedContent(value) {
       const normalized = normalizeForModeration(value);
-      return blockedTerms.some(term => {
-        const normalizedTerm = normalizeForModeration(term);
-        const escaped = normalizedTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const flexible = escaped.replace(/\s+/g, "\\s+");
-        return new RegExp(`(?:^|\\s)${flexible}(?:$|\\s)`, "i").test(normalized);
-      });
-    };
+      return blockedPatterns.some(pattern => pattern.test(normalized));
+    }
+
     function validateCommunityText(value, label) {
       if (containsBlockedContent(value)) {
-        alert(`${label} contains language that isn't allowed. Please rephrase it respectfully.`);
+        showToast(`${label} contains language that isn't allowed. Please rephrase it respectfully.`);
         return false;
       }
       return true;
@@ -266,7 +317,7 @@
     function initHandle() {
       const stored = localStorage.getItem("shinyside_id");
       shinysideId = stored || "guest_" + Math.floor(Math.random() * 9999);
-      if (!validateCommunityText(shinysideId, "Your Shinyside ID")) {
+      if (containsBlockedContent(shinysideId)) {
         shinysideId = "guest_" + Math.floor(Math.random() * 9999);
       }
       localStorage.setItem("shinyside_id", shinysideId);
@@ -278,7 +329,7 @@
       const trimmed = next.trim();
       if (!trimmed) return;
       if (trimmed.length > 30) {
-        alert("Shinyside IDs must be 30 characters or fewer.");
+        showToast("Shinyside IDs must be 30 characters or fewer.");
         return;
       }
       if (!validateCommunityText(trimmed, "Your Shinyside ID")) return;
@@ -386,7 +437,7 @@
       const content = messageInput.value.trim();
       if (!content || isSending || cooldownRemaining > 0) return;
       if (content.length > 500) {
-        alert("Messages must be 500 characters or fewer.");
+        showToast("Messages must be 500 characters or fewer.");
         return;
       }
       if (!validateCommunityText(content, "Your message")) return;
@@ -395,7 +446,7 @@
       sendBtn.disabled = true;
       try {
         if (await isUserBlocked(shinysideId)) {
-          alert("You are muted for the rest of the day.");
+          showToast("You are muted for the rest of the day.");
           return;
         }
         const { error } = await supabase.from("guestbook_messages").insert({
@@ -406,7 +457,7 @@
         startCooldown();
       } catch (error) {
         console.error("Could not send message:", error);
-        alert("Your message could not be sent. Please try again.");
+        showToast("Your message could not be sent. Please try again.");
       } finally {
         isSending = false;
         sendBtn.disabled = cooldownRemaining > 0;
@@ -440,7 +491,7 @@
         if (el) el.remove();
       } catch (err) {
         console.error("Delete failed:", err);
-        alert("Error deleting message");
+        showToast("Error deleting message.");
       }
     }
 
@@ -455,12 +506,10 @@
         });
       } catch (err) {
         console.error("Block failed:", err);
-        alert("Error blocking user");
+        showToast("Error blocking user.");
       }
     }
 
-    // Keep the composer above the on-screen keyboard on browsers where the
-    // keyboard overlays (rather than resizes) the layout viewport.
     function adjustForKeyboard() {
       const viewport = window.visualViewport;
       const keyboardInset = viewport
