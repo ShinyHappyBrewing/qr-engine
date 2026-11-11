@@ -4,193 +4,60 @@
   <meta charset="UTF-8" />
   <title>Shiny Happy Guestbook</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-
   <style>
-    :root {
-      --blue: #00A9CE;
-      --black: #0d0d0d;
-      --black-alt: #161616;
-      --white: #f3f3f3;
-    }
-    * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; }
-    body {
-      margin: 0;
-      font-family: "IBM Plex Mono", monospace;
-      background: radial-gradient(circle at top, #222 0, var(--black-alt) 40%, var(--black) 100%);
-      color: var(--white);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      height: 100dvh;
-      min-height: 0;
-      overflow: hidden;
-    }
-    header {
-      flex: 0 0 auto;
-      padding: 8px 12px;
-      background: var(--black-alt);
-      border-bottom: 1px solid #333;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-    }
-    header .brand { font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
-    header .status { font-size: 12px; opacity: 0.8; white-space: nowrap; }
-    .tabs { display: flex; flex: 0 0 auto; background: #111; border-bottom: 1px solid #333; }
-    .tab {
-      flex: 1 1 0;
-      min-width: 0;
-      padding: 8px 4px;
-      text-align: center;
-      font-size: 13px;
-      cursor: pointer;
-      border-right: 1px solid #222;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .tab:last-child { border-right: none; }
-    .tab.active { background: var(--black-alt); color: var(--blue); font-weight: bold; }
-    .chat-container {
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      padding: 10px 12px;
-      -webkit-overflow-scrolling: touch;
-    }
-    .message {
-      margin-bottom: 8px;
-      padding: 6px 8px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 13px;
-      position: relative;
-    }
-    .message .meta { font-size: 11px; opacity: 0.7; margin-bottom: 2px; }
-    .message .username { color: var(--blue); font-weight: bold; }
-    .message .content { white-space: pre-wrap; overflow-wrap: anywhere; }
-    .message .admin-actions { position: absolute; top: 4px; right: 6px; display: flex; gap: 4px; }
-    .admin-btn {
-      font-size: 10px;
-      padding: 2px 4px;
-      border-radius: 3px;
-      border: 1px solid #444;
-      background: #111;
-      color: var(--white);
-      cursor: pointer;
-    }
-    .admin-btn.delete { border-color: #ff4b4b; color: #ffaaaa; }
-    .admin-btn.block { border-color: #ffaa00; color: #ffdd99; }
-    .footer {
-      position: relative;
-      flex: 0 0 auto;
-      width: 100%;
-      padding: 8px 10px max(8px, env(safe-area-inset-bottom));
-      background: var(--black-alt);
-      border-top: 1px solid #333;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .footer-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; }
-    .input-row { display: flex; gap: 6px; }
-    .input-row input {
-      flex: 1;
-      min-width: 0;
-      padding: 8px;
-      border-radius: 3px;
-      border: 1px solid #333;
-      background: #111;
-      color: var(--white);
-      font-size: 16px; /* Prevents automatic focus zoom in iOS Safari. */
-    }
-    button { touch-action: manipulation; }
-    #change-handle-btn { min-height: 36px; }
-    .send-btn {
-      padding: 6px 10px;
-      border-radius: 3px;
-      border: 1px solid var(--blue);
-      background: var(--blue);
-      color: var(--black);
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-      min-width: 80px;
-      min-height: 40px;
-    }
-    .send-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
-    .cooldown { font-size: 11px; opacity: 0.7; min-height: 13px; }
-    .toast {
-      position: fixed;
-      z-index: 1000;
-      left: 50%;
-      top: max(12px, env(safe-area-inset-top));
-      width: min( calc(100vw - 32px), 520px );
-      padding: 12px 16px;
-      border: 1px solid #ff7777;
-      border-radius: 6px;
-      background: #351919;
-      color: #fff;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
-      text-align: center;
-      font-size: 14px;
-      line-height: 1.4;
-      opacity: 0;
-      transform: translate(-50%, -10px);
-      pointer-events: none;
-      transition: opacity 160ms ease, transform 160ms ease;
-    }
-    .toast.visible { opacity: 1; transform: translate(-50%, 0); }
-    @media (max-width: 560px) {
-      header { align-items: flex-start; }
-      header .brand { font-size: 11px; letter-spacing: 0.04em; }
-      header .status { font-size: 10px; }
-      .tabs { overflow-x: auto; }
-      .tab { flex: 0 0 auto; min-width: 25%; font-size: 10px; padding: 10px 5px; }
-    }
-    @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+    :root { --blue:#00A9CE; --black:#0d0d0d; --black-alt:#161616; --white:#f3f3f3; }
+    * { box-sizing:border-box; }
+    html,body { width:100%; height:100%; }
+    body { margin:0; font-family:"IBM Plex Mono",monospace; background:radial-gradient(circle at top,#222 0,var(--black-alt) 40%,var(--black) 100%); color:var(--white); display:flex; flex-direction:column; height:100vh; height:100dvh; min-height:0; overflow:hidden; }
+    header { flex:0 0 auto; padding:8px 12px; background:var(--black-alt); border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:14px; }
+    header .brand { font-weight:bold; letter-spacing:.08em; text-transform:uppercase; color:var(--blue); }
+    header .status { font-size:12px; opacity:.8; white-space:nowrap; }
+    .tabs { display:flex; flex:0 0 auto; background:#111; border-bottom:1px solid #333; }
+    .tab { flex:1 1 0; min-width:0; padding:8px 4px; text-align:center; font-size:13px; cursor:pointer; border-right:1px solid #222; text-transform:uppercase; letter-spacing:.04em; }
+    .tab:last-child { border-right:none; }
+    .tab.active { background:var(--black-alt); color:var(--blue); font-weight:bold; }
+    .chat-container { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:10px 12px; -webkit-overflow-scrolling:touch; }
+    .message { margin-bottom:8px; padding:6px 8px; border-radius:4px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.05); font-size:13px; position:relative; }
+    .message .meta { font-size:11px; opacity:.7; margin-bottom:2px; }
+    .message .username { color:var(--blue); font-weight:bold; }
+    .message .content { white-space:pre-wrap; overflow-wrap:anywhere; }
+    .message .admin-actions { position:absolute; top:4px; right:6px; display:flex; gap:4px; }
+    .admin-btn { font-size:10px; padding:2px 4px; border-radius:3px; border:1px solid #444; background:#111; color:var(--white); cursor:pointer; }
+    .admin-btn.delete { border-color:#ff4b4b; color:#ffaaaa; }
+    .admin-btn.block { border-color:#ffaa00; color:#ffdd99; }
+    .footer { position:relative; flex:0 0 auto; width:100%; padding:8px 10px max(8px,env(safe-area-inset-bottom)); background:var(--black-alt); border-top:1px solid #333; display:flex; flex-direction:column; gap:6px; }
+    .footer-top { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:11px; }
+    .input-row { display:flex; gap:6px; }
+    .input-row input { flex:1; min-width:0; padding:8px; border-radius:3px; border:1px solid #333; background:#111; color:var(--white); font-size:16px; }
+    button { touch-action:manipulation; }
+    #change-handle-btn { min-height:36px; }
+    .send-btn { padding:6px 10px; border-radius:3px; border:1px solid var(--blue); background:var(--blue); color:var(--black); font-weight:bold; font-size:16px; cursor:pointer; min-width:80px; min-height:40px; }
+    .send-btn[disabled] { opacity:.5; cursor:not-allowed; }
+    .cooldown { font-size:11px; opacity:.7; min-height:13px; }
+    .toast { position:fixed; z-index:1000; left:50%; top:max(12px,env(safe-area-inset-top)); width:min(calc(100vw - 32px),520px); padding:12px 16px; border:1px solid #ff7777; border-radius:6px; background:#351919; color:#fff; box-shadow:0 6px 24px rgba(0,0,0,.45); text-align:center; font-size:14px; line-height:1.4; opacity:0; transform:translate(-50%,-10px); pointer-events:none; transition:opacity 160ms ease,transform 160ms ease; }
+    .toast.visible { opacity:1; transform:translate(-50%,0); }
+    @media (max-width:560px) { header { align-items:flex-start; } header .brand { font-size:11px; letter-spacing:.04em; } header .status { font-size:10px; } .tabs { overflow-x:auto; } .tab { flex:0 0 auto; min-width:25%; font-size:10px; padding:10px 5px; } }
+    @media (prefers-reduced-motion:reduce) { .toast { transition:none; } }
   </style>
 </head>
-
 <body>
-  <header>
-    <div class="brand">Shiny Happy Brewing // Guestbook</div>
-    <div class="status" id="status">Connecting…</div>
-  </header>
-
+  <header><div class="brand">Shiny Happy Brewing // Guestbook</div><div class="status" id="status">Connecting…</div></header>
   <div class="tabs">
-    <div class="tab active" data-room="main_lobby">📍 Main Lobby</div>
-    <div class="tab" data-room="taproom">🍻 Taproom</div>
-    <div class="tab" data-room="event_room">🎉 Event Room</div>
-    <div class="tab" data-room="beer_garden">🌿 Beer Garden</div>
+    <div class="tab active" data-room="main_lobby">📍 Main Lobby</div><div class="tab" data-room="taproom">🍻 Taproom</div><div class="tab" data-room="event_room">🎉 Event Room</div><div class="tab" data-room="beer_garden">🌿 Beer Garden</div>
   </div>
-
   <div class="chat-container" id="chat" aria-live="polite"></div>
-
   <div class="footer" id="footer">
-    <div class="footer-top">
-      <span id="handle-display"></span>
-      <button id="change-handle-btn" type="button">Change Shinyside ID</button>
-    </div>
-    <div class="input-row">
-      <input type="text" id="message-input" placeholder="Leave a note…" maxlength="500" autocomplete="off" />
-      <button class="send-btn" id="send-btn" type="button">Send</button>
-    </div>
+    <div class="footer-top"><span id="handle-display"></span><button id="change-handle-btn" type="button">Change Shinyside ID</button></div>
+    <div class="input-row"><input type="text" id="message-input" placeholder="Leave a note…" maxlength="500" autocomplete="off" /><button class="send-btn" id="send-btn" type="button">Send</button></div>
     <div class="cooldown" id="cooldown-text" aria-live="polite"></div>
   </div>
   <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
     const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     const chatEl = document.getElementById("chat");
     const tabs = document.querySelectorAll(".tab");
     const statusEl = document.getElementById("status");
@@ -201,66 +68,69 @@
     const cooldownText = document.getElementById("cooldown-text");
     const footer = document.getElementById("footer");
     const toastEl = document.getElementById("toast");
-
-    let currentRoom = "main_lobby";
-    let shinysideId = null;
-    let isAdmin = false;
-    let cooldownTimer = null;
-    let cooldownRemaining = 0;
-    let isSending = false;
-    let toastTimer = null;
+    let currentRoom = "main_lobby", shinysideId = null, isAdmin = false;
+    let cooldownTimer = null, cooldownRemaining = 0, isSending = false, toastTimer = null;
 
     const ICEBREAKERS = [
-      "What beer are you starting with today?",
-      "If you could name a Shiny Happy beer, what would you call it?",
-      "What’s the best thing you’ve done today?",
-      "What band should we play next?",
-      "What’s your go-to comfort food?",
-      "What’s a random fun fact about you?",
-      "If you could teleport anywhere right now, where would you go?",
-      "What’s a movie you think everyone should watch?",
-      "What’s your favorite fall activity?",
-      "What’s something you’re looking forward to?"
+      "What beer are you starting with today?", "If you could name a Shiny Happy beer, what would you call it?",
+      "What’s the best thing you’ve done today?", "What band should we play next?", "What’s your go-to comfort food?",
+      "What’s a random fun fact about you?", "If you could teleport anywhere right now, where would you go?",
+      "What’s a movie you think everyone should watch?", "What’s your favorite fall activity?", "What’s something you’re looking forward to?"
     ];
     const getRandomIcebreaker = () => ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
 
-    // Client-side screening is a practical first line of moderation, not a
-    // guarantee: context, new slang, other languages, and novel evasion can
-    // require human review. Keep these terms in lower case and add local needs.
+    // Broad client-side word/phrase screening. It cannot catch every language,
+    // context, or new evasion; keep reviewing messages and extend this list as needed.
     const blockedTerms = [
-      // Profanity, insults, and common spelling variants.
-      "fuck", "fucking", "fucker", "motherfucker", "shit", "bullshit", "bitch", "bitches",
-      "bastard", "asshole", "arsehole", "dickhead", "dick", "cock", "cunt", "twat",
-      "piss off", "damn you", "goddamn", "motherfucking", "son of a bitch", "piece of shit",
-      "fuck you", "go to hell", "eat shit", "kiss my ass",
-      // Sexual harassment / explicit sexual language / solicitation.
-      "porn", "porno", "pornography", "xxx", "nsfw", "nude", "nudes", "naked pics",
-      "send nudes", "sex tape", "blowjob", "handjob", "rimjob", "deepthroat", "orgasm",
-      "masturbate", "masturbation", "cumshot", "semen", "dildo", "vibrator", "hentai",
-      "onlyfans", "hook up", "hookup", "suck my", "show me your body", "send me pics",
-      "sexual favors", "sexual favor", "rape", "molest", "groping", "pedo", "pedophile",
-      "child porn", "underage sex", "incest", "prostitute", "whore", "slut", "skank",
-      // Threats, violent intent, and encouragement of self-harm.
-      "kill yourself", "kys", "go kill yourself", "end your life", "you should die", "i hope you die",
-      "i will kill", "i'll kill", "im going to kill", "i am going to kill", "kill you", "shoot you",
-      "stab you", "bomb threat", "blow you up", "burn your house", "i will hurt you", "i'll hurt you",
-      "death threat", "hang yourself", "cut yourself", "self harm", "suicide is the answer",
-      // Hate symbols, racist slogans, and targeted identity-based abuse.
-      "nazi", "nazis", "heil hitler", "white power", "white supremacy", "white supremacist",
-      "gas the jews", "gas jews", "jews control", "jewish control", "race war", "ethnic cleansing",
-      "racial purity", "go back to your country", "go back where you came from", "you don't belong here",
-      "all muslims are terrorists", "all immigrants are criminals", "immigrants are vermin",
-      // Common English-language racial / ethnic / religious slurs. This list is
-      // deliberately used only for detection and rejection, never displayed.
-      "nigger", "niggers", "nigga", "niggas", "chink", "chinks", "gook", "gooks",
-      "spic", "spics", "wetback", "wetbacks", "kike", "kikes", "raghead", "ragheads",
-      "towelhead", "towelheads", "paki", "pakis", "coon", "coons", "porch monkey",
-      "sand nigger", "jigaboo", "negro", "beaner", "beaners", "cracker", "zipperhead",
-      "faggot", "faggots", "dyke", "tranny", " shemale", "retard", "retarded",
-      // Harassment / demeaning attacks and common abusive commands.
-      "worthless piece of", "you are disgusting", "nobody likes you", "shut up loser",
-      "go die", "you are ugly", "stupid bitch", "dumb bitch", "fat pig", "subhuman",
-      "vermin", "filthy animal", "rape you", "i want to rape"
+      // English profanity and slang, including requested terms.
+      "fuck", "fucking", "fucker", "motherfucker", "shit", "bullshit", "bull sh*t", "bitch", "bitches",
+      "bastard", "ass", "arse", "asshole", "arsehole", "dickhead", "dick", "cock", "cunt", "twat",
+      "piss", "pissed", "pissing", "piss off", "damn you", "goddamn", "motherfucking", "son of a bitch",
+      "piece of shit", "fuck you", "go to hell", "eat shit", "kiss my ass", "titties", "titty", "boobs",
+      "ballsack", "wanker", "bollocks", "bugger", "prick", "jackass", "douchebag", "douche", "crap",
+      // Explicit sexual content, solicitation, sexual harassment, and abuse.
+      "porn", "porno", "pornography", "xxx", "nsfw", "nude", "nudes", "naked pics", "send nudes", "sex tape",
+      "blowjob", "handjob", "rimjob", "deepthroat", "orgasm", "masturbate", "masturbation", "cumshot", "semen",
+      "dildo", "vibrator", "hentai", "onlyfans", "hook up", "hookup", "suck my", "show me your body", "send me pics",
+      "sexual favors", "sexual favor", "rape", "molest", "groping", "pedo", "pedophile", "child porn", "underage sex",
+      "incest", "prostitute", "whore", "slut", "skank", "milf", "anal sex", "pussy", "threesome",
+      // Threats, violence, and self-harm encouragement.
+      "kill yourself", "kys", "go kill yourself", "end your life", "you should die", "i hope you die", "i will kill",
+      "i'll kill", "ill kill", "im going to kill", "i am going to kill", "kill you", "shoot you", "stab you",
+      "bomb threat", "blow you up", "burn your house", "i will hurt you", "i'll hurt you", "death threat",
+      "hang yourself", "cut yourself", "self harm", "suicide is the answer", "murder you", "beat you up",
+      // Hate slogans and targeted hateful abuse.
+      "nazi", "nazis", "heil hitler", "white power", "white supremacy", "white supremacist", "gas the jews", "gas jews",
+      "jews control", "jewish control", "race war", "ethnic cleansing", "racial purity", "go back to your country",
+      "go back where you came from", "you don't belong here", "all muslims are terrorists", "all immigrants are criminals",
+      "immigrants are vermin", "deport all", "ethnic inferiority",
+      // English racial, ethnic, religious, and identity slurs; included solely for rejection.
+      "nigger", "niggers", "nigga", "niggas", "niggah", "niggaz", "chink", "chinks", "gook", "gooks",
+      "spic", "spics", "wetback", "wetbacks", "kike", "kikes", "raghead", "ragheads", "towelhead", "towelheads",
+      "paki", "pakis", "coon", "coons", "porch monkey", "sand nigger", "jigaboo", "beaner", "beaners",
+      "zipperhead", "faggot", "faggots", "dyke", "tranny", "shemale", "retard", "retarded", "homophobic slur",
+      // Spanish.
+      "joder", "jodido", "jodida", "mierda", "puta", "puto", "putas", "putos", "coño", "cabron", "cabrón",
+      "pendejo", "pendeja", "chingar", "chingada", "chingado", "chingas a tu madre", "vete a la mierda", "maricon",
+      "maricón", "negro de mierda", "mono de mierda", "te voy a matar", "ojala te mueras", "ojalá te mueras",
+      // French.
+      "merde", "putain", "connard", "connasse", "enculé", "encule", "salope", "nique ta mère", "nique ta mere",
+      "va te faire foutre", "sale arabe", "sale juif", "je vais te tuer",
+      // German.
+      "scheisse", "scheiße", "arschloch", "fick dich", "hurensohn", "hure", "schlampe", "schwuchtel", "kanake",
+      "verpiss dich", "ich bring dich um", "judensau",
+      // Portuguese.
+      " porra", "caralho", "puta", "puto", "merda", "foda-se", "fodase", "vai se foder", "filho da puta",
+      "macaco", "vou te matar", "se mata",
+      // Italian and Dutch.
+      "cazzo", "vaffanculo", "stronzo", "troia", "figlio di puttana", "negro di merda", "ti ammazzo",
+      "kanker", "kankerlijer", "tering", "klootzak", "tyfuslijer", "neger", "ik maak je dood",
+      // Russian and common Cyrillic abusive language / threats.
+      "блядь", "блять", "сука", "хуй", "хуя", "пизда", "пиздец", "ебать", "ёб", "мудак", "ублюдок",
+      "гомик", "чурка", "мразь", "я тебя убью", "сдохни", "убей себя",
+      // Common demeaning attacks and abusive commands.
+      "worthless piece of", "you are disgusting", "nobody likes you", "shut up loser", "go die", "you are ugly",
+      "stupid bitch", "dumb bitch", "fat pig", "subhuman", "vermin", "filthy animal", "rape you", "i want to rape"
     ];
 
     function showToast(message, duration = 3500) {
@@ -271,38 +141,37 @@
     }
 
     function normalizeForModeration(value) {
-      return value
-        .normalize("NFKD")
+      const confusables = {
+        "а":"a","е":"e","о":"o","р":"p","с":"c","х":"x","у":"y","і":"i","ї":"i","ј":"j","к":"k","м":"m","т":"t","в":"b","н":"h",
+        "α":"a","β":"b","ε":"e","ι":"i","κ":"k","ο":"o","ρ":"p","τ":"t","υ":"u","χ":"x","ν":"v"
+      };
+      return value.normalize("NFKD")
         .replace(/[\u0300-\u036f]/g, "")
         .toLowerCase()
-        .replace(/[0]/g, "o")
-        .replace(/[@]/g, "a")
-        .replace(/[1!|]/g, "i")
-        .replace(/[3]/g, "e")
-        .replace(/[4]/g, "a")
-        .replace(/[5$]/g, "s")
-        .replace(/[7+]/g, "t")
-        .replace(/[8]/g, "b")
-        .replace(/[\u200B-\u200D\uFEFF]/g, "");
+        .replace(/[аерсхуієїјкмтв]/g, char => confusables[char] || char)
+        .replace(/[αβεiκορτυχν]/g, char => confusables[char] || char)
+        .replace(/[0]/g, "o").replace(/[@]/g, "a").replace(/[1!|]/g, "i")
+        .replace(/[3]/g, "e").replace(/[4]/g, "a").replace(/[5$]/g, "s")
+        .replace(/[7+]/g, "t").replace(/[8]/g, "b")
+        .replace(/[\u200B-\u200D\uFEFF\uFE0E\uFE0F]/g, "");
     }
 
     function termToPattern(term) {
-      const normalized = normalizeForModeration(term).trim();
-      return normalized.split(/\s+/).map(word =>
-        [...word].map(char => `${char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}+`).join("[^a-z0-9]*")
-      ).join("[^a-z0-9]+");
+      const words = normalizeForModeration(term).trim().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+      return words.map(word => [...word]
+        .map(char => `${char.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}+`)
+        .join("[^\\p{L}\\p{N}]*"))
+        .join("[^\\p{L}\\p{N}]+");
     }
-
-    const blockedPatterns = blockedTerms
-      .map(term => term.trim())
-      .filter(Boolean)
-      .map(term => new RegExp(`(?:^|[^a-z0-9])${termToPattern(term)}(?:$|[^a-z0-9])`, "i"));
+    const blockedPatterns = blockedTerms.map(term => term.trim()).filter(Boolean).map(term => {
+      const pattern = termToPattern(term);
+      return pattern ? new RegExp(`(?:^|[^\\p{L}\\p{N}])${pattern}(?:$|[^\\p{L}\\p{N}])`, "iu") : null;
+    }).filter(Boolean);
 
     function containsBlockedContent(value) {
       const normalized = normalizeForModeration(value);
       return blockedPatterns.some(pattern => pattern.test(normalized));
     }
-
     function validateCommunityText(value, label) {
       if (containsBlockedContent(value)) {
         showToast(`${label} contains language that isn't allowed. Please rephrase it respectfully.`);
@@ -310,16 +179,11 @@
       }
       return true;
     }
-
-    function setHandleDisplay() {
-      handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
-    }
+    function setHandleDisplay() { handleDisplayEl.textContent = "Shinyside ID: " + shinysideId; }
     function initHandle() {
       const stored = localStorage.getItem("shinyside_id");
       shinysideId = stored || "guest_" + Math.floor(Math.random() * 9999);
-      if (containsBlockedContent(shinysideId)) {
-        shinysideId = "guest_" + Math.floor(Math.random() * 9999);
-      }
+      if (containsBlockedContent(shinysideId)) shinysideId = "guest_" + Math.floor(Math.random() * 9999);
       localStorage.setItem("shinyside_id", shinysideId);
       setHandleDisplay();
     }
@@ -328,21 +192,16 @@
       if (next === null) return;
       const trimmed = next.trim();
       if (!trimmed) return;
-      if (trimmed.length > 30) {
-        showToast("Shinyside IDs must be 30 characters or fewer.");
-        return;
-      }
+      if (trimmed.length > 30) { showToast("Shinyside IDs must be 30 characters or fewer."); return; }
       if (!validateCommunityText(trimmed, "Your Shinyside ID")) return;
       shinysideId = trimmed;
       localStorage.setItem("shinyside_id", shinysideId);
       setHandleDisplay();
     }
-
     function initAdminMode() {
       isAdmin = new URLSearchParams(window.location.search).get("admin") === "true";
       if (isAdmin) statusEl.textContent = "Connected // ADMIN MODE";
     }
-
     tabs.forEach(tab => tab.addEventListener("click", () => {
       tabs.forEach(item => item.classList.remove("active"));
       tab.classList.add("active");
@@ -353,197 +212,112 @@
     const get24hCutoffISO = () => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     async function loadMessages() {
       chatEl.replaceChildren();
-      const { data, error } = await supabase.from("guestbook_messages")
-        .select("*").eq("room", currentRoom).eq("is_deleted", false)
-        .gte("created_at", get24hCutoffISO()).order("created_at", { ascending: true });
-      if (error) {
-        console.error("Could not load messages:", error);
-        return;
-      }
+      const { data, error } = await supabase.from("guestbook_messages").select("*")
+        .eq("room", currentRoom).eq("is_deleted", false).gte("created_at", get24hCutoffISO())
+        .order("created_at", { ascending:true });
+      if (error) { console.error("Could not load messages:", error); return; }
       (data || []).forEach(renderMessage);
       chatEl.scrollTop = chatEl.scrollHeight;
     }
-
     async function maybePostDailyIcebreaker() {
-      const { data, error } = await supabase.from("guestbook_messages")
-        .select("id").eq("room", currentRoom).gte("created_at", get24hCutoffISO()).limit(1);
+      const { data, error } = await supabase.from("guestbook_messages").select("id")
+        .eq("room", currentRoom).gte("created_at", get24hCutoffISO()).limit(1);
       if (!error && (!data || data.length === 0)) {
-        const { error: insertError } = await supabase.from("guestbook_messages").insert({
-          room: currentRoom, username: "ShinyBot", content: getRandomIcebreaker()
-        });
+        const { error: insertError } = await supabase.from("guestbook_messages").insert({ room:currentRoom, username:"ShinyBot", content:getRandomIcebreaker() });
         if (insertError) console.error("Could not post icebreaker:", insertError);
       }
     }
-
     function renderMessage(msg) {
       const el = document.createElement("div");
-      el.className = "message";
-      el.dataset.id = msg.id;
-      el.dataset.username = msg.username;
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      const username = document.createElement("span");
-      username.className = "username";
-      username.textContent = msg.username;
+      el.className = "message"; el.dataset.id = msg.id; el.dataset.username = msg.username;
+      const meta = document.createElement("div"); meta.className = "meta";
+      const username = document.createElement("span"); username.className = "username"; username.textContent = msg.username;
       const time = document.createElement("span");
-      time.textContent = ` // ${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-      meta.append(username, time);
-      const content = document.createElement("div");
-      content.className = "content";
-      content.textContent = msg.content;
-      el.append(meta, content);
-
+      time.textContent = ` // ${new Date(msg.created_at).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })}`;
+      meta.append(username,time);
+      const content = document.createElement("div"); content.className = "content"; content.textContent = msg.content;
+      el.append(meta,content);
       if (isAdmin) {
-        const actions = document.createElement("div");
-        actions.className = "admin-actions";
-        const del = document.createElement("button");
-        del.className = "admin-btn delete";
-        del.textContent = "Delete";
-        del.onclick = () => adminDeleteMessage(msg.id);
-        const block = document.createElement("button");
-        block.className = "admin-btn block";
-        block.textContent = "Block";
-        block.onclick = () => adminBlockUser(msg.username);
-        actions.append(del, block);
-        el.appendChild(actions);
+        const actions = document.createElement("div"); actions.className = "admin-actions";
+        const del = document.createElement("button"); del.className = "admin-btn delete"; del.textContent = "Delete"; del.onclick = () => adminDeleteMessage(msg.id);
+        const block = document.createElement("button"); block.className = "admin-btn block"; block.textContent = "Block"; block.onclick = () => adminBlockUser(msg.username);
+        actions.append(del,block); el.appendChild(actions);
       }
       chatEl.appendChild(el);
     }
-
     function subscribeRealtime() {
       supabase.channel("guestbook_channel")
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "guestbook_messages" }, ({ new: msg }) => {
+        .on("postgres_changes", { event:"INSERT", schema:"public", table:"guestbook_messages" }, ({ new:msg }) => {
           if (msg.room === currentRoom && !msg.is_deleted && !chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`)) {
-            renderMessage(msg);
-            chatEl.scrollTop = chatEl.scrollHeight;
+            renderMessage(msg); chatEl.scrollTop = chatEl.scrollHeight;
           }
         })
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "guestbook_messages" }, ({ new: msg }) => {
-          if (msg.is_deleted) {
-            const el = chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`);
-            if (el) el.remove();
-          }
+        .on("postgres_changes", { event:"UPDATE", schema:"public", table:"guestbook_messages" }, ({ new:msg }) => {
+          if (msg.is_deleted) { const el = chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`); if (el) el.remove(); }
         }).subscribe();
     }
-
     async function isUserBlocked(username) {
       const { data, error } = await supabase.from("blocked_handles").select("username")
         .eq("username", username).gte("blocked_until", new Date().toISOString()).limit(1);
       if (error) throw error;
       return data && data.length > 0;
     }
-
     async function sendMessage() {
       const content = messageInput.value.trim();
       if (!content || isSending || cooldownRemaining > 0) return;
-      if (content.length > 500) {
-        showToast("Messages must be 500 characters or fewer.");
-        return;
-      }
-      if (!validateCommunityText(content, "Your message")) return;
-
-      isSending = true;
-      sendBtn.disabled = true;
+      if (content.length > 500) { showToast("Messages must be 500 characters or fewer."); return; }
+      if (!validateCommunityText(content,"Your message")) return;
+      isSending = true; sendBtn.disabled = true;
       try {
-        if (await isUserBlocked(shinysideId)) {
-          showToast("You are muted for the rest of the day.");
-          return;
-        }
-        const { error } = await supabase.from("guestbook_messages").insert({
-          room: currentRoom, username: shinysideId, content
-        });
+        if (await isUserBlocked(shinysideId)) { showToast("You are muted for the rest of the day."); return; }
+        const { error } = await supabase.from("guestbook_messages").insert({ room:currentRoom, username:shinysideId, content });
         if (error) throw error;
-        messageInput.value = "";
-        startCooldown();
+        messageInput.value = ""; startCooldown();
       } catch (error) {
-        console.error("Could not send message:", error);
-        showToast("Your message could not be sent. Please try again.");
-      } finally {
-        isSending = false;
-        sendBtn.disabled = cooldownRemaining > 0;
-      }
+        console.error("Could not send message:",error); showToast("Your message could not be sent. Please try again.");
+      } finally { isSending = false; sendBtn.disabled = cooldownRemaining > 0; }
     }
-
     function startCooldown() {
-      clearInterval(cooldownTimer);
-      cooldownRemaining = 10;
-      sendBtn.disabled = true;
+      clearInterval(cooldownTimer); cooldownRemaining = 10; sendBtn.disabled = true;
       cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
       cooldownTimer = setInterval(() => {
         cooldownRemaining--;
-        if (cooldownRemaining <= 0) {
-          clearInterval(cooldownTimer);
-          cooldownText.textContent = "";
-          sendBtn.disabled = false;
-        } else {
-          cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
-        }
-      }, 1000);
+        if (cooldownRemaining <= 0) { clearInterval(cooldownTimer); cooldownText.textContent = ""; sendBtn.disabled = false; }
+        else cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
+      },1000);
     }
-
     async function adminDeleteMessage(id) {
       try {
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-delete-message`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id })
-        });
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-delete-message`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({id}) });
         if (!res.ok) throw new Error(await res.text());
-        const el = chatEl.querySelector(`[data-id="${CSS.escape(String(id))}"]`);
-        if (el) el.remove();
-      } catch (err) {
-        console.error("Delete failed:", err);
-        showToast("Error deleting message.");
-      }
+        const el = chatEl.querySelector(`[data-id="${CSS.escape(String(id))}"]`); if (el) el.remove();
+      } catch (err) { console.error("Delete failed:",err); showToast("Error deleting message."); }
     }
-
     async function adminBlockUser(username) {
       try {
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-block-user`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username })
-        });
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-block-user`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username}) });
         if (!res.ok) throw new Error(await res.text());
-        document.querySelectorAll(".message").forEach(el => {
-          if (el.dataset.username === username) el.remove();
-        });
-      } catch (err) {
-        console.error("Block failed:", err);
-        showToast("Error blocking user.");
-      }
+        document.querySelectorAll(".message").forEach(el => { if (el.dataset.username === username) el.remove(); });
+      } catch (err) { console.error("Block failed:",err); showToast("Error blocking user."); }
     }
-
     function adjustForKeyboard() {
       const viewport = window.visualViewport;
-      const keyboardInset = viewport
-        ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
-        : 0;
+      const keyboardInset = viewport ? Math.max(0,window.innerHeight - viewport.height - viewport.offsetTop) : 0;
       footer.style.transform = keyboardInset ? `translateY(-${keyboardInset}px)` : "";
-      if (document.activeElement === messageInput && keyboardInset) {
-        requestAnimationFrame(() => messageInput.scrollIntoView({ block: "nearest", behavior: "smooth" }));
-      }
+      if (document.activeElement === messageInput && keyboardInset) requestAnimationFrame(() => messageInput.scrollIntoView({block:"nearest",behavior:"smooth"}));
     }
     if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", adjustForKeyboard);
-      window.visualViewport.addEventListener("scroll", adjustForKeyboard);
+      window.visualViewport.addEventListener("resize",adjustForKeyboard);
+      window.visualViewport.addEventListener("scroll",adjustForKeyboard);
     }
-    window.addEventListener("resize", adjustForKeyboard);
-
+    window.addEventListener("resize",adjustForKeyboard);
     (async function boot() {
-      initHandle();
-      initAdminMode();
-      await loadMessages();
-      await maybePostDailyIcebreaker();
-      subscribeRealtime();
-      statusEl.textContent = isAdmin ? "Connected // ADMIN MODE" : "Connected";
-      sendBtn.disabled = false;
+      initHandle(); initAdminMode(); await loadMessages(); await maybePostDailyIcebreaker(); subscribeRealtime();
+      statusEl.textContent = isAdmin ? "Connected // ADMIN MODE" : "Connected"; sendBtn.disabled = false;
     })();
-
-    changeHandleBtn.addEventListener("click", promptHandle);
-    sendBtn.addEventListener("click", sendMessage);
-    messageInput.addEventListener("keydown", event => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        sendMessage();
-      }
-    });
+    changeHandleBtn.addEventListener("click",promptHandle);
+    sendBtn.addEventListener("click",sendMessage);
+    messageInput.addEventListener("keydown",event => { if (event.key === "Enter") { event.preventDefault(); sendMessage(); } });
   </script>
 </body>
 </html>
