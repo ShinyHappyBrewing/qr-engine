@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <title>Shiny Happy Guestbook</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0d0d" />
+  <link rel="icon" type="image/svg+xml" href="/assets/shb-home-icon.svg" />
+  <link rel="apple-touch-icon" href="/assets/shb-home-icon.svg" />
+  <link rel="manifest" href="/site.webmanifest" />
   <style>
     :root {
       --blue: #00A9CE;
@@ -229,8 +233,7 @@
       header { align-items: flex-start; }
       header .brand { font-size: 11px; letter-spacing: 0.04em; }
       header .status { font-size: 10px; }
-      .tabs { overflow-x: auto; }
-      .tab { flex: 0 0 auto; min-width: 25%; font-size: 10px; padding: 10px 5px; }
+      .tab { font-size: 10px; padding: 10px 5px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -248,7 +251,6 @@
   <div class="tabs">
     <div class="tab active" data-room="main_lobby">📍 Main Lobby</div>
     <div class="tab" data-room="taproom">🍻 Taproom</div>
-    <div class="tab" data-room="event_room">🎉 Event Room</div>
     <div class="tab" data-room="beer_garden">🌿 Beer Garden</div>
   </div>
 

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0d0d0d"/>
+  <circle cx="256" cy="256" r="210" fill="#161616" stroke="#00A9CE" stroke-width="18"/>
+  <path d="M157 144h198l-22 221a22 22 0 0 1-22 20h-110a22 22 0 0 1-22-20z" fill="#00A9CE"/>
+  <path d="M169 202h174l-15 153a9 9 0 0 1-9 8h-126a9 9 0 0 1-9-8z" fill="#f3f3f3"/>
+  <path d="M355 190h24a51 51 0 0 1 0 102h-34" fill="none" stroke="#00A9CE" stroke-width="22" stroke-linecap="round"/>
+  <path d="M201 277h110" stroke="#00A9CE" stroke-width="16" stroke-linecap="round"/>
+  <text x="256" y="433" fill="#f3f3f3" font-family="Arial,sans-serif" font-size="42" font-weight="700" text-anchor="middle" letter-spacing="6">SHB</text>
+</svg>
