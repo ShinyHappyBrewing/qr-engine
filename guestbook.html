@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Shiny Happy Guestbook</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <style>
     :root {
@@ -11,8 +11,10 @@
       --black: #0d0d0d;
       --black-alt: #161616;
       --white: #f3f3f3;
+      --footer-height: 0px;
     }
     * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; }
     body {
       margin: 0;
       font-family: "IBM Plex Mono", monospace;
@@ -21,14 +23,19 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh;
+      min-height: 0;
+      overflow: hidden;
     }
     header {
+      flex: 0 0 auto;
       padding: 8px 12px;
       background: var(--black-alt);
       border-bottom: 1px solid #333;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
       font-size: 14px;
     }
     header .brand {
@@ -37,35 +44,33 @@
       text-transform: uppercase;
       color: var(--blue);
     }
-    header .status {
-      font-size: 12px;
-      opacity: 0.8;
-    }
+    header .status { font-size: 12px; opacity: 0.8; white-space: nowrap; }
     .tabs {
       display: flex;
+      flex: 0 0 auto;
       background: #111;
       border-bottom: 1px solid #333;
     }
     .tab {
-      flex: 1;
-      padding: 8px;
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 8px 4px;
       text-align: center;
       font-size: 13px;
       cursor: pointer;
       border-right: 1px solid #222;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
     }
     .tab:last-child { border-right: none; }
-    .tab.active {
-      background: var(--black-alt);
-      color: var(--blue);
-      font-weight: bold;
-    }
+    .tab.active { background: var(--black-alt); color: var(--blue); font-weight: bold; }
     .chat-container {
-      flex: 1;
+      flex: 1 1 auto;
+      min-height: 0;
       overflow-y: auto;
-      padding: 10px 12px 70px;
+      overscroll-behavior: contain;
+      padding: 10px 12px;
+      -webkit-overflow-scrolling: touch;
     }
     .message {
       margin-bottom: 8px;
@@ -76,19 +81,9 @@
       font-size: 13px;
       position: relative;
     }
-    .message .meta {
-      font-size: 11px;
-      opacity: 0.7;
-      margin-bottom: 2px;
-    }
-    .message .username {
-      color: var(--blue);
-      font-weight: bold;
-    }
-    .message .content {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
+    .message .meta { font-size: 11px; opacity: 0.7; margin-bottom: 2px; }
+    .message .username { color: var(--blue); font-weight: bold; }
+    .message .content { white-space: pre-wrap; overflow-wrap: anywhere; }
     .message .admin-actions {
       position: absolute;
       top: 4px;
@@ -108,13 +103,12 @@
     .admin-btn.delete { border-color: #ff4b4b; color: #ffaaaa; }
     .admin-btn.block { border-color: #ffaa00; color: #ffdd99; }
     .footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      position: relative;
+      flex: 0 0 auto;
+      width: 100%;
+      padding: 8px 10px max(8px, env(safe-area-inset-bottom));
       background: var(--black-alt);
       border-top: 1px solid #333;
-      padding: 8px 10px;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -123,21 +117,22 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
       font-size: 11px;
     }
-    .input-row {
-      display: flex;
-      gap: 6px;
-    }
+    .input-row { display: flex; gap: 6px; }
     .input-row input {
       flex: 1;
-      padding: 6px 8px;
+      min-width: 0;
+      padding: 8px;
       border-radius: 3px;
       border: 1px solid #333;
       background: #111;
       color: var(--white);
-      font-size: 13px;
+      font-size: 16px; /* Prevents automatic focus zoom in iOS Safari. */
     }
+    button { touch-action: manipulation; }
+    #change-handle-btn { min-height: 36px; }
     .send-btn {
       padding: 6px 10px;
       border-radius: 3px;
@@ -145,17 +140,19 @@
       background: var(--blue);
       color: var(--black);
       font-weight: bold;
-      font-size: 13px;
+      font-size: 16px;
       cursor: pointer;
       min-width: 80px;
+      min-height: 40px;
     }
-    .send-btn[disabled] {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .cooldown {
-      font-size: 11px;
-      opacity: 0.7;
+    .send-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+    .cooldown { font-size: 11px; opacity: 0.7; min-height: 13px; }
+    @media (max-width: 560px) {
+      header { align-items: flex-start; }
+      header .brand { font-size: 11px; letter-spacing: 0.04em; }
+      header .status { font-size: 10px; }
+      .tabs { overflow-x: auto; }
+      .tab { flex: 0 0 auto; min-width: 25%; font-size: 10px; padding: 10px 5px; }
     }
   </style>
 </head>
@@ -173,28 +170,25 @@
     <div class="tab" data-room="beer_garden">🌿 Beer Garden</div>
   </div>
 
-  <div class="chat-container" id="chat"></div>
+  <div class="chat-container" id="chat" aria-live="polite"></div>
 
-  <div class="footer">
+  <div class="footer" id="footer">
     <div class="footer-top">
       <span id="handle-display"></span>
-      <button id="change-handle-btn">Change Shinyside ID</button>
+      <button id="change-handle-btn" type="button">Change Shinyside ID</button>
     </div>
     <div class="input-row">
-      <input type="text" id="message-input" placeholder="Leave a note…" />
-      <button class="send-btn" id="send-btn">Send</button>
+      <input type="text" id="message-input" placeholder="Leave a note…" maxlength="500" autocomplete="off" />
+      <button class="send-btn" id="send-btn" type="button">Send</button>
     </div>
-    <div class="cooldown" id="cooldown-text"></div>
+    <div class="cooldown" id="cooldown-text" aria-live="polite"></div>
   </div>
 
-  <!-- ⭐ CLEAN MODERN SUPABASE SCRIPT ⭐ -->
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
     const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
-    const SUPABASE_ANON_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
-
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const chatEl = document.getElementById("chat");
@@ -205,12 +199,14 @@
     const messageInput = document.getElementById("message-input");
     const sendBtn = document.getElementById("send-btn");
     const cooldownText = document.getElementById("cooldown-text");
+    const footer = document.getElementById("footer");
 
     let currentRoom = "main_lobby";
     let shinysideId = null;
     let isAdmin = false;
     let cooldownTimer = null;
     let cooldownRemaining = 0;
+    let isSending = false;
 
     const ICEBREAKERS = [
       "What beer are you starting with today?",
@@ -224,273 +220,281 @@
       "What’s your favorite fall activity?",
       "What’s something you’re looking forward to?"
     ];
-    const getRandomIcebreaker = () =>
-      ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
+    const getRandomIcebreaker = () => ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
 
+    // Basic client-side screening. This is a deterrent, not a substitute for
+    // server-side moderation: users can bypass all browser-only checks.
+    const blockedTerms = [
+      "fuck", "shit", "bitch", "bastard", "asshole", "cunt", "damn",
+      "porn", "nude", "nudes", "blowjob", "handjob", "orgasm",
+      "nazi", "heil hitler", "white power", "kill yourself", "kys",
+      "i will kill", "i'll kill", "shoot you", "bomb threat", "rape"
+    ];
+    const normalizeForModeration = value => value
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[0@]/g, "o")
+      .replace(/[1!|]/g, "i")
+      .replace(/[3]/g, "e")
+      .replace(/[4@]/g, "a")
+      .replace(/[5$]/g, "s")
+      .replace(/[7]/g, "t")
+      .replace(/[\u200B-\u200D\uFEFF]/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+    const containsBlockedContent = value => {
+      const normalized = normalizeForModeration(value);
+      return blockedTerms.some(term => {
+        const normalizedTerm = normalizeForModeration(term);
+        const escaped = normalizedTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const flexible = escaped.replace(/\s+/g, "\\s+");
+        return new RegExp(`(?:^|\\s)${flexible}(?:$|\\s)`, "i").test(normalized);
+      });
+    };
+    function validateCommunityText(value, label) {
+      if (containsBlockedContent(value)) {
+        alert(`${label} contains language that isn't allowed. Please rephrase it respectfully.`);
+        return false;
+      }
+      return true;
+    }
+
+    function setHandleDisplay() {
+      handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
+    }
     function initHandle() {
       const stored = localStorage.getItem("shinyside_id");
       shinysideId = stored || "guest_" + Math.floor(Math.random() * 9999);
-      localStorage.setItem("shinyside_id", shinysideId);
-      handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
-    }
-
-    function promptHandle() {
-      const next = prompt("Choose your Shinyside ID:", shinysideId);
-      if (next && next.trim()) {
-        shinysideId = next.trim();
-        localStorage.setItem("shinyside_id", shinysideId);
-        handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
+      if (!validateCommunityText(shinysideId, "Your Shinyside ID")) {
+        shinysideId = "guest_" + Math.floor(Math.random() * 9999);
       }
+      localStorage.setItem("shinyside_id", shinysideId);
+      setHandleDisplay();
+    }
+    function promptHandle() {
+      const next = prompt("Choose your Shinyside ID (up to 30 characters):", shinysideId);
+      if (next === null) return;
+      const trimmed = next.trim();
+      if (!trimmed) return;
+      if (trimmed.length > 30) {
+        alert("Shinyside IDs must be 30 characters or fewer.");
+        return;
+      }
+      if (!validateCommunityText(trimmed, "Your Shinyside ID")) return;
+      shinysideId = trimmed;
+      localStorage.setItem("shinyside_id", shinysideId);
+      setHandleDisplay();
     }
 
     function initAdminMode() {
-      const params = new URLSearchParams(window.location.search);
-      isAdmin = params.get("admin") === "true";
+      isAdmin = new URLSearchParams(window.location.search).get("admin") === "true";
       if (isAdmin) statusEl.textContent = "Connected // ADMIN MODE";
     }
 
-    tabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        tabs.forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        currentRoom = tab.dataset.room;
-        loadMessages();
-      });
-    });
+    tabs.forEach(tab => tab.addEventListener("click", () => {
+      tabs.forEach(item => item.classList.remove("active"));
+      tab.classList.add("active");
+      currentRoom = tab.dataset.room;
+      loadMessages();
+    }));
 
-    const get24hCutoffISO = () =>
-      new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
+    const get24hCutoffISO = () => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     async function loadMessages() {
-      chatEl.innerHTML = "";
-      const cutoff = get24hCutoffISO();
-
-      const { data } = await supabase
-        .from("guestbook_messages")
-        .select("*")
-        .eq("room", currentRoom)
-        .eq("is_deleted", false)
-        .gte("created_at", cutoff)
-        .order("created_at", { ascending: true });
-
-      data.forEach(renderMessage);
+      chatEl.replaceChildren();
+      const { data, error } = await supabase.from("guestbook_messages")
+        .select("*").eq("room", currentRoom).eq("is_deleted", false)
+        .gte("created_at", get24hCutoffISO()).order("created_at", { ascending: true });
+      if (error) {
+        console.error("Could not load messages:", error);
+        return;
+      }
+      (data || []).forEach(renderMessage);
       chatEl.scrollTop = chatEl.scrollHeight;
     }
 
     async function maybePostDailyIcebreaker() {
-      const cutoff = get24hCutoffISO();
-
-      const { data } = await supabase
-        .from("guestbook_messages")
-        .select("*")
-        .eq("room", currentRoom)
-        .gte("created_at", cutoff)
-        .limit(1);
-
-      if (!data || data.length === 0) {
-        await supabase.from("guestbook_messages").insert({
-          room: currentRoom,
-          username: "ShinyBot",
-          content: getRandomIcebreaker()
+      const { data, error } = await supabase.from("guestbook_messages")
+        .select("id").eq("room", currentRoom).gte("created_at", get24hCutoffISO()).limit(1);
+      if (!error && (!data || data.length === 0)) {
+        const { error: insertError } = await supabase.from("guestbook_messages").insert({
+          room: currentRoom, username: "ShinyBot", content: getRandomIcebreaker()
         });
+        if (insertError) console.error("Could not post icebreaker:", insertError);
       }
     }
 
-   function renderMessage(msg) {
-  const el = document.createElement("div");
-  el.className = "message";
-  el.dataset.id = msg.id;
-  el.dataset.username = msg.username;
+    function renderMessage(msg) {
+      const el = document.createElement("div");
+      el.className = "message";
+      el.dataset.id = msg.id;
+      el.dataset.username = msg.username;
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const username = document.createElement("span");
+      username.className = "username";
+      username.textContent = msg.username;
+      const time = document.createElement("span");
+      time.textContent = ` // ${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+      meta.append(username, time);
+      const content = document.createElement("div");
+      content.className = "content";
+      content.textContent = msg.content;
+      el.append(meta, content);
 
-  el.innerHTML = `
-    <div class="meta">
-      <span class="username">${msg.username}</span> //
-      <span>${new Date(msg.created_at).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit"
-      })}</span>
-    </div>
-    <div class="content">${msg.content}</div>
-  `;
+      if (isAdmin) {
+        const actions = document.createElement("div");
+        actions.className = "admin-actions";
+        const del = document.createElement("button");
+        del.className = "admin-btn delete";
+        del.textContent = "Delete";
+        del.onclick = () => adminDeleteMessage(msg.id);
+        const block = document.createElement("button");
+        block.className = "admin-btn block";
+        block.textContent = "Block";
+        block.onclick = () => adminBlockUser(msg.username);
+        actions.append(del, block);
+        el.appendChild(actions);
+      }
+      chatEl.appendChild(el);
+    }
 
-  if (isAdmin) {
-    const actions = document.createElement("div");
-    actions.className = "admin-actions";
+    function subscribeRealtime() {
+      supabase.channel("guestbook_channel")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "guestbook_messages" }, ({ new: msg }) => {
+          if (msg.room === currentRoom && !msg.is_deleted && !chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`)) {
+            renderMessage(msg);
+            chatEl.scrollTop = chatEl.scrollHeight;
+          }
+        })
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "guestbook_messages" }, ({ new: msg }) => {
+          if (msg.is_deleted) {
+            const el = chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`);
+            if (el) el.remove();
+          }
+        }).subscribe();
+    }
 
-    const del = document.createElement("button");
-    del.className = "admin-btn delete";
-    del.textContent = "Delete";
-    del.onclick = () => adminDeleteMessage(msg.id);
+    async function isUserBlocked(username) {
+      const { data, error } = await supabase.from("blocked_handles").select("username")
+        .eq("username", username).gte("blocked_until", new Date().toISOString()).limit(1);
+      if (error) throw error;
+      return data && data.length > 0;
+    }
 
-    const block = document.createElement("button");
-    block.className = "admin-btn block";
-    block.textContent = "Block";
-    block.onclick = () => adminBlockUser(msg.username);
+    async function sendMessage() {
+      const content = messageInput.value.trim();
+      if (!content || isSending || cooldownRemaining > 0) return;
+      if (content.length > 500) {
+        alert("Messages must be 500 characters or fewer.");
+        return;
+      }
+      if (!validateCommunityText(content, "Your message")) return;
 
-    actions.appendChild(del);
-    actions.appendChild(block);
-    el.appendChild(actions);
-  }
-
-  chatEl.appendChild(el);
-}
-
-function subscribeRealtime() {
-  const channel = supabase.channel("guestbook_channel");
-
-  channel.on(
-    "postgres_changes",
-    { event: "INSERT", schema: "public", table: "guestbook_messages" },
-    payload => {
-      const msg = payload.new;
-      if (msg.room === currentRoom && !msg.is_deleted) {
-        renderMessage(msg);
-        chatEl.scrollTop = chatEl.scrollHeight;
+      isSending = true;
+      sendBtn.disabled = true;
+      try {
+        if (await isUserBlocked(shinysideId)) {
+          alert("You are muted for the rest of the day.");
+          return;
+        }
+        const { error } = await supabase.from("guestbook_messages").insert({
+          room: currentRoom, username: shinysideId, content
+        });
+        if (error) throw error;
+        messageInput.value = "";
+        startCooldown();
+      } catch (error) {
+        console.error("Could not send message:", error);
+        alert("Your message could not be sent. Please try again.");
+      } finally {
+        isSending = false;
+        sendBtn.disabled = cooldownRemaining > 0;
       }
     }
-  );
 
-  channel.on(
-    "postgres_changes",
-    { event: "UPDATE", schema: "public", table: "guestbook_messages" },
-    payload => {
-      const msg = payload.new;
-      if (msg.is_deleted) {
-        const el = chatEl.querySelector(`[data-id="${msg.id}"]`);
-        if (el) el.remove();
-      }
-    }
-  );
-
-  channel.subscribe();
-}
-
-async function isUserBlocked(username) {
-  const nowISO = new Date().toISOString();
-  const { data } = await supabase
-    .from("blocked_handles")
-    .select("*")
-    .eq("username", username)
-    .gte("blocked_until", nowISO)
-    .limit(1);
-
-  return data && data.length > 0;
-}
-
-async function sendMessage() {
-  const content = messageInput.value.trim();
-  if (!content) return;
-
-  if (await isUserBlocked(shinysideId)) {
-    alert("You are muted for the rest of the day.");
-    return;
-  }
-
-  sendBtn.disabled = true;
-
-  await supabase.from("guestbook_messages").insert({
-    room: currentRoom,
-    username: shinysideId,
-    content
-  });
-
-  messageInput.value = "";
-  startCooldown();
-}
-
-function startCooldown() {
-  cooldownRemaining = 10;
-  cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
-
-  cooldownTimer = setInterval(() => {
-    cooldownRemaining--;
-    if (cooldownRemaining <= 0) {
+    function startCooldown() {
       clearInterval(cooldownTimer);
-      cooldownText.textContent = "";
-      sendBtn.disabled = false;
-    } else {
+      cooldownRemaining = 10;
+      sendBtn.disabled = true;
       cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
+      cooldownTimer = setInterval(() => {
+        cooldownRemaining--;
+        if (cooldownRemaining <= 0) {
+          clearInterval(cooldownTimer);
+          cooldownText.textContent = "";
+          sendBtn.disabled = false;
+        } else {
+          cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
+        }
+      }, 1000);
     }
-  }, 1000);
-}
 
-// --- SECURE ADMIN ACTIONS VIA EDGE FUNCTIONS ---
-
-async function adminDeleteMessage(id) {
-  try {
-    const res = await fetch(
-      "https://wowdmkxuwysuihgoklki.supabase.co/functions/v1/admin-delete-message",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ id })
+    async function adminDeleteMessage(id) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-delete-message`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const el = chatEl.querySelector(`[data-id="${CSS.escape(String(id))}"]`);
+        if (el) el.remove();
+      } catch (err) {
+        console.error("Delete failed:", err);
+        alert("Error deleting message");
       }
-    );
-
-    if (!res.ok) {
-      console.error("Delete failed:", await res.text());
-      alert("Error deleting message");
-      return;
     }
 
-    // Remove deleted message from UI
-    const el = document.querySelector(`[data-id="${id}"]`);
-    if (el) el.remove();
-
-  } catch (err) {
-    console.error("Delete error:", err);
-    alert("Error deleting message");
-  }
-}
-
-async function adminBlockUser(username) {
-  try {
-    const res = await fetch(
-      "https://wowdmkxuwysuihgoklki.supabase.co/functions/v1/admin-block-user",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ username })
+    async function adminBlockUser(username) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-block-user`, {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        document.querySelectorAll(".message").forEach(el => {
+          if (el.dataset.username === username) el.remove();
+        });
+      } catch (err) {
+        console.error("Block failed:", err);
+        alert("Error blocking user");
       }
-    );
-
-    if (!res.ok) {
-      console.error("Block failed:", await res.text());
-      alert("Error blocking user");
-      return;
     }
 
-    // Remove all messages from that user
-    document
-      .querySelectorAll(`[data-username="${username}"]`)
-      .forEach(el => el.remove());
+    // Keep the composer above the on-screen keyboard on browsers where the
+    // keyboard overlays (rather than resizes) the layout viewport.
+    function adjustForKeyboard() {
+      const viewport = window.visualViewport;
+      const keyboardInset = viewport
+        ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+        : 0;
+      footer.style.transform = keyboardInset ? `translateY(-${keyboardInset}px)` : "";
+      if (document.activeElement === messageInput && keyboardInset) {
+        requestAnimationFrame(() => messageInput.scrollIntoView({ block: "nearest", behavior: "smooth" }));
+      }
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", adjustForKeyboard);
+      window.visualViewport.addEventListener("scroll", adjustForKeyboard);
+    }
+    window.addEventListener("resize", adjustForKeyboard);
 
-  } catch (err) {
-    console.error("Block error:", err);
-    alert("Error blocking user");
-  }
-}
+    (async function boot() {
+      initHandle();
+      initAdminMode();
+      await loadMessages();
+      await maybePostDailyIcebreaker();
+      subscribeRealtime();
+      statusEl.textContent = isAdmin ? "Connected // ADMIN MODE" : "Connected";
+      sendBtn.disabled = false;
+    })();
 
-// --- BOOTSTRAP ---
-
-(async function boot() {
-  initHandle();
-  initAdminMode();
-  await loadMessages();
-  await maybePostDailyIcebreaker();
-  subscribeRealtime();
-  statusEl.textContent = "Connected";
-  sendBtn.disabled = false;
-})();
-
-// --- EVENT LISTENERS ---
-
-changeHandleBtn.addEventListener("click", promptHandle);
-sendBtn.addEventListener("click", sendMessage);
+    changeHandleBtn.addEventListener("click", promptHandle);
+    sendBtn.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
   </script>
 </body>
 </html>
