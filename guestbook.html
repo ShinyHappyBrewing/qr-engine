@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Shiny Happy Guestbook</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
 
   <style>
     :root {
@@ -13,6 +13,14 @@
       --white: #f3f3f3;
     }
     * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
     body {
       margin: 0;
       font-family: "IBM Plex Mono", monospace;
@@ -20,6 +28,7 @@
       color: var(--white);
       display: flex;
       flex-direction: column;
+      min-height: 100vh;
       height: 100vh;
     }
     header {
@@ -65,7 +74,8 @@
     .chat-container {
       flex: 1;
       overflow-y: auto;
-      padding: 10px 12px 70px;
+      padding: 10px 12px 110px;
+      -webkit-overflow-scrolling: touch;
     }
     .message {
       margin-bottom: 8px;
@@ -118,28 +128,33 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      z-index: 10;
     }
     .footer-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 11px;
+      gap: 8px;
     }
     .input-row {
       display: flex;
       gap: 6px;
+      align-items: center;
     }
     .input-row input {
       flex: 1;
-      padding: 6px 8px;
+      min-height: 44px;
+      padding: 8px 10px;
       border-radius: 3px;
       border: 1px solid #333;
       background: #111;
       color: var(--white);
-      font-size: 13px;
+      font-size: 16px;
+      line-height: 1.3;
     }
     .send-btn {
-      padding: 6px 10px;
+      padding: 8px 12px;
       border-radius: 3px;
       border: 1px solid var(--blue);
       background: var(--blue);
@@ -148,6 +163,8 @@
       font-size: 13px;
       cursor: pointer;
       min-width: 80px;
+      min-height: 44px;
+      touch-action: manipulation;
     }
     .send-btn[disabled] {
       opacity: 0.5;
@@ -156,6 +173,35 @@
     .cooldown {
       font-size: 11px;
       opacity: 0.7;
+      min-height: 14px;
+    }
+
+    @media (max-width: 480px) {
+      header {
+        padding: 8px 10px;
+      }
+      header .brand {
+        font-size: 11px;
+        letter-spacing: 0.04em;
+      }
+      .tabs {
+        font-size: 11px;
+      }
+      .tab {
+        padding: 10px 6px;
+        font-size: 11px;
+      }
+      .footer-top {
+        flex-wrap: wrap;
+        font-size: 10px;
+      }
+      .footer {
+        padding: 8px;
+      }
+      .input-row input,
+      .send-btn {
+        min-height: 46px;
+      }
     }
   </style>
 </head>
@@ -193,7 +239,7 @@
 
     const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
     const SUPABASE_ANON_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr[...]";
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -224,23 +270,127 @@
       "What’s your favorite fall activity?",
       "What’s something you’re looking forward to?"
     ];
+
+    const MODERATION_BLOCKLIST = [
+      "fuck","fuk","fucking","shit","bitch","asshole","dick","pussy","nigger","nigga",
+      "coon","chink","beaner","whore","slut","rape","rapist","kill","stab","shoot","bomb",
+      "hate","cunt","faggot","tranny","retard","incel","slur","threat"
+    ];
+
     const getRandomIcebreaker = () =>
       ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
 
+    function normalizeText(value) {
+      return String(value || "")
+        .toLowerCase()
+        .normalize("NFKC")
+        .replace(/[\u200B-\u200D\uFEFF]/g, "")
+        .trim();
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function sanitizeHandle(value) {
+      const cleaned = String(value || "")
+        .replace(/[^a-zA-Z0-9._-]/g, "")
+        .replace(/\s+/g, "")
+        .trim();
+
+      return cleaned.slice(0, 24);
+    }
+
+    function sanitizeMessage(value) {
+      return String(value || "")
+        .replace(/\r/g, "")
+        .replace(/[\u0000-\u001F\u007F]/g, "")
+        .trim();
+    }
+
+    function containsModerationIssue(rawValue) {
+      const text = normalizeText(rawValue);
+      if (!text) return false;
+
+      return MODERATION_BLOCKLIST.some(word => {
+        const pattern = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+        return pattern.test(text);
+      });
+    }
+
+    function isSuspiciousHandle(handle) {
+      const normalized = normalizeText(handle);
+      if (!normalized) return true;
+      if (normalized.length < 2 || normalized.length > 24) return true;
+      if (!/^[a-z0-9._-]+$/i.test(normalized)) return true;
+
+      if (normalized.includes("admin") || normalized.includes("mod") || normalized.includes("bot")) {
+        return true;
+      }
+
+      return containsModerationIssue(normalized);
+    }
+
+    function validateMessageContent(messageText, handleText) {
+      const cleanMessage = sanitizeMessage(messageText);
+      const cleanHandle = sanitizeHandle(handleText);
+
+      if (!cleanMessage || cleanMessage.length < 1 || cleanMessage.length > 300) {
+        return {
+          ok: false,
+          message: "Your message must be between 1 and 300 characters."
+        };
+      }
+
+      if (containsModerationIssue(cleanMessage) || containsModerationIssue(cleanHandle)) {
+        return {
+          ok: false,
+          message: "Please keep this community respectful. No profanity, hate, sexual, or threatening language."
+        };
+      }
+
+      if (isSuspiciousHandle(cleanHandle)) {
+        return {
+          ok: false,
+          message: "Choose a cleaner Shinyside ID with letters/numbers and no offensive language."
+        };
+      }
+
+      return { ok: true, message: cleanMessage, handle: cleanHandle };
+    }
+
     function initHandle() {
       const stored = localStorage.getItem("shinyside_id");
-      shinysideId = stored || "guest_" + Math.floor(Math.random() * 9999);
+      const fallback = "guest_" + Math.floor(Math.random() * 9999);
+      const candidate = sanitizeHandle(stored || fallback);
+      shinysideId = candidate && !isSuspiciousHandle(candidate) ? candidate : fallback;
       localStorage.setItem("shinyside_id", shinysideId);
       handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
     }
 
     function promptHandle() {
       const next = prompt("Choose your Shinyside ID:", shinysideId);
-      if (next && next.trim()) {
-        shinysideId = next.trim();
-        localStorage.setItem("shinyside_id", shinysideId);
-        handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
+      if (!next) return;
+
+      const cleaned = sanitizeHandle(next);
+      if (!cleaned) {
+        alert("Please enter a valid Shinyside ID.");
+        return;
       }
+
+      if (isSuspiciousHandle(cleaned)) {
+        alert("That ID isn’t allowed. Please choose something respectful and clear.");
+        return;
+      }
+
+      shinysideId = cleaned;
+      localStorage.setItem("shinyside_id", shinysideId);
+      handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
     }
 
     function initAdminMode() {
@@ -273,7 +423,7 @@
         .gte("created_at", cutoff)
         .order("created_at", { ascending: true });
 
-      data.forEach(renderMessage);
+      (data || []).forEach(renderMessage);
       chatEl.scrollTop = chatEl.scrollHeight;
     }
 
@@ -296,201 +446,233 @@
       }
     }
 
-   function renderMessage(msg) {
-  const el = document.createElement("div");
-  el.className = "message";
-  el.dataset.id = msg.id;
-  el.dataset.username = msg.username;
+    function renderMessage(msg) {
+      const el = document.createElement("div");
+      el.className = "message";
+      el.dataset.id = msg.id;
+      el.dataset.username = msg.username;
 
-  el.innerHTML = `
-    <div class="meta">
-      <span class="username">${msg.username}</span> //
-      <span>${new Date(msg.created_at).toLocaleTimeString([], {
+      const meta = document.createElement("div");
+      meta.className = "meta";
+
+      const username = document.createElement("span");
+      username.className = "username";
+      username.textContent = escapeHtml(msg.username);
+
+      const separator = document.createElement("span");
+      separator.textContent = " // ";
+
+      const time = document.createElement("span");
+      time.textContent = new Date(msg.created_at).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit"
-      })}</span>
-    </div>
-    <div class="content">${msg.content}</div>
-  `;
+      });
 
-  if (isAdmin) {
-    const actions = document.createElement("div");
-    actions.className = "admin-actions";
+      meta.appendChild(username);
+      meta.appendChild(separator);
+      meta.appendChild(time);
 
-    const del = document.createElement("button");
-    del.className = "admin-btn delete";
-    del.textContent = "Delete";
-    del.onclick = () => adminDeleteMessage(msg.id);
+      const content = document.createElement("div");
+      content.className = "content";
+      content.textContent = msg.content;
 
-    const block = document.createElement("button");
-    block.className = "admin-btn block";
-    block.textContent = "Block";
-    block.onclick = () => adminBlockUser(msg.username);
+      el.appendChild(meta);
+      el.appendChild(content);
 
-    actions.appendChild(del);
-    actions.appendChild(block);
-    el.appendChild(actions);
-  }
+      if (isAdmin) {
+        const actions = document.createElement("div");
+        actions.className = "admin-actions";
 
-  chatEl.appendChild(el);
-}
+        const del = document.createElement("button");
+        del.className = "admin-btn delete";
+        del.textContent = "Delete";
+        del.onclick = () => adminDeleteMessage(msg.id);
 
-function subscribeRealtime() {
-  const channel = supabase.channel("guestbook_channel");
+        const block = document.createElement("button");
+        block.className = "admin-btn block";
+        block.textContent = "Block";
+        block.onclick = () => adminBlockUser(msg.username);
 
-  channel.on(
-    "postgres_changes",
-    { event: "INSERT", schema: "public", table: "guestbook_messages" },
-    payload => {
-      const msg = payload.new;
-      if (msg.room === currentRoom && !msg.is_deleted) {
-        renderMessage(msg);
-        chatEl.scrollTop = chatEl.scrollHeight;
+        actions.appendChild(del);
+        actions.appendChild(block);
+        el.appendChild(actions);
+      }
+
+      chatEl.appendChild(el);
+    }
+
+    function subscribeRealtime() {
+      const channel = supabase.channel("guestbook_channel");
+
+      channel.on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "guestbook_messages" },
+        payload => {
+          const msg = payload.new;
+          if (msg.room === currentRoom && !msg.is_deleted) {
+            renderMessage(msg);
+            chatEl.scrollTop = chatEl.scrollHeight;
+          }
+        }
+      );
+
+      channel.on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "guestbook_messages" },
+        payload => {
+          const msg = payload.new;
+          if (msg.is_deleted) {
+            const el = chatEl.querySelector(`[data-id="${msg.id}"]`);
+            if (el) el.remove();
+          }
+        }
+      );
+
+      channel.subscribe();
+    }
+
+    async function isUserBlocked(username) {
+      const nowISO = new Date().toISOString();
+      const { data } = await supabase
+        .from("blocked_handles")
+        .select("*")
+        .eq("username", username)
+        .gte("blocked_until", nowISO)
+        .limit(1);
+
+      return data && data.length > 0;
+    }
+
+    async function sendMessage() {
+      const rawMessage = messageInput.value;
+      const validation = validateMessageContent(rawMessage, shinysideId);
+
+      if (!validation.ok) {
+        alert(validation.message);
+        return;
+      }
+
+      if (await isUserBlocked(shinysideId)) {
+        alert("You are muted for the rest of the day.");
+        return;
+      }
+
+      sendBtn.disabled = true;
+
+      try {
+        await supabase.from("guestbook_messages").insert({
+          room: currentRoom,
+          username: validation.handle,
+          content: validation.message
+        });
+
+        messageInput.value = "";
+        startCooldown();
+      } catch (error) {
+        console.error("Send error:", error);
+        alert("Your message could not be sent. Please try again.");
+        sendBtn.disabled = false;
       }
     }
-  );
 
-  channel.on(
-    "postgres_changes",
-    { event: "UPDATE", schema: "public", table: "guestbook_messages" },
-    payload => {
-      const msg = payload.new;
-      if (msg.is_deleted) {
-        const el = chatEl.querySelector(`[data-id="${msg.id}"]`);
-        if (el) el.remove();
-      }
-    }
-  );
-
-  channel.subscribe();
-}
-
-async function isUserBlocked(username) {
-  const nowISO = new Date().toISOString();
-  const { data } = await supabase
-    .from("blocked_handles")
-    .select("*")
-    .eq("username", username)
-    .gte("blocked_until", nowISO)
-    .limit(1);
-
-  return data && data.length > 0;
-}
-
-async function sendMessage() {
-  const content = messageInput.value.trim();
-  if (!content) return;
-
-  if (await isUserBlocked(shinysideId)) {
-    alert("You are muted for the rest of the day.");
-    return;
-  }
-
-  sendBtn.disabled = true;
-
-  await supabase.from("guestbook_messages").insert({
-    room: currentRoom,
-    username: shinysideId,
-    content
-  });
-
-  messageInput.value = "";
-  startCooldown();
-}
-
-function startCooldown() {
-  cooldownRemaining = 10;
-  cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
-
-  cooldownTimer = setInterval(() => {
-    cooldownRemaining--;
-    if (cooldownRemaining <= 0) {
+    function startCooldown() {
       clearInterval(cooldownTimer);
-      cooldownText.textContent = "";
-      sendBtn.disabled = false;
-    } else {
+      cooldownRemaining = 10;
       cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
+
+      cooldownTimer = setInterval(() => {
+        cooldownRemaining--;
+        if (cooldownRemaining <= 0) {
+          clearInterval(cooldownTimer);
+          cooldownText.textContent = "";
+          sendBtn.disabled = false;
+        } else {
+          cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
+        }
+      }, 1000);
     }
-  }, 1000);
-}
 
-// --- SECURE ADMIN ACTIONS VIA EDGE FUNCTIONS ---
+    // --- SECURE ADMIN ACTIONS VIA EDGE FUNCTIONS ---
 
-async function adminDeleteMessage(id) {
-  try {
-    const res = await fetch(
-      "https://wowdmkxuwysuihgoklki.supabase.co/functions/v1/admin-delete-message",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ id })
+    async function adminDeleteMessage(id) {
+      try {
+        const res = await fetch(
+          "https://wowdmkxuwysuihgoklki.supabase.co/functions/v1/admin-delete-message",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ id })
+          }
+        );
+
+        if (!res.ok) {
+          console.error("Delete failed:", await res.text());
+          alert("Error deleting message");
+          return;
+        }
+
+        const el = document.querySelector(`[data-id="${id}"]`);
+        if (el) el.remove();
+
+      } catch (err) {
+        console.error("Delete error:", err);
+        alert("Error deleting message");
       }
-    );
-
-    if (!res.ok) {
-      console.error("Delete failed:", await res.text());
-      alert("Error deleting message");
-      return;
     }
 
-    // Remove deleted message from UI
-    const el = document.querySelector(`[data-id="${id}"]`);
-    if (el) el.remove();
+    async function adminBlockUser(username) {
+      try {
+        const res = await fetch(
+          "https://wowdmkxuwysuihgoklki.supabase.co/functions/v1/admin-block-user",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ username })
+          }
+        );
 
-  } catch (err) {
-    console.error("Delete error:", err);
-    alert("Error deleting message");
-  }
-}
+        if (!res.ok) {
+          console.error("Block failed:", await res.text());
+          alert("Error blocking user");
+          return;
+        }
 
-async function adminBlockUser(username) {
-  try {
-    const res = await fetch(
-      "https://wowdmkxuwysuihgoklki.supabase.co/functions/v1/admin-block-user",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ username })
+        document
+          .querySelectorAll(`[data-username="${username}"]`)
+          .forEach(el => el.remove());
+
+      } catch (err) {
+        console.error("Block error:", err);
+        alert("Error blocking user");
       }
-    );
-
-    if (!res.ok) {
-      console.error("Block failed:", await res.text());
-      alert("Error blocking user");
-      return;
     }
 
-    // Remove all messages from that user
-    document
-      .querySelectorAll(`[data-username="${username}"]`)
-      .forEach(el => el.remove());
+    // --- BOOTSTRAP ---
 
-  } catch (err) {
-    console.error("Block error:", err);
-    alert("Error blocking user");
-  }
-}
+    (async function boot() {
+      initHandle();
+      initAdminMode();
+      await loadMessages();
+      await maybePostDailyIcebreaker();
+      subscribeRealtime();
+      statusEl.textContent = "Connected";
+      sendBtn.disabled = false;
+    })();
 
-// --- BOOTSTRAP ---
+    // --- EVENT LISTENERS ---
 
-(async function boot() {
-  initHandle();
-  initAdminMode();
-  await loadMessages();
-  await maybePostDailyIcebreaker();
-  subscribeRealtime();
-  statusEl.textContent = "Connected";
-  sendBtn.disabled = false;
-})();
-
-// --- EVENT LISTENERS ---
-
-changeHandleBtn.addEventListener("click", promptHandle);
-sendBtn.addEventListener("click", sendMessage);
+    changeHandleBtn.addEventListener("click", promptHandle);
+    sendBtn.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
   </script>
 </body>
 </html>
