@@ -343,8 +343,7 @@
       "kanake", "verpiss dich", "ich bring dich um", "judensau", "porra", "caralho", "foda-se", "fodase",
       "vai se foder", "filho da puta", "macaco", "vou te matar", "se mata", "cazzo", "vaffanculo",
       "stronzo", "troia", "figlio di puttana", "negro di merda", "ti ammazzo", "kanker", "klootzak",
-      "tering", "neger", "ik maak je dood", "блядь", "блять", "сука", "хуй", "хуя", "пизда", "пиздец",
-      "ебать", "мудак", "ублюдок", "гомик", "чурка", "мразь", "я тебя убью", "сдохни", "убей себя"
+      "tering", "neger", "ik maak je dood"
     ];
 
     function showToast(message, duration = 3500) {
@@ -373,15 +372,28 @@
         .trim();
     }
 
+    function escapeRegex(value) {
+      return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function termMatches(input, term) {
+      const normalizedInput = normalizeForModeration(input);
+      const normalizedTerm = normalizeForModeration(term);
+      if (!normalizedInput || !normalizedTerm) return false;
+
+      const pattern = normalizedTerm
+        .split(/\s+/)
+        .map(part => escapeRegex(part))
+        .join("[^a-z0-9]*");
+
+      const regex = new RegExp(`(^|[^a-z0-9])${pattern}($|[^a-z0-9])`, "i");
+      return regex.test(normalizedInput);
+    }
+
     function containsBlockedContent(value) {
       const normalized = normalizeForModeration(value);
       if (!normalized) return false;
-
-      return blockedTerms.some(term => {
-        const normalizedTerm = normalizeForModeration(term);
-        if (!normalizedTerm) return false;
-        return normalized.includes(normalizedTerm);
-      });
+      return blockedTerms.some(term => termMatches(normalized, term));
     }
 
     function validateCommunityText(value, label) {
