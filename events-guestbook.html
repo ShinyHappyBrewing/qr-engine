@@ -2,448 +2,103 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Shiny Happy Events Guestbook</title>
-  <meta name="theme-color" content="#f5f5f5" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --brand-blue: #107098;
-      --gold: #c27e3a;
-      --silver: #dfe3e7;
-      --black: #000000;
-      --white: #ffffff;
-      --paper: #f5f5f5;
-      --ink: #111111;
-      --muted: #616161;
-      --line: rgba(17, 17, 17, 0.12);
-      --shadow: rgba(0, 0, 0, 0.08);
-      --danger: #8a2b2b;
-      --danger-bg: #f7e5e5;
-    }
-
-    * { box-sizing: border-box; }
-    html, body {
-      width: 100%;
-      min-height: 100%;
-      margin: 0;
-    }
-    body {
-      font-family: "Inter", Arial, sans-serif;
-      background: linear-gradient(180deg, #f7f7f7 0%, #f1f1f1 100%);
-      color: var(--ink);
-      min-height: 100vh;
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
-      padding: 24px;
-    }
-
-    .page {
-      width: min(980px, 100%);
-      background: rgba(255,255,255,0.78);
-      border: 1px solid var(--line);
-      box-shadow: 0 18px 45px var(--shadow);
-      border-radius: 18px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      min-height: 820px;
-    }
-
-    .topbar {
-      background: var(--white);
-      border-bottom: 1px solid var(--line);
-      padding: 18px 20px 24px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .brand-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      text-align: center;
-    }
-
-    .brand-mark {
-      position: relative;
-      width: min(92vw, 560px);
-      height: 220px;
-      display: grid;
-      place-items: center;
-      margin-bottom: 4px;
-    }
-
-    .ring {
-      position: absolute;
-      inset: 18px 36px 14px 36px;
-      border: 4px solid var(--brand-blue);
-      border-radius: 50%;
-      opacity: 0.9;
-    }
-
-    .brand-wordmark {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      line-height: 0.9;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      color: var(--ink);
-      font-family: "Inter", Arial, sans-serif;
-      font-weight: 800;
-    }
-
-    .brand-wordmark .script {
-      font-family: "Playfair Display", Georgia, serif;
-      font-style: italic;
-      font-weight: 600;
-      text-transform: lowercase;
-      letter-spacing: 0.02em;
-      font-size: clamp(2.5rem, 5vw, 5rem);
-      transform: rotate(-8deg);
-      margin-bottom: 4px;
-      color: var(--ink);
-    }
-
-    .brand-wordmark .happy {
-      font-size: clamp(2.5rem, 7vw, 6rem);
-      letter-spacing: 0.12em;
-      font-weight: 800;
-    }
-
-    .brand-wordmark .events {
-      font-size: clamp(0.8rem, 2vw, 1.5rem);
-      letter-spacing: 0.35em;
-      font-weight: 600;
-      color: var(--ink);
-    }
-
-    .brand-wordmark .estd {
-      font-size: clamp(0.7rem, 1.6vw, 1rem);
-      letter-spacing: 0.28em;
-      font-weight: 500;
-      color: var(--muted);
-    }
-
-    .title {
-      text-align: center;
-      font-family: "Playfair Display", Georgia, serif;
-      font-size: clamp(1.25rem, 3vw, 2.2rem);
-      color: var(--ink);
-      letter-spacing: 0.06em;
-      margin-top: 4px;
-    }
-
-    .tagline {
-      text-align: center;
-      font-size: clamp(0.8rem, 2vw, 1.1rem);
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--brand-blue);
-      margin-top: 2px;
-      font-weight: 600;
-    }
-
-    .main {
-      background: rgba(245,245,245,0.9);
-      flex: 1;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .guestbook {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding: 20px 18px 0;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .message {
-      background: rgba(255,255,255,0.7);
-      border: 1px solid var(--line);
-      border-left: 4px solid var(--brand-blue);
-      border-radius: 12px;
-      padding: 12px 14px;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.02);
-    }
-
-    .message-meta {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.75rem;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .username {
-      color: var(--brand-blue);
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      font-size: 0.78rem;
-    }
-
-    .message-text {
-      font-size: 0.98rem;
-      line-height: 1.7;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      color: var(--ink);
-    }
-
-    .composer {
-      background: var(--white);
-      border-top: 1px solid var(--line);
-      padding: 18px 18px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .composer-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .composer-label {
-      font-size: 0.75rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--muted);
-      font-weight: 700;
-    }
-
-    .id-button {
-      border: 1px solid var(--brand-blue);
-      background: rgba(16,112,152,0.08);
-      color: var(--brand-blue);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      transition: 0.18s ease;
-    }
-
-    .id-button:hover { background: rgba(16,112,152,0.12); }
-
-    .id-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .id-pill {
-      background: rgba(194,126,58,0.09);
-      border: 1px solid rgba(194,126,58,0.3);
-      color: var(--black);
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 0.76rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .input-row {
-      display: flex;
-      gap: 10px;
-      align-items: stretch;
-    }
-
-    .message-input {
-      flex: 1;
-      min-width: 0;
-      border: 1px solid var(--line);
-      background: var(--paper);
-      color: var(--ink);
-      border-radius: 12px;
-      padding: 14px 16px;
-      font: inherit;
-      font-size: 1rem;
-      min-height: 52px;
-      resize: vertical;
-      outline: none;
-    }
-
-    .message-input:focus {
-      border-color: rgba(16,112,152,0.5);
-      box-shadow: 0 0 0 3px rgba(16,112,152,0.08);
-    }
-
-    .send-btn {
-      border: none;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--brand-blue), #1b7db0);
-      color: var(--white);
-      padding: 0 20px;
-      font: inherit;
-      font-weight: 700;
-      min-width: 120px;
-      cursor: pointer;
-      transition: transform 0.14s ease, filter 0.14s ease;
-    }
-
-    .send-btn:hover { filter: brightness(1.04); }
-    .send-btn:active { transform: translateY(1px); }
-    .send-btn[disabled] {
-      opacity: 0.55;
-      cursor: not-allowed;
-      filter: grayscale(0.2);
-    }
-
-    .status-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      min-height: 18px;
-      color: var(--muted);
-      font-size: 0.76rem;
-      letter-spacing: 0.04em;
-    }
-
-    .cooldown {
-      color: var(--gold);
-      font-weight: 700;
-    }
-
-    .toast {
-      position: fixed;
-      left: 50%;
-      top: 20px;
-      transform: translateX(-50%) translateY(-12px);
-      background: var(--danger-bg);
-      color: var(--danger);
-      border: 1px solid rgba(138, 43, 43, 0.2);
-      border-radius: 999px;
-      padding: 10px 16px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 160ms ease, transform 160ms ease;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    }
-
-    .toast.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    @media (max-width: 640px) {
-      body { padding: 12px; }
-      .page { min-height: calc(100vh - 24px); border-radius: 12px; }
-      .topbar { padding: 16px 14px 18px; }
-      .brand-mark { height: 180px; }
-      .ring { inset: 18px 20px 12px 20px; }
-      .brand-wordmark .events { letter-spacing: 0.18em; }
-      .brand-wordmark .estd { letter-spacing: 0.16em; }
-      .input-row { flex-direction: column; }
-      .send-btn { width: 100%; min-height: 48px; }
-      .composer { padding: 16px 14px 18px; }
-      .guestbook { padding: 16px 14px 0; }
-    }
+    :root { --blue:#107098; --gold:#c27e3a; --silver:#dfe3e7; --white:#fff; --paper:#f5f5f5; --ink:#111; --muted:#666; }
+    * { box-sizing:border-box; }
+    html,body { width:100%;height:100%;margin:0; }
+    body { font-family:Inter,Arial,sans-serif;color:var(--ink);background:var(--paper);display:flex;flex-direction:column;min-height:100vh;min-height:100dvh; }
+    header { flex:0 0 auto;text-align:center;background:var(--white);border-bottom:1px solid var(--silver);padding:14px 18px 12px; }
+    .brand { display:flex;flex-direction:column;align-items:center;line-height:1; }
+    .brand-script { font:italic 600 clamp(2rem,5vw,3rem) "Playfair Display",Georgia,serif;transform:rotate(-7deg);margin:0 0 4px; }
+    .brand-happy { font-size:clamp(2rem,7vw,3.8rem);font-weight:700;letter-spacing:.24em;padding-left:.24em; }
+    .brand-events { font-size:.8rem;letter-spacing:.48em;padding-left:.48em;margin-top:8px;font-weight:600; }
+    .brand-estd { font-size:.62rem;letter-spacing:.3em;padding-left:.3em;margin-top:9px;color:var(--muted); }
+    .title { margin:15px 0 4px;font:600 clamp(1.35rem,4vw,2rem) "Playfair Display",Georgia,serif; }
+    .tagline { color:var(--blue);font-size:.77rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600; }
+    main { flex:1 1 auto;min-height:0;display:flex;flex-direction:column;max-width:980px;width:100%;margin:0 auto;background:var(--paper); }
+    #status { padding:9px 16px;text-align:center;color:var(--muted);font-size:.78rem;border-bottom:1px solid rgba(0,0,0,.06); }
+    #chat { flex:1 1 auto;min-height:180px;overflow-y:auto;padding:14px 16px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch; }
+    .message { margin-bottom:10px;padding:12px 14px;background:var(--white);border:1px solid rgba(0,0,0,.08);border-left:3px solid var(--blue);border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,.035); }
+    .meta { display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:7px;color:var(--muted);font-size:.73rem; }
+    .username { color:var(--blue);font-weight:700;letter-spacing:.04em; }
+    .content { white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;font-size:.95rem; }
+    .footer { flex:0 0 auto;background:var(--white);border-top:1px solid var(--silver);padding:12px max(14px, calc((100% - 948px)/2)) max(12px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:9px; }
+    .footer-top { display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.78rem; }
+    #handle-display { color:var(--muted); }
+    button { font:inherit;touch-action:manipulation;cursor:pointer; }
+    #change-handle-btn { border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:4px;padding:8px 11px;font-weight:600; }
+    .input-row { display:flex;gap:8px; }
+    #message-input { flex:1;min-width:0;padding:11px 12px;border:1px solid #d5d9dc;border-radius:5px;background:#fff;color:var(--ink);font:inherit;font-size:16px; }
+    #send-btn { min-width:84px;min-height:42px;border:0;border-radius:5px;background:var(--blue);color:#fff;font-weight:700;padding:8px 14px; }
+    #send-btn:disabled { opacity:.5;cursor:not-allowed; }
+    #cooldown-text { min-height:14px;color:var(--gold);font-size:.75rem; }
+    #toast { position:fixed;z-index:5;left:50%;top:max(12px,env(safe-area-inset-top));width:min(calc(100vw - 28px),520px);padding:12px 15px;transform:translate(-50%,-10px);opacity:0;pointer-events:none;text-align:center;border:1px solid #c77979;border-radius:6px;background:#fff1f1;color:#752222;box-shadow:0 5px 20px #0002;transition:opacity .16s,transform .16s; }
+    #toast.visible { opacity:1;transform:translate(-50%,0); }
+    @media(max-width:560px) { header{padding:12px 10px}.brand-events{letter-spacing:.35em}.footer{padding-left:10px;padding-right:10px}.input-row{gap:6px}#send-btn{min-width:72px} }
+    @media(prefers-reduced-motion:reduce) { #toast{transition:none} }
   </style>
 </head>
 <body>
-  <div class="page">
-    <header class="topbar">
-      <div class="brand-wrap">
-        <div class="brand-mark" aria-label="Shiny Happy Events logo">
-          <div class="ring"></div>
-          <div class="brand-wordmark">
-            <div class="script">shiny</div>
-            <div class="happy">HAPPY</div>
-            <div class="events">EVENTS</div>
-            <div class="estd">ESTD 2024</div>
-          </div>
-        </div>
-        <div class="title">Shiny Happy Events Guestbook</div>
-        <div class="tagline">Gather. Celebrate. Belong.</div>
-      </div>
-    </header>
-
-    <main class="main">
-      <div class="guestbook" id="chat" aria-live="polite"></div>
-
-      <div class="composer">
-        <div class="composer-head">
-          <div class="composer-label">Leave a note</div>
-          <button id="change-id-btn" class="id-button" type="button">Choose ID</button>
-        </div>
-
-        <div class="id-row">
-          <span class="composer-label">Your ID:</span>
-          <span class="id-pill" id="id-pill">Not chosen yet</span>
-        </div>
-
-        <div class="input-row">
-          <textarea id="message-input" class="message-input" rows="3" maxlength="500" placeholder="Share a message for the event…" aria-label="Write a guestbook message"></textarea>
-          <button id="send-btn" type="button" class="send-btn" disabled>Send</button>
-        </div>
-
-        <div class="status-row">
-          <span id="status">Waiting for your ID</span>
-          <span id="cooldown" class="cooldown" aria-live="polite"></span>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
+  <header>
+    <div class="brand" aria-label="Shiny Happy Events">
+      <div class="brand-script">shiny</div><div class="brand-happy">HAPPY</div><div class="brand-events">EVENTS</div><div class="brand-estd">ESTD 2024</div>
+    </div>
+    <h1 class="title">Shiny Happy Events Guestbook</h1>
+    <div class="tagline">Gather. Celebrate. Belong.</div>
+  </header>
+  <main>
+    <div id="status" role="status">Connecting…</div>
+    <div id="chat" aria-live="polite"></div>
+  </main>
+  <footer class="footer">
+    <div class="footer-top"><span id="handle-display">Choose an ID before posting</span><button id="change-handle-btn" type="button">Choose / Change ID</button></div>
+    <div class="input-row"><input type="text" id="message-input" placeholder="Leave a note…" maxlength="500" autocomplete="off" disabled /><button id="send-btn" type="button" disabled>Send</button></div>
+    <div id="cooldown-text" aria-live="polite"></div>
+  </footer>
+  <div id="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
     const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
-    const SUPABASE_ANON_KEY = "PASTE_THE_SAME_ANON_KEY_FROM_YOUR_EXISTING_GUESTBOOK_HTML";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzd2loZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     const chatEl = document.getElementById("chat");
+    const statusEl = document.getElementById("status");
+    const handleDisplayEl = document.getElementById("handle-display");
+    const changeHandleBtn = document.getElementById("change-handle-btn");
     const messageInput = document.getElementById("message-input");
     const sendBtn = document.getElementById("send-btn");
-    const idPill = document.getElementById("id-pill");
-    const statusEl = document.getElementById("status");
-    const cooldownEl = document.getElementById("cooldown");
+    const cooldownText = document.getElementById("cooldown-text");
     const toastEl = document.getElementById("toast");
-    const changeIdBtn = document.getElementById("change-id-btn");
-
+    const storageKey = "shinyhappy_events_id";
     let shinysideId = null;
     let cooldownTimer = null;
     let cooldownRemaining = 0;
     let isSending = false;
     let toastTimer = null;
 
+    // Client-side screening is a first layer, not server-enforced moderation.
     const blockedTerms = [
-      "fuck","fucker","fucking","fucked","motherfucker","shit","shitty","bullshit","bitch","bitches","ass","asshole","dick","cock","cunt","twat","piss","damn","goddamn","slut","whore","retard","nigger","nigga","chink","faggot","fag","rape","kill yourself","suicide","nazi","jew","porra","merde","scheisse","cazzo","kanker"
+      "fuck","fucker","fucking","fucked","motherfucker","motherfucking","shit","shitty","bullshit","bitch","bitches","bastard","ass","asshole","arse","arsehole","dickhead","dick","cock","cunt","twat","piss","pissed","pissing","piss off","damn you","goddamn","son of a bitch","piece of shit","fuck you","go to hell","eat shit","kiss my ass","titties","titty","boobs","ballsack","wanker","bollocks","bugger","prick","jackass","douchebag","douche","crap","shithead","dipshit","bullshitter","dickwad","dickweed","asswipe","dumbass","slut","whore","skank","fuckhead","fuckface","cocksucker","penis","vagina","assfuck","assfucker","unclefucker","kidfucker","childfucker","sisterfucker","cousinfucker","brotherfucker","dadfucker","fatherfucker","fatherfuck","dadfuck","god damn","god dam","goddam","muthafucka","muthafucker","muthahfuckah","muthahfucker","motherfucka","motherfuckah","fuckwad","fucktard","cuntmuffin","slutbag","cumdumpster","cumdump",
+      "porn","porno","pornography","xxx","nsfw","nude","nudes","naked pics","send nudes","sex tape","blowjob","handjob","rimjob","deepthroat","orgasm","masturbate","masturbation","cumshot","semen","dildo","vibrator","hentai","onlyfans","hook up","hookup","suck my","show me your body","send me pics","sexual favors","sexual favor","rape","molest","groping","pedo","pedophile","child porn","underage sex","incest","prostitute","milf","anal sex","pussy","threesome","sexual assault","sexually assault","anal","blow job","hand job","rim job","sextape","deep throat","blow me","suck me","butthole","ass hole","butt hole","cum",
+      "kill yourself","kys","go kill yourself","end your life","you should die","i hope you die","i will kill","i'll kill","ill kill","im going to kill","i am going to kill","kill you","shoot you","stab you","bomb threat","blow you up","burn your house","i will hurt you","i'll hurt you","death threat","hang yourself","cut yourself","self harm","suicide is the answer","murder you","beat you up","go die","dead","die","suicide",
+      "nazi","nazis","heil hitler","white power","white supremacy","white supremacist","gas the jews","gas jews","jews control","jewish control","race war","ethnic cleansing","racial purity","go back to your country","go back where you came from","you don't belong here","all muslims are terrorists","all immigrants are criminals","immigrants are vermin","deport all","ethnic inferiority","ethnicity","deport","naz1","naz1s",
+      "nigger","niggers","nigga","niggas","niggah","niggaz","chink","chinks","gook","gooks","spic","spics","wetback","wetbacks","kike","kikes","raghead","ragheads","towelhead","towelheads","paki","pakis","coon","coons","porch monkey","sand nigger","jigaboo","beaner","beaners","zipperhead","faggot","faggots","dyke","tranny","shemale","retard","retarded","n1gger","nigg3r","n1gg3r","n1gga","n1ggah","n1ggaz","fagg","fag","twink","fairy","butch","sandnigger","sandnigga","sandniggah","sandn1gger","sandnigg3r","sandn1gga","sandn1ggah","sandniggers","sandniggas","sandniggahs","sandn1gg3r","sandn1ggas","sandn1ggahs","heeb","retards","fags","faggs","fairies",
+      "joder","jodido","jodida","mierda","puta","puto","putas","putos","coño","cabron","cabrón","pendejo","pendeja","chingar","chingada","chingado","chingas a tu madre","vete a la mierda","maricon","maricón","negro de mierda","mono de mierda","te voy a matar","ojala te mueras","ojalá te mueras",
+      "merde","putain","connard","connasse","enculé","encule","salope","nique ta mère","nique ta mere","va te faire foutre","sale arabe","sale juif","je vais te tuer",
+      "scheisse","scheiße","arschloch","fick dich","hurensohn","hure","schlampe","schwuchtel","kanake","verpiss dich","ich bring dich um","judensau",
+      "porra","caralho","foda-se","fodase","vai se foder","filho da puta","macaco","vou te matar","se mata","cazzo","vaffanculo","stronzo","troia","figlio di puttana","negro di merda","ti ammazzo","kanker","kankerlijer","tering","klootzak","tyfuslijer","neger","ik maak je dood",
+      "worthless piece of","you are disgusting","nobody likes you","shut up loser","you are ugly","stupid bitch","dumb bitch","fat pig","subhuman","vermin","filthy animal","rape you","i want to rape","will rape"
     ];
 
-    function showToast(message, duration = 3000) {
+    function showToast(message, duration = 3500) {
       clearTimeout(toastTimer);
       toastEl.textContent = message;
       toastEl.classList.add("visible");
@@ -451,35 +106,19 @@
     }
 
     function normalizeForModeration(value) {
-      return String(value || "")
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .replace(/[0]/g, "o")
-        .replace(/[@]/g, "a")
-        .replace(/[1!|]/g, "i")
-        .replace(/[3]/g, "e")
-        .replace(/[4]/g, "a")
-        .replace(/[5$]/g, "s")
-        .replace(/[7+]/g, "t")
-        .replace(/[8]/g, "b")
-        .replace(/[\u200B-\u200D\uFEFF\uFE0E\uFE0F]/g, "")
-        .replace(/[^a-z0-9\s]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+      return String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+        .replace(/[0]/g,"o").replace(/[@]/g,"a").replace(/[1!|]/g,"i").replace(/[3]/g,"e")
+        .replace(/[4]/g,"a").replace(/[5$]/g,"s").replace(/[7+]/g,"t").replace(/[8]/g,"b")
+        .replace(/[\u200B-\u200D\uFEFF\uFE0E\uFE0F]/g,"").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
     }
 
     function containsBlockedContent(value) {
       const normalized = normalizeForModeration(value);
       if (!normalized) return false;
-
       return blockedTerms.some(term => {
         const normalizedTerm = normalizeForModeration(term);
         if (!normalizedTerm) return false;
-        const pattern = normalizedTerm
-          .split(/\s+/)
-          .map(word => [...word].join("[^a-z0-9]*"))
-          .join("[^a-z0-9]+");
+        const pattern = normalizedTerm.split(/\s+/).map(word => [...word].join("[^a-z0-9]*")).join("[^a-z0-9]+");
         return new RegExp(`(^|[^a-z0-9])${pattern}($|[^a-z0-9])`, "i").test(normalized);
       });
     }
@@ -492,198 +131,122 @@
       return true;
     }
 
-    function setIdDisplay() {
-      idPill.textContent = shinysideId ? shinysideId : "Not chosen yet";
-      sendBtn.disabled = !shinysideId;
-      statusEl.textContent = shinysideId ? "Ready to send" : "Waiting for your ID";
+    function updateIdentity() {
+      handleDisplayEl.textContent = shinysideId ? `Shinyside ID: ${shinysideId}` : "Choose an ID before posting";
+      messageInput.disabled = !shinysideId;
+      sendBtn.disabled = !shinysideId || cooldownRemaining > 0;
     }
 
-    function initHandle() {
-      const stored = localStorage.getItem("shinyhappy_events_id");
-      shinysideId = stored || "guest_" + Math.floor(Math.random() * 9999);
-      if (containsBlockedContent(shinysideId)) {
-        shinysideId = "guest_" + Math.floor(Math.random() * 9999);
-      }
-      localStorage.setItem("shinyhappy_events_id", shinysideId);
-      setIdDisplay();
-    }
-
-    function promptHandle() {
-      const next = window.prompt("Choose your guestbook ID (up to 30 characters):", shinysideId || "guest");
+    function chooseId() {
+      const next = window.prompt("Choose your Shinyside ID (up to 30 characters):", shinysideId || "");
       if (next === null) return;
       const trimmed = next.trim();
-      if (!trimmed) {
-        showToast("Please choose an ID before posting.");
-        return;
-      }
-      if (trimmed.length > 30) {
-        showToast("IDs must be 30 characters or fewer.");
-        return;
-      }
-      if (!validateCommunityText(trimmed, "Your ID")) return;
+      if (!trimmed) { showToast("Please choose an ID before posting."); return; }
+      if (trimmed.length > 30) { showToast("Shinyside IDs must be 30 characters or fewer."); return; }
+      if (!validateCommunityText(trimmed, "Your Shinyside ID")) return;
       shinysideId = trimmed;
-      localStorage.setItem("shinyhappy_events_id", shinysideId);
-      setIdDisplay();
-    }
-
-    function formatMessageTime(ts) {
-      const date = new Date(ts);
-      return new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit"
-      }).format(date);
+      localStorage.setItem(storageKey, shinysideId);
+      updateIdentity();
     }
 
     function renderMessage(msg) {
       const el = document.createElement("article");
       el.className = "message";
       el.dataset.id = String(msg.id);
-
       const meta = document.createElement("div");
-      meta.className = "message-meta";
-
-      const user = document.createElement("span");
-      user.className = "username";
-      user.textContent = msg.username;
-
-      const stamp = document.createElement("span");
-      stamp.textContent = `• ${formatMessageTime(msg.created_at)}`;
-
-      meta.append(user, stamp);
-
-      const body = document.createElement("div");
-      body.className = "message-text";
-      body.textContent = msg.content;
-
-      el.append(meta, body);
+      meta.className = "meta";
+      const username = document.createElement("span");
+      username.className = "username";
+      username.textContent = msg.username;
+      const stamp = document.createElement("time");
+      stamp.dateTime = msg.created_at;
+      stamp.textContent = `• ${new Date(msg.created_at).toLocaleString([], { dateStyle:"medium", timeStyle:"short" })}`;
+      meta.append(username, stamp);
+      const content = document.createElement("div");
+      content.className = "content";
+      content.textContent = msg.content;
+      el.append(meta, content);
       chatEl.appendChild(el);
     }
 
     async function loadMessages() {
       chatEl.replaceChildren();
-      const { data, error } = await supabase
-        .from("events_guestbook_messages")
-        .select("*")
-        .eq("is_deleted", false)
-        .order("created_at", { ascending: true });
-
+      const { data, error } = await supabase.from("events_guestbook_messages")
+        .select("id,username,content,created_at,is_deleted").eq("is_deleted", false)
+        .order("created_at", { ascending: true }).limit(500);
       if (error) {
-        console.error("Could not load messages:", error);
-        showToast("The guestbook could not be loaded.");
+        console.error("Could not load Events guestbook messages:", error);
+        statusEl.textContent = "Could not load messages. Please refresh to try again.";
         return;
       }
-
-      if (!data || data.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "message";
-        empty.innerHTML = `<div class="message-meta"><span class="username">Shiny Happy Events</span><span>• Ready for your first note</span></div><div class="message-text">Be the first to leave a message for the evening.</div>`;
-        chatEl.appendChild(empty);
-        return;
-      }
-
-      data.forEach(renderMessage);
+      (data || []).forEach(renderMessage);
+      statusEl.textContent = "Gather. Celebrate. Belong.";
       chatEl.scrollTop = chatEl.scrollHeight;
     }
 
     function subscribeRealtime() {
       supabase.channel("events_guestbook_channel")
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "events_guestbook_messages" }, ({ new: msg }) => {
+        .on("postgres_changes", { event:"INSERT", schema:"public", table:"events_guestbook_messages" }, ({ new: msg }) => {
           if (!msg.is_deleted && !chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`)) {
             renderMessage(msg);
             chatEl.scrollTop = chatEl.scrollHeight;
           }
         })
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "events_guestbook_messages" }, ({ new: msg }) => {
-          if (msg.is_deleted) {
-            const el = chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`);
-            if (el) el.remove();
-          }
-        })
-        .subscribe();
-    }
-
-    async function isUserBlocked(username) {
-      const { data, error } = await supabase
-        .from("events_blocked_handles")
-        .select("username")
-        .eq("username", username)
-        .gt("blocked_until", new Date().toISOString())
-        .limit(1);
-
-      if (error) throw error;
-      return Boolean(data && data.length > 0);
+        .on("postgres_changes", { event:"UPDATE", schema:"public", table:"events_guestbook_messages" }, ({ new: msg }) => {
+          if (msg.is_deleted) chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`)?.remove();
+        }).subscribe();
     }
 
     function startCooldown() {
       clearInterval(cooldownTimer);
       cooldownRemaining = 10;
-      sendBtn.disabled = true;
-      cooldownEl.textContent = `Cooldown: ${cooldownRemaining}s`;
+      cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
+      updateIdentity();
       cooldownTimer = setInterval(() => {
         cooldownRemaining -= 1;
         if (cooldownRemaining <= 0) {
           clearInterval(cooldownTimer);
-          cooldownEl.textContent = "";
-          sendBtn.disabled = !shinysideId;
-        } else {
-          cooldownEl.textContent = `Cooldown: ${cooldownRemaining}s`;
-        }
+          cooldownText.textContent = "";
+          updateIdentity();
+        } else cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
       }, 1000);
     }
 
     async function sendMessage() {
       const content = messageInput.value.trim();
-      if (!content || isSending || cooldownRemaining > 0 || !shinysideId) return;
-      if (content.length > 500) {
-        showToast("Messages must be 500 characters or fewer.");
-        return;
-      }
+      if (!shinysideId) { showToast("Choose an ID before posting."); return; }
+      if (!content || isSending || cooldownRemaining > 0) return;
+      if (content.length > 500) { showToast("Messages must be 500 characters or fewer."); return; }
       if (!validateCommunityText(content, "Your message")) return;
-
       isSending = true;
       sendBtn.disabled = true;
-
       try {
-        if (await isUserBlocked(shinysideId)) {
-          showToast("This ID is currently muted.");
-          return;
-        }
-
-        const { error } = await supabase.from("events_guestbook_messages").insert({
-          username: shinysideId,
-          content
-        });
-
+        const { error } = await supabase.from("events_guestbook_messages").insert({ username:shinysideId, content });
         if (error) throw error;
         messageInput.value = "";
         startCooldown();
       } catch (error) {
-        console.error("Could not send message:", error);
+        console.error("Could not send Events guestbook message:", error);
         showToast("Your message could not be sent. Please try again.");
       } finally {
         isSending = false;
-        sendBtn.disabled = cooldownRemaining > 0 || !shinysideId;
+        sendBtn.disabled = !shinysideId || cooldownRemaining > 0;
       }
     }
 
-    changeIdBtn.addEventListener("click", promptHandle);
+    changeHandleBtn.addEventListener("click", chooseId);
     sendBtn.addEventListener("click", sendMessage);
-    messageInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-      }
+    messageInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); sendMessage(); }
     });
 
     (async function boot() {
-      initHandle();
+      const stored = localStorage.getItem(storageKey);
+      if (stored && stored.length <= 30 && !containsBlockedContent(stored)) shinysideId = stored;
+      updateIdentity();
       await loadMessages();
       subscribeRealtime();
-      statusEl.textContent = shinysideId ? "Ready to send" : "Waiting for your ID";
-      sendBtn.disabled = !shinysideId;
+      if (!shinysideId) chooseId();
     })();
   </script>
 </body>
