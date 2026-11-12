@@ -219,8 +219,23 @@
       "What’s a random fun fact about you?",
       "If you could teleport anywhere right now, where would you go?",
       "What’s a movie you think everyone should watch?",
-      "What’s your favorite fall activity?",
-      "What’s something you’re looking forward to?"
+      "What’s your favorite after work activity?",
+      "What’s something you’re looking forward to this year?",
+      "A/S/L?",
+      "Did you hear a train?",
+      "Let's get shiny, let's get happy!",
+      "Check out the Beer of the Day Board!",
+      "Play something good...",
+      "Well, well, well...",
+      "You?! Again?!",
+      "Here we go again!",
+      "Nothing average about us..."
+      "Favorite dinosaur?", 
+      "Remember Gumby?",
+      "Where is your dream vacation spot?",
+      "You look like you can do long division.",
+      "Looking good today!",
+      
     ];
     const getRandomIcebreaker = () => ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
 
@@ -234,28 +249,36 @@
       "piece of shit", "fuck you", "go to hell", "eat shit", "kiss my ass", "titties", "titty", "boobs",
       "ballsack", "wanker", "bollocks", "bugger", "prick", "jackass", "douchebag", "douche", "crap",
       "motherfucking", "shithead", "dipshit", "bullshitter", "dickwad", "dickweed", "asswipe", "dumbass",
-      "slut", "whore", "skank",
+      "slut", "whore", "skank", "fuckhead", "fuckface", "cocksucker", "penis", "vagina", "assfuck", "assfucker",
+      "unclefucker", "kidfucker", "childfucker", "sisterfucker", "cousinfucker", "brotherfucker", "dadfucker",
+      "fatherfucker", "fatherfuck", "dadfuck", "goddamn", "god damn", "god dam", "goddam", "muthafucka", "muthafucker",
+      "muthahfuckah", "muthahfucker", "motherfucka", "motherfuckah", 
       // Explicit sexual content, solicitation, sexual harassment and abuse.
       "porn", "porno", "pornography", "xxx", "nsfw", "nude", "nudes", "naked pics", "send nudes", "sex tape",
       "blowjob", "handjob", "rimjob", "deepthroat", "orgasm", "masturbate", "masturbation", "cumshot", "semen",
       "dildo", "vibrator", "hentai", "onlyfans", "hook up", "hookup", "suck my", "show me your body", "send me pics",
       "sexual favors", "sexual favor", "rape", "molest", "groping", "pedo", "pedophile", "child porn", "underage sex",
-      "incest", "prostitute", "milf", "anal sex", "pussy", "threesome", "sexual assault", "sexually assault",
+      "incest", "prostitute", "milf", "anal sex", "pussy", "threesome", "sexual assault", "sexually assault", "anal", 
+      "blow job", "hand job", "rim job", "sextape", "deep throat", "blow me", "suck me", "butthole", "asshole", 
+      "ass hole", "butt hole", 
       // Threats, violence and encouragement of self-harm.
       "kill yourself", "kys", "go kill yourself", "end your life", "you should die", "i hope you die", "i will kill",
       "i'll kill", "ill kill", "im going to kill", "i am going to kill", "kill you", "shoot you", "stab you",
       "bomb threat", "blow you up", "burn your house", "i will hurt you", "i'll hurt you", "death threat",
       "hang yourself", "cut yourself", "self harm", "suicide is the answer", "murder you", "beat you up", "go die",
+      "dead", "die", "suicide", 
       // Hate slogans and targeted hateful abuse.
       "nazi", "nazis", "heil hitler", "white power", "white supremacy", "white supremacist", "gas the jews", "gas jews",
       "jews control", "jewish control", "race war", "ethnic cleansing", "racial purity", "go back to your country",
       "go back where you came from", "you don't belong here", "all muslims are terrorists", "all immigrants are criminals",
-      "immigrants are vermin", "deport all", "ethnic inferiority",
+      "immigrants are vermin", "deport all", "ethnic inferiority", "ethnicity", "deport", "naz1", "naz1s", 
       // Racial, ethnic, religious and identity slurs, listed only for detection/rejection.
       "nigger", "niggers", "nigga", "niggas", "niggah", "niggaz", "chink", "chinks", "gook", "gooks",
       "spic", "spics", "wetback", "wetbacks", "kike", "kikes", "raghead", "ragheads", "towelhead", "towelheads",
       "paki", "pakis", "coon", "coons", "porch monkey", "sand nigger", "jigaboo", "beaner", "beaners",
-      "zipperhead", "faggot", "faggots", "dyke", "tranny", "shemale", "retard", "retarded",
+      "zipperhead", "faggot", "faggots", "dyke", "tranny", "shemale", "retard", "retarded", "n1gger", "nigg3r", "n1gg3r", "n1gga", "n1ggah", "n1ggaz", "fagg", "fag", 
+      "twink", "fairy", "butch", "sandnigger", "sandnigga", "sandniggah", "sandn1gger", "sandnigg3r", "sandn1gga", "sandn1ggah", "sandniggers", "sandniggas", 
+      "sandniggahs", "sandn1gg3r", "sandn1ggas", "sandn1ggahs", 
       // Spanish.
       "joder", "jodido", "jodida", "mierda", "puta", "puto", "putas", "putos", "coño", "cabron", "cabrón",
       "pendejo", "pendeja", "chingar", "chingada", "chingado", "chingas a tu madre", "vete a la mierda", "maricon",
@@ -273,7 +296,8 @@
       "kanker", "kankerlijer", "tering", "klootzak", "tyfuslijer", "neger", "ik maak je dood",
       // Common demeaning attacks and abusive commands.
       "worthless piece of", "you are disgusting", "nobody likes you", "shut up loser", "you are ugly",
-      "stupid bitch", "dumb bitch", "fat pig", "subhuman", "vermin", "filthy animal", "rape you", "i want to rape"
+      "stupid bitch", "dumb bitch", "fat pig", "subhuman", "vermin", "filthy animal", "rape you", "i want to rape",
+      "will rape"
     ];
 
     function showToast(message, duration = 3500) {
