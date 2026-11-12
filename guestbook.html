@@ -74,19 +74,6 @@
     .message .meta { font-size: 11px; opacity: 0.7; margin-bottom: 2px; }
     .message .username { color: var(--blue); font-weight: bold; }
     .message .content { white-space: pre-wrap; overflow-wrap: anywhere; }
-    .message .admin-actions { position: absolute; top: 4px; right: 6px; display: flex; gap: 4px; }
-    .admin-btn {
-      font-size: 10px;
-      padding: 2px 4px;
-      border-radius: 3px;
-      border: 1px solid #444;
-      background: #111;
-      color: var(--white);
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    .admin-btn.delete { border-color: #ff4b4b; color: #ffaaaa; }
-    .admin-btn.block { border-color: #ffaa00; color: #ffdd99; }
     .footer {
       position: relative;
       flex: 0 0 auto;
@@ -204,7 +191,6 @@
 
     let currentRoom = "main_lobby";
     let shinysideId = null;
-    let isAdmin = false;
     let cooldownTimer = null;
     let cooldownRemaining = 0;
     let isSending = false;
@@ -378,10 +364,6 @@
       setHandleDisplay();
     }
 
-    function initAdminMode() {
-      isAdmin = new URLSearchParams(window.location.search).get("admin") === "true";
-      if (isAdmin) statusEl.textContent = "Connected // ADMIN MODE";
-    }
 
     tabs.forEach(tab => tab.addEventListener("click", () => {
       tabs.forEach(item => item.classList.remove("active"));
@@ -434,20 +416,6 @@
       content.textContent = msg.content;
       el.append(meta, content);
 
-      if (isAdmin) {
-        const actions = document.createElement("div");
-        actions.className = "admin-actions";
-        const del = document.createElement("button");
-        del.className = "admin-btn delete";
-        del.textContent = "Delete";
-        del.onclick = () => adminDeleteMessage(msg.id);
-        const block = document.createElement("button");
-        block.className = "admin-btn block";
-        block.textContent = "Block";
-        block.onclick = () => adminBlockUser(msg.username);
-        actions.append(del, block);
-        el.appendChild(actions);
-      }
       chatEl.appendChild(el);
     }
 
@@ -522,35 +490,6 @@
       }, 1000);
     }
 
-    async function adminDeleteMessage(id) {
-      try {
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-delete-message`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id })
-        });
-        if (!res.ok) throw new Error(await res.text());
-        const el = chatEl.querySelector(`[data-id="${CSS.escape(String(id))}"]`);
-        if (el) el.remove();
-      } catch (err) {
-        console.error("Delete failed:", err);
-        showToast("Error deleting message.");
-      }
-    }
-
-    async function adminBlockUser(username) {
-      try {
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/admin-block-user`, {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username })
-        });
-        if (!res.ok) throw new Error(await res.text());
-        document.querySelectorAll(".message").forEach(el => {
-          if (el.dataset.username === username) el.remove();
-        });
-      } catch (err) {
-        console.error("Block failed:", err);
-        showToast("Error blocking user.");
-      }
-    }
-
     function adjustForKeyboard() {
       const viewport = window.visualViewport;
       const keyboardInset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
@@ -567,11 +506,10 @@
 
     (async function boot() {
       initHandle();
-      initAdminMode();
       await loadMessages();
       await maybePostDailyIcebreaker();
       subscribeRealtime();
-      statusEl.textContent = isAdmin ? "Connected // ADMIN MODE" : "Connected";
+      statusEl.textContent = "Connected";
       sendBtn.disabled = false;
     })();
 
