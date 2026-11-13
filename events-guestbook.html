@@ -28,7 +28,7 @@
     .meta { display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:7px;color:var(--muted);font-size:.73rem; }
     .username { color:var(--blue);font-weight:700;letter-spacing:.04em; }
     .content { white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;font-size:.95rem; }
-    .footer { flex:0 0 auto;background:var(--white);border-top:1px solid var(--silver);padding:12px max(14px, calc((100% - 948px)/2)) max(12px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:9px; }
+    .footer { flex:0 0 auto;background:var(--white);border-top:1px solid var(--silver);padding:12px max(14px, calc((100% - 948px)/2)) max(12px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px; }
     .footer-top { display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:.78rem; }
     #handle-display { color:var(--muted); }
     button { font:inherit;touch-action:manipulation;cursor:pointer; }
@@ -38,7 +38,7 @@
     #send-btn { min-width:84px;min-height:42px;border:0;border-radius:5px;background:var(--blue);color:#fff;font-weight:700;padding:8px 14px; }
     #send-btn:disabled { opacity:.5;cursor:not-allowed; }
     #cooldown-text { min-height:14px;color:var(--gold);font-size:.75rem; }
-    #toast { position:fixed;z-index:5;left:50%;top:max(12px,env(safe-area-inset-top));width:min(calc(100vw - 28px),520px);padding:12px 15px;transform:translate(-50%,-10px);opacity:0;pointer-events:none;text-align:center;border:1px solid #c77979;border-radius:6px;background:#fff1f1;color:#752222;box-shadow:0 5px 20px #0002;transition:opacity .16s,transform .16s; }
+    #toast { position:fixed;z-index:5;left:50%;top:max(12px,env(safe-area-inset-top));width:min(calc(100vw - 28px),520px);padding:12px 15px;transform:translate(-50%,-10px);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;background:rgba(17,17,17,.96);border:1px solid rgba(0,0,0,.06);border-radius:8px;color:#fff;box-shadow:0 12px 30px rgba(0,0,0,.18);text-align:center; }
     #toast.visible { opacity:1;transform:translate(-50%,0); }
     @media(max-width:560px) { header{padding:12px 10px}.brand-events{letter-spacing:.35em}.footer{padding-left:10px;padding-right:10px}.input-row{gap:6px}#send-btn{min-width:72px} }
     @media(prefers-reduced-motion:reduce) { #toast{transition:none} }
@@ -67,7 +67,7 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
     const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWh[...]
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const chatEl = document.getElementById("chat");
     const statusEl = document.getElementById("status");
@@ -86,16 +86,79 @@
 
     // Client-side screening is a first layer, not server-enforced moderation.
     const blockedTerms = [
-      "fuck","fucker","fucking","fucked","motherfucker","motherfucking","shit","shitty","bullshit","bitch","bitches","bastard","ass","asshole","arse","arsehole","dickhead","dick","cock","cunt","twat","piss","pissed","pissing","piss off","damn you","goddamn","son of a bitch","piece of shit","fuck you","go to hell","eat shit","kiss my ass","titties","titty","boobs","ballsack","wanker","bollocks","bugger","prick","jackass","douchebag","douche","crap","shithead","dipshit","bullshitter","dickwad","dickweed","asswipe","dumbass","slut","whore","skank","fuckhead","fuckface","cocksucker","penis","vagina","assfuck","assfucker","unclefucker","kidfucker","childfucker","sisterfucker","cousinfucker","brotherfucker","dadfucker","fatherfucker","fatherfuck","dadfuck","god damn","god dam","goddam","muthafucka","muthafucker","muthahfuckah","muthahfucker","motherfucka","motherfuckah","fuckwad","fucktard","cuntmuffin","slutbag","cumdumpster","cumdump",
-      "porn","porno","pornography","xxx","nsfw","nude","nudes","naked pics","send nudes","sex tape","blowjob","handjob","rimjob","deepthroat","orgasm","masturbate","masturbation","cumshot","semen","dildo","vibrator","hentai","onlyfans","hook up","hookup","suck my","show me your body","send me pics","sexual favors","sexual favor","rape","molest","groping","pedo","pedophile","child porn","underage sex","incest","prostitute","milf","anal sex","pussy","threesome","sexual assault","sexually assault","anal","blow job","hand job","rim job","sextape","deep throat","blow me","suck me","butthole","ass hole","butt hole","cum",
-      "kill yourself","kys","go kill yourself","end your life","you should die","i hope you die","i will kill","i'll kill","ill kill","im going to kill","i am going to kill","kill you","shoot you","stab you","bomb threat","blow you up","burn your house","i will hurt you","i'll hurt you","death threat","hang yourself","cut yourself","self harm","suicide is the answer","murder you","beat you up","go die","dead","die","suicide",
-      "nazi","nazis","heil hitler","white power","white supremacy","white supremacist","gas the jews","gas jews","jews control","jewish control","race war","ethnic cleansing","racial purity","go back to your country","go back where you came from","you don't belong here","all muslims are terrorists","all immigrants are criminals","immigrants are vermin","deport all","ethnic inferiority","ethnicity","deport","naz1","naz1s",
-      "nigger","niggers","nigga","niggas","niggah","niggaz","chink","chinks","gook","gooks","spic","spics","wetback","wetbacks","kike","kikes","raghead","ragheads","towelhead","towelheads","paki","pakis","coon","coons","porch monkey","sand nigger","jigaboo","beaner","beaners","zipperhead","faggot","faggots","dyke","tranny","shemale","retard","retarded","n1gger","nigg3r","n1gg3r","n1gga","n1ggah","n1ggaz","fagg","fag","twink","fairy","butch","sandnigger","sandnigga","sandniggah","sandn1gger","sandnigg3r","sandn1gga","sandn1ggah","sandniggers","sandniggas","sandniggahs","sandn1gg3r","sandn1ggas","sandn1ggahs","heeb","retards","fags","faggs","fairies",
-      "joder","jodido","jodida","mierda","puta","puto","putas","putos","coño","cabron","cabrón","pendejo","pendeja","chingar","chingada","chingado","chingas a tu madre","vete a la mierda","maricon","maricón","negro de mierda","mono de mierda","te voy a matar","ojala te mueras","ojalá te mueras",
-      "merde","putain","connard","connasse","enculé","encule","salope","nique ta mère","nique ta mere","va te faire foutre","sale arabe","sale juif","je vais te tuer",
-      "scheisse","scheiße","arschloch","fick dich","hurensohn","hure","schlampe","schwuchtel","kanake","verpiss dich","ich bring dich um","judensau",
-      "porra","caralho","foda-se","fodase","vai se foder","filho da puta","macaco","vou te matar","se mata","cazzo","vaffanculo","stronzo","troia","figlio di puttana","negro di merda","ti ammazzo","kanker","kankerlijer","tering","klootzak","tyfuslijer","neger","ik maak je dood",
-      "worthless piece of","you are disgusting","nobody likes you","shut up loser","you are ugly","stupid bitch","dumb bitch","fat pig","subhuman","vermin","filthy animal","rape you","i want to rape","will rape"
+      "fuck", "fucker", "fucking", "fucked", "motherfucker", "motherfucking", "shit", "shitty", "bullshit",
+      "bitch", "bitches", "bastard", "ass", "asshole", "arse", "arsehole", "dickhead", "dick", "cock",
+      "cunt", "twat", "piss", "pissed", "pissing", "piss off", "damn you", "goddamn", "son of a bitch",
+      "piece of shit", "fuck you", "go to hell", "eat shit", "kiss my ass", "titties", "titty", "boobs",
+      "ballsack", "wanker", "bollocks", "bugger", "prick", "jackass", "douchebag", "douche", "crap",
+      "motherfucking", "shithead", "dipshit", "bullshitter", "dickwad", "dickweed", "asswipe", "dumbass",
+      "slut", "whore", "skank", "fuckhead", "fuckface", "cocksucker", "penis", "vagina", "assfuck", "assfucker",
+      "unclefucker", "kidfucker", "childfucker", "sisterfucker", "cousinfucker", "brotherfucker", "dadfucker",
+      "fatherfucker", "fatherfuck", "dadfuck", "goddamn", "god damn", "god dam", "goddam", "muthafucka", "muthafucker",
+      "muthahfuckah", "muthahfucker", "motherfucka", "motherfuckah", "fuckwad", "dipshit", "dickwad", "fucktard",
+      "cuntmuffin", "slutbag", "cumdumpster", "cumdump", "cumbucket", "pooping", "vag", "vagine", "poop", "cooter",
+      "tiddies", "honkers", "hooters", "funbags", "balls", "blue waffle", "pissy", "fuckboy", "fuckboi", "donkey punch",
+      "penetration", "whalecum", "jizz", "jism", "jizzy", "bussy", "ejaculate", "fartbox", "fart", "fartknocker", "fuk",
+      "shyt", "shite", "turd", "turdcutter", "terd", "terdcutter", "babyfucker", "bearfucker", "dogfucker", "catfucker",
+      "horsefucker", "hoebag", "smartass", "shitass", "fuckass", "fuckbutt", "fatass", "hankhillass", "shlt", "sh1t",
+      "scrote", "scrotum", "gooch", "nipkin", "swampass", "cuntfuck", "fucknugget", "myass", "fuckin", "ass",
+      "porn", "porno", "pornography", "xxx", "nsfw", "nude", "nudes", "naked pics", "send nudes", "sex tape",
+      "blowjob", "handjob", "rimjob", "deepthroat", "orgasm", "masturbate", "masturbation", "cumshot", "semen",
+      "dildo", "vibrator", "hentai", "onlyfans", "hook up", "hookup", "suck my", "show me your body", "send me pics",
+      "sexual favors", "sexual favor", "rape", "molest", "groping", "pedo", "pedophile", "child porn", "underage sex",
+      "incest", "prostitute", "milf", "anal sex", "pussy", "threesome", "sexual assault", "sexually assault", "anal",
+      "blow job", "hand job", "rim job", "sextape", "deep throat", "blow me", "suck me", "butthole", "asshole",
+      "ass hole", "butt hole", "cum", "sperm", "hoe", "beef lips", "beef curtains", "trans", "drag queen", "dragqueen",
+      "dragqueens", "drag queens", "gay", "butt", "butthole", "butthead", "red rocket", "cumwad", "cumslut", "he hole", "hehole",
+      "queef", "queefs", "qu33f", "qu33fs", "kweef", "kweefs", "kweeph", "kweephs", "queeph", "queephs", "kw33f", "kw33fs", "qu33ph",
+      "qu33phs", "cumdumpstr", "cumbuckit", "cumbukit", "flick your bean", "flick my bean", "flick her bean", "jackoff", "jack off",
+      "chocolate starfish", "assfkr", "asslicker", "asslick", "asslikr", "asslickr", "azzfuck", "azzfucker", "azzlick", "azz lick",
+      "ass licker", "ass lick", "rimmjob", "porridge baby", "tarbaby", "fudge packer", "clam dip", "tiddy", "pussylatte", "fukk",
+      "fukked", "vulva", "flick job", "flickjob", "labia", "clit", "clitoris", "klit", "klitoris", "foreskin", "fore skin", "forskin",
+      "for skin", "carpet munch", "carpet muncher", "gaywad", "fagget", "homo", "aids", "gays", "jugs", "milkers", "wap", "whores", "pussies",
+      "hoes", "cocks", "penises", "cummy", "anus", "tit", "tits", "pillow biter", "sex", "sexy", "puzzy", "cootchie", "coochie", "kootchie",
+      "koochie", "coochy", "cootchy", "koochy", "kootchy", "cumburger", "kum", "kumburger", "purdy mouth", "dirtybitch", "good old fasioned", "good ole fasioned",
+      "gumjob", "gum job", "dubai chocolate", "hot carl", "hot karl", "hotcarl", "hotkarl", "c4nt", "ni66er", "queefcunt", "prolapse",
+      "gaysex", "groupsex", "swinger", "swingers", "cockring", "clitoris", "scat", "tittyfuck", "tittyballs", "tittyshit", "analorgasm",
+      "gaping", "anus", "moon cricket", "ham wallet", "squish mitten", "pubic", "cumfart", "cumqueef", "pussyfart", "pu55yfart", "pu55y",
+      "cunnulingus", "analingus", "cocaine", "bitchez", "bukkake", "puss", "grool", "nipple", "frenum", "pubick", "damniel", " reach around",
+      "rusty trombone", "breastitution", "dig ole bicks", "tig ole bitties", "frenum", "ice cream paint job", "limpdick", "shooting tadpoles",
+      "taint", "cumdust", "cumcloud", "cumloud", "boyhole", "girlhole", "shithole", "suck", "sucks",
+      "kill yourself", "kys", "go kill yourself", "end your life", "you should die", "i hope you die", "i will kill",
+      "i'll kill", "ill kill", "im going to kill", "i am going to kill", "kill you", "shoot you", "stab you",
+      "bomb threat", "blow you up", "burn your house", "i will hurt you", "i'll hurt you", "death threat",
+      "hang yourself", "cut yourself", "self harm", "suicide is the answer", "murder you", "beat you up", "go die",
+      "dead", "die", "suicide", "see you next tuesday", "c u next tuesday", "catch u next tuesday", "catch you next tuesday",
+      "c you next tuesday", "2 girls 1 cup", "two girls one cup", "stick it in", "slit your", "drop a log", "just the tip", "uses teeth",
+      "uses her teeth", "lick my", "play with my balls",
+      "nazi", "nazis", "heil hitler", "white power", "white supremacy", "white supremacist", "gas the jews", "gas jews",
+      "jews control", "jewish control", "race war", "ethnic cleansing", "racial purity", "go back to your country",
+      "go back where you came from", "you don't belong here", "all muslims are terrorists", "all immigrants are criminals",
+      "immigrants are vermin", "deport all", "ethnic inferiority", "ethnicity", "deport", "naz1", "naz1s", "kkk", "her box was huge",
+      "her box", "your box", "charliekirk", "charlie kirk", "donald trump", "barack obama", "joe biden", "knuckle baby", "knuckle babies",
+      "mlk", "martin luther king", "hitler", "shitler", "palestine", "israel", "middle east", "ss", "mein kampf", "meinkampf",
+      "joo", "blacks", "coloreds", "colored", "wop", "satan", "jesus", "epstein", "epstein's", "joos", "jews did", "9/11", "control the banks",
+      "twin towers", "bill clinton", "donaldtrump", "dtrump", "d trump", "putin", "netanyahu", "jd vance", "jdvance", "j d vance",
+      "nigger", "niggers", "nigga", "niggas", "niggah", "niggaz", "chink", "chinks", "gook", "gooks",
+      "spic", "spics", "wetback", "wetbacks", "kike", "kikes", "raghead", "ragheads", "towelhead", "towelheads",
+      "paki", "pakis", "coon", "coons", "porch monkey", "sand nigger", "jigaboo", "beaner", "beaners",
+      "zipperhead", "faggot", "faggots", "dyke", "tranny", "shemale", "retard", "retarded", "n1gger", "nigg3r", "n1gg3r", "n1gga", "n1ggah", "n1ggaz", "fagg", "fag",
+      "twink", "fairy", "butch", "sandnigger", "sandnigga", "sandniggah", "sandn1gger", "sandnigg3r", "sandn1gga", "sandn1ggah", "sandniggers", "sandniggas",
+      "sandniggahs", "sandn1gg3r", "sandn1ggas", "sandn1ggahs", "heeb", "retards", "faggots", "fags", "faggs", "fairies", "negro", "f@ggot",
+      "f@gget", "reggin", "dike",
+      "joder", "jodido", "jodida", "mierda", "puta", "puto", "putas", "putos", "coño", "cabron", "cabrón",
+      "pendejo", "pendeja", "chingar", "chingada", "chingado", "chingas a tu madre", "vete a la mierda", "maricon",
+      "maricón", "negro de mierda", "mono de mierda", "te voy a matar", "ojala te mueras", "ojalá te mueras",
+      "merde", "putain", "connard", "connasse", "enculé", "encule", "salope", "nique ta mère", "nique ta mere",
+      "va te faire foutre", "sale arabe", "sale juif", "je vais te tuer",
+      "scheisse", "scheiße", "arschloch", "fick dich", "hurensohn", "hure", "schlampe", "schwuchtel", "kanake",
+      "verpiss dich", "ich bring dich um", "judensau",
+      "porra", "caralho", "foda-se", "fodase", "vai se foder", "filho da puta", "macaco", "vou te matar", "se mata",
+      "cazzo", "vaffanculo", "stronzo", "troia", "figlio di puttana", "negro di merda", "ti ammazzo",
+      "kanker", "kankerlijer", "tering", "klootzak", "tyfuslijer", "neger", "ik maak je dood",
+      "worthless piece of", "you are disgusting", "nobody likes you", "shut up loser", "you are ugly",
+      "stupid bitch", "dumb bitch", "fat pig", "subhuman", "vermin", "filthy animal", "rape you", "i want to rape",
+      "will rape", "tittilicious", "tittylicious", "tiddylicious", "bootylicious", "cunts", "twats", "dicks", "cocks",
     ];
 
     function showToast(message, duration = 3500) {
