@@ -4,198 +4,121 @@
   <meta charset="UTF-8" />
   <title>Shiny Happy Guestbook</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-
   <style>
     :root {
       --blue: #00A9CE;
       --black: #0d0d0d;
       --black-alt: #161616;
       --white: #f3f3f3;
-      --muted: rgba(255,255,255,0.7);
-      --border: rgba(255,255,255,0.08);
-      --panel: rgba(255,255,255,0.03);
+      --muted: rgba(255,255,255,.68);
+      --gold: #f2bd55;
+      --gold-dark: #65491d;
+      --panel: rgba(255,255,255,.035);
     }
     * { box-sizing: border-box; }
     html, body { width: 100%; height: 100%; }
     body {
-      margin: 0;
-      font-family: "IBM Plex Mono", monospace;
+      margin: 0; font-family: "IBM Plex Mono", monospace;
       background: radial-gradient(circle at top, #222 0, var(--black-alt) 40%, var(--black) 100%);
-      color: var(--white);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      height: 100dvh;
-      min-height: 0;
-      overflow: hidden;
+      color: var(--white); display: flex; flex-direction: column;
+      height: 100vh; height: 100dvh; min-height: 0; overflow: hidden;
     }
     header {
-      flex: 0 0 auto;
-      padding: 8px 12px;
-      background: var(--black-alt);
-      border-bottom: 1px solid #333;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
+      flex: 0 0 auto; padding: 8px 12px; background: var(--black-alt);
+      border-bottom: 1px solid #333; display: flex; justify-content: space-between;
+      align-items: center; gap: 8px; font-size: 14px;
     }
-    header .brand { font-weight: bold; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); }
-    header .status { font-size: 12px; opacity: 0.8; white-space: nowrap; }
+    header .brand { font-weight: bold; letter-spacing: .08em; text-transform: uppercase; color: var(--blue); }
+    header .status { font-size: 12px; opacity: .8; white-space: nowrap; }
     .tabs { display: flex; flex: 0 0 auto; background: #111; border-bottom: 1px solid #333; }
     .tab {
-      flex: 1 1 0;
-      min-width: 0;
-      padding: 8px 4px;
-      text-align: center;
-      font-size: 13px;
-      cursor: pointer;
-      border-right: 1px solid #222;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      touch-action: manipulation;
+      flex: 1 1 0; min-width: 0; padding: 8px 4px; text-align: center;
+      font-size: 13px; cursor: pointer; border-right: 1px solid #222;
+      text-transform: uppercase; letter-spacing: .04em; touch-action: manipulation;
     }
     .tab:last-child { border-right: none; }
     .tab.active { background: var(--black-alt); color: var(--blue); font-weight: bold; }
     .chat-container {
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      padding: 10px 12px;
-      -webkit-overflow-scrolling: touch;
+      flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+      padding: 10px 12px; -webkit-overflow-scrolling: touch;
     }
     .message {
-      margin-bottom: 8px;
-      padding: 6px 8px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      font-size: 13px;
-      position: relative;
+      margin-bottom: 9px; padding: 8px 9px; border-radius: 5px;
+      background: var(--panel); border: 1px solid rgba(255,255,255,.07);
+      font-size: 13px; position: relative;
     }
-    .message .meta { font-size: 11px; opacity: 0.7; margin-bottom: 2px; }
+    .message .meta { font-size: 11px; opacity: .72; margin-bottom: 3px; }
     .message .username { color: var(--blue); font-weight: bold; }
     .message .content { white-space: pre-wrap; overflow-wrap: anywhere; }
-    .message-reactions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 8px;
-      flex-wrap: wrap;
-    }
+    .message-reactions { display: flex; align-items: center; gap: 8px; margin-top: 9px; flex-wrap: wrap; }
     .reaction-btn {
-      appearance: none;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.02);
-      color: var(--white);
-      border-radius: 999px;
-      padding: 4px 8px;
-      font: inherit;
-      font-size: 11px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      min-height: 26px;
-      touch-action: manipulation;
+      appearance: none; border: 1px solid #514329; border-bottom-width: 2px;
+      background: linear-gradient(180deg, #29241b, #1d1a15); color: #f4e7ca;
+      border-radius: 5px; padding: 5px 10px; font: inherit; font-size: 11px;
+      font-weight: 700; letter-spacing: .045em; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 7px; min-height: 34px;
+      touch-action: manipulation; transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
     }
-    .reaction-btn:hover { border-color: rgba(0, 169, 206, 0.45); }
-    .reaction-btn:disabled { opacity: 0.6; cursor: default; }
-    .reaction-count {
-      min-width: 1ch;
-      text-align: center;
-      color: var(--muted);
-    }
+    .reaction-btn:hover:not(:disabled) { border-color: var(--gold); background: linear-gradient(180deg, #393020, #272117); }
+    .reaction-btn:active:not(:disabled) { transform: translateY(1px); }
+    .reaction-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .reaction-btn[aria-pressed="true"] { color: #fff3d4; border-color: var(--gold); background: #49391e; box-shadow: inset 0 0 0 1px rgba(242,189,85,.18); }
+    .reaction-btn:disabled { opacity: .72; cursor: default; }
+    .reaction-btn svg { width: 14px; height: 14px; flex: 0 0 auto; }
+    .reaction-btn.like svg { color: #9ed5de; }
+    .reaction-btn.dislike svg { color: #e2a38d; }
+    .reaction-count { min-width: 1ch; text-align: center; color: var(--gold); font-variant-numeric: tabular-nums; }
+    .reaction-hint { font-size: 10px; color: var(--muted); }
     .footer {
-      position: relative;
-      flex: 0 0 auto;
-      width: 100%;
-      padding: 8px 10px max(8px, env(safe-area-inset-bottom));
-      background: var(--black-alt);
-      border-top: 1px solid #333;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      position: relative; flex: 0 0 auto; width: 100%;
+      padding: 8px 10px max(8px, env(safe-area-inset-bottom)); background: var(--black-alt);
+      border-top: 1px solid #333; display: flex; flex-direction: column; gap: 6px;
     }
     .footer-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; }
     #change-handle-btn { min-height: 36px; touch-action: manipulation; }
     .input-row { display: flex; gap: 6px; }
     .input-row input {
-      flex: 1;
-      min-width: 0;
-      padding: 8px;
-      border-radius: 3px;
-      border: 1px solid #333;
-      background: #111;
-      color: var(--white);
-      font-size: 16px; /* 16px prevents iOS Safari focus zoom. */
+      flex: 1; min-width: 0; padding: 8px; border-radius: 3px; border: 1px solid #333;
+      background: #111; color: var(--white); font-size: 16px;
     }
     .send-btn {
-      padding: 6px 10px;
-      border-radius: 3px;
-      border: 1px solid var(--blue);
-      background: var(--blue);
-      color: var(--black);
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-      min-width: 80px;
-      min-height: 40px;
-      touch-action: manipulation;
+      padding: 6px 10px; border-radius: 3px; border: 1px solid var(--blue);
+      background: var(--blue); color: var(--black); font-weight: bold; font-size: 16px;
+      cursor: pointer; min-width: 80px; min-height: 40px; touch-action: manipulation;
     }
-    .send-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
-    .cooldown { font-size: 11px; opacity: 0.7; min-height: 13px; }
+    .send-btn[disabled] { opacity: .5; cursor: not-allowed; }
+    .cooldown { font-size: 11px; opacity: .7; min-height: 13px; }
     .toast {
-      position: fixed;
-      z-index: 1000;
-      left: 50%;
-      top: max(12px, env(safe-area-inset-top));
-      width: min(calc(100vw - 32px), 520px);
-      padding: 12px 16px;
-      border: 1px solid #ff7777;
-      border-radius: 6px;
-      background: #351919;
-      color: #fff;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
-      text-align: center;
-      font-size: 14px;
-      line-height: 1.4;
-      opacity: 0;
-      transform: translate(-50%, -10px);
-      pointer-events: none;
+      position: fixed; z-index: 1000; left: 50%; top: max(12px, env(safe-area-inset-top));
+      width: min(calc(100vw - 32px), 520px); padding: 12px 16px;
+      border: 1px solid #ff7777; border-radius: 6px; background: #351919; color: #fff;
+      box-shadow: 0 6px 24px rgba(0,0,0,.45); text-align: center; font-size: 14px;
+      line-height: 1.4; opacity: 0; transform: translate(-50%,-10px); pointer-events: none;
       transition: opacity 160ms ease, transform 160ms ease;
     }
-    .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+    .toast.visible { opacity: 1; transform: translate(-50%,0); }
     @media (max-width: 560px) {
       header { align-items: flex-start; }
-      header .brand { font-size: 11px; letter-spacing: 0.04em; }
+      header .brand { font-size: 11px; letter-spacing: .04em; }
       header .status { font-size: 10px; }
       .tab { font-size: 10px; padding: 10px 5px; }
     }
-    @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+    @media (prefers-reduced-motion: reduce) { .toast, .reaction-btn { transition: none; } }
   </style>
 </head>
-
 <body>
   <header>
     <div class="brand">Shiny Happy Brewing // Chat Room (21+)</div>
     <div class="status" id="status">Connecting…</div>
   </header>
-
   <div class="tabs">
     <div class="tab active" data-room="main_lobby">📍 Main Lobby</div>
     <div class="tab" data-room="taproom">🍻 Taproom</div>
     <div class="tab" data-room="beer_garden">🌿 Beer Garden</div>
   </div>
-
   <div class="chat-container" id="chat" aria-live="polite"></div>
-
   <div class="footer" id="footer">
-    <div class="footer-top">
-      <span id="handle-display"></span>
-      <button id="change-handle-btn" type="button">Change Shinyside ID</button>
-    </div>
+    <div class="footer-top"><span id="handle-display"></span><button id="change-handle-btn" type="button">Change Shinyside ID</button></div>
     <div class="input-row">
       <input type="text" id="message-input" placeholder="Leave a note…" maxlength="500" autocomplete="off" />
       <button class="send-btn" id="send-btn" type="button">Send</button>
@@ -208,9 +131,8 @@
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
     const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWh[... ]";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     const chatEl = document.getElementById("chat");
     const tabs = document.querySelectorAll(".tab");
     const statusEl = document.getElementById("status");
@@ -221,6 +143,7 @@
     const cooldownText = document.getElementById("cooldown-text");
     const footer = document.getElementById("footer");
     const toastEl = document.getElementById("toast");
+    const REACTIONS_STORAGE_KEY = "shinyhappy_guestbook_reactions_v1";
 
     let currentRoom = "main_lobby";
     let shinysideId = null;
@@ -228,110 +151,33 @@
     let cooldownRemaining = 0;
     let isSending = false;
     let toastTimer = null;
+    let roomLoadSequence = 0;
     const reactionTotals = new Map();
+    const reactionPending = new Set();
+    const reactionRefreshTimers = new Map();
+    let localReactions = readLocalReactions();
 
     const ICEBREAKERS = [
-      "What beer are you starting with today?",
-      "If you could name a Shiny Happy beer, what would you call it?",
-      "What’s the best thing you’ve done today?",
-      "What band should we play next?",
-      "What’s your go-to comfort food?",
-      "What’s a random fun fact about you?",
-      "If you could teleport anywhere right now, where would you go?",
-      "What’s a movie you think everyone should watch?",
-      "What’s your favorite after work activity?",
-      "What’s something you’re looking forward to this year?",
-      "A/S/L?",
-      "Did you hear a train?",
-      "Let's get shiny, let's get happy!",
-      "Check out the Beer of the Day Board!",
-      "Play something good...",
-      "Well, well, well...",
-      "You?! Again?!",
-      "Here we go again!",
-      "Nothing average about us...",
-      "Favorite dinosaur?",
-      "Remember Gumby?",
-      "Where is your dream vacation spot?",
-      "You look like you can do long division.",
-      "Looking good today!"
+      "What beer are you starting with today?", "If you could name a Shiny Happy beer, what would you call it?",
+      "What’s the best thing you’ve done today?", "What band should we play next?", "What’s your go-to comfort food?",
+      "What’s a random fun fact about you?", "If you could teleport anywhere right now, where would you go?",
+      "What’s a movie you think everyone should watch?", "What’s your favorite after work activity?",
+      "What’s something you’re looking forward to this year?", "A/S/L?", "Did you hear a train?",
+      "Let's get shiny, let's get happy!", "Check out the Beer of the Day Board!", "Play something good...",
+      "Well, well, well...", "You?! Again?!", "Here we go again!", "Nothing average about us...",
+      "Favorite dinosaur?", "Remember Gumby?", "Where is your dream vacation spot?",
+      "You look like you can do long division.", "Looking good today!"
     ];
     const getRandomIcebreaker = () => ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
 
+    // Client-side screening is a first line of moderation; the database trigger rejects emoji.
     const blockedTerms = [
-      "fuck", "fucker", "fucking", "fucked", "motherfucker", "motherfucking", "shit", "shitty", "bullshit",
-      "bitch", "bitches", "bastard", "ass", "asshole", "arse", "arsehole", "dickhead", "dick", "cock",
-      "cunt", "twat", "piss", "pissed", "pissing", "piss off", "damn you", "goddamn", "son of a bitch",
-      "piece of shit", "fuck you", "go to hell", "eat shit", "kiss my ass", "titties", "titty", "boobs",
-      "ballsack", "wanker", "bollocks", "bugger", "prick", "jackass", "douchebag", "douche", "crap",
-      "motherfucking", "shithead", "dipshit", "bullshitter", "dickwad", "dickweed", "asswipe", "dumbass",
-      "slut", "whore", "skank", "fuckhead", "fuckface", "cocksucker", "penis", "vagina", "assfuck", "assfucker",
-      "unclefucker", "kidfucker", "childfucker", "sisterfucker", "cousinfucker", "brotherfucker", "dadfucker",
-      "fatherfucker", "fatherfuck", "dadfuck", "goddamn", "god damn", "god dam", "goddam", "muthafucka", "muthafucker",
-      "muthahfuckah", "muthahfucker", "motherfucka", "motherfuckah", "fuckwad", "dipshit", "dickwad", "fucktard",
-      "cuntmuffin", "slutbag", "cumdumpster", "cumdump", "cumbucket", "pooping", "vag", "vagine", "poop", "cooter",
-      "tiddies", "honkers", "hooters", "funbags", "balls", "blue waffle", "pissy", "fuckboy", "fuckboi", "donkey punch",
-      "penetration", "whalecum", "jizz", "jism", "jizzy", "bussy", "ejaculate", "fartbox", "fart", "fartknocker", "fuk",
-      "shyt", "shite", "turd", "turdcutter", "terd", "terdcutter", "babyfucker", "bearfucker", "dogfucker", "catfucker",
-      "horsefucker", "hoebag", "smartass", "shitass", "fuckass", "fuckbutt", "fatass", "hankhillass", "shlt", "sh1t",
-      "scrote", "scrotum", "gooch", "nipkin", "swampass", "cuntfuck", "fucknugget", "myass", "fuckin", "ass",
-      "porn", "porno", "pornography", "xxx", "nsfw", "nude", "nudes", "naked pics", "send nudes", "sex tape",
-      "blowjob", "handjob", "rimjob", "deepthroat", "orgasm", "masturbate", "masturbation", "cumshot", "semen",
-      "dildo", "vibrator", "hentai", "onlyfans", "hook up", "hookup", "suck my", "show me your body", "send me pics",
-      "sexual favors", "sexual favor", "rape", "molest", "groping", "pedo", "pedophile", "child porn", "underage sex",
-      "incest", "prostitute", "milf", "anal sex", "pussy", "threesome", "sexual assault", "sexually assault", "anal",
-      "blow job", "hand job", "rim job", "sextape", "deep throat", "blow me", "suck me", "butthole", "asshole",
-      "ass hole", "butt hole", "cum", "sperm", "hoe", "beef lips", "beef curtains", "trans", "drag queen", "dragqueen",
-      "dragqueens", "drag queens", "gay", "butt", "butthole", "butthead", "red rocket", "cumwad", "cumslut", "he hole", "hehole",
-      "queef", "queefs", "qu33f", "qu33fs", "kweef", "kweefs", "kweeph", "kweephs", "queeph", "queephs", "kw33f", "kw33fs", "qu33ph",
-      "qu33phs", "cumdumpstr", "cumbuckit", "cumbukit", "flick your bean", "flick my bean", "flick her bean", "jackoff", "jack off",
-      "chocolate starfish", "assfkr", "asslicker", "asslick", "asslikr", "asslickr", "azzfuck", "azzfucker", "azzlick", "azz lick",
-      "ass licker", "ass lick", "rimmjob", "porridge baby", "tarbaby", "fudge packer", "clam dip", "tiddy", "pussylatte", "fukk",
-      "fukked", "vulva", "flick job", "flickjob", "labia", "clit", "clitoris", "klit", "klitoris", "foreskin", "fore skin", "forskin",
-      "for skin", "carpet munch", "carpet muncher", "gaywad", "fagget", "homo", "aids", "gays", "jugs", "milkers", "wap", "whores", "pussies",
-      "hoes", "cocks", "penises", "cummy", "anus", "tit", "tits", "pillow biter", "sex", "sexy", "puzzy", "cootchie", "coochie", "kootchie",
-      "koochie", "coochy", "cootchy", "koochy", "kootchy", "cumburger", "kum", "kumburger", "purdy mouth", "dirtybitch", "good old fasioned", "good ole fasioned",
-      "gumjob", "gum job", "dubai chocolate", "hot carl", "hot karl", "hotcarl", "hotkarl", "c4nt", "ni66er", "queefcunt", "prolapse",
-      "gaysex", "groupsex", "swinger", "swingers", "cockring", "clitoris", "scat", "tittyfuck", "tittyballs", "tittyshit", "analorgasm",
-      "gaping", "anus", "moon cricket", "ham wallet", "squish mitten", "pubic", "cumfart", "cumqueef", "pussyfart", "pu55yfart", "pu55y",
-      "cunnulingus", "analingus", "cocaine", "bitchez", "bukkake", "puss", "grool", "nipple", "frenum", "pubick", "damniel", " reach around",
-      "rusty trombone", "breastitution", "dig ole bicks", "tig ole bitties", "frenum", "ice cream paint job", "limpdick", "shooting tadpoles",
-      "taint", "cumdust", "cumcloud", "cumloud", "boyhole", "girlhole", "shithole", "suck", "sucks",
-      "kill yourself", "kys", "go kill yourself", "end your life", "you should die", "i hope you die", "i will kill",
-      "i'll kill", "ill kill", "im going to kill", "i am going to kill", "kill you", "shoot you", "stab you",
-      "bomb threat", "blow you up", "burn your house", "i will hurt you", "i'll hurt you", "death threat",
-      "hang yourself", "cut yourself", "self harm", "suicide is the answer", "murder you", "beat you up", "go die",
-      "dead", "die", "suicide", "see you next tuesday", "c u next tuesday", "catch u next tuesday", "catch you next tuesday",
-      "c you next tuesday", "2 girls 1 cup", "two girls one cup", "stick it in", "slit your", "drop a log", "just the tip", "uses teeth",
-      "uses her teeth", "lick my", "play with my balls",
-      "nazi", "nazis", "heil hitler", "white power", "white supremacy", "white supremacist", "gas the jews", "gas jews",
-      "jews control", "jewish control", "race war", "ethnic cleansing", "racial purity", "go back to your country",
-      "go back where you came from", "you don't belong here", "all muslims are terrorists", "all immigrants are criminals",
-      "immigrants are vermin", "deport all", "ethnic inferiority", "ethnicity", "deport", "naz1", "naz1s", "kkk", "her box was huge",
-      "her box", "your box", "charliekirk", "charlie kirk", "donald trump", "barack obama", "joe biden", "knuckle baby", "knuckle babies",
-      "mlk", "martin luther king", "hitler", "shitler", "palestine", "israel", "middle east", "ss", "mein kampf", "meinkampf",
-      "joo", "blacks", "coloreds", "colored", "wop", "satan", "jesus", "epstein", "epstein's", "joos", "jews did", "9/11", "control the banks",
-      "twin towers", "bill clinton", "donaldtrump", "dtrump", "d trump", "putin", "netanyahu", "jd vance", "jdvance", "j d vance",
-      "nigger", "niggers", "nigga", "niggas", "niggah", "niggaz", "chink", "chinks", "gook", "gooks",
-      "spic", "spics", "wetback", "wetbacks", "kike", "kikes", "raghead", "ragheads", "towelhead", "towelheads",
-      "paki", "pakis", "coon", "coons", "porch monkey", "sand nigger", "jigaboo", "beaner", "beaners",
-      "zipperhead", "faggot", "faggots", "dyke", "tranny", "shemale", "retard", "retarded", "n1gger", "nigg3r", "n1gg3r", "n1gga", "n1ggah", "n1ggaz", "fagg", "fag",
-      "twink", "fairy", "butch", "sandnigger", "sandnigga", "sandniggah", "sandn1gger", "sandnigg3r", "sandn1gga", "sandn1ggah", "sandniggers", "sandniggas",
-      "sandniggahs", "sandn1gg3r", "sandn1ggas", "sandn1ggahs", "heeb", "retards", "faggots", "fags", "faggs", "fairies", "negro", "f@ggot",
-      "f@gget", "reggin", "dike",
-      "joder", "jodido", "jodida", "mierda", "puta", "puto", "putas", "putos", "coño", "cabron", "cabrón",
-      "pendejo", "pendeja", "chingar", "chingada", "chingado", "chingas a tu madre", "vete a la mierda", "maricon",
-      "maricón", "negro de mierda", "mono de mierda", "te voy a matar", "ojala te mueras", "ojalá te mueras",
-      "merde", "putain", "connard", "connasse", "enculé", "encule", "salope", "nique ta mère", "nique ta mere",
-      "va te faire foutre", "sale arabe", "sale juif", "je vais te tuer",
-      "scheisse", "scheiße", "arschloch", "fick dich", "hurensohn", "hure", "schlampe", "schwuchtel", "kanake",
-      "verpiss dich", "ich bring dich um", "judensau",
-      "porra", "caralho", "foda-se", "fodase", "vai se foder", "filho da puta", "macaco", "vou te matar", "se mata",
-      "cazzo", "vaffanculo", "stronzo", "troia", "figlio di puttana", "negro di merda", "ti ammazzo",
-      "kanker", "kankerlijer", "tering", "klootzak", "tyfuslijer", "neger", "ik maak je dood",
-      "worthless piece of", "you are disgusting", "nobody likes you", "shut up loser", "you are ugly",
-      "stupid bitch", "dumb bitch", "fat pig", "subhuman", "vermin", "filthy animal", "rape you", "i want to rape",
-      "will rape"
+      "fuck", "fucker", "fucking", "fucked", "motherfucker", "motherfucking", "shit", "shitty", "bullshit", "bitch", "bitches", "bastard", "ass", "asshole", "arse", "arsehole", "dickhead", "dick", "cock", "cunt", "twat", "piss", "pissed", "pissing", "piss off", "damn you", "goddamn", "son of a bitch", "piece of shit", "fuck you", "go to hell", "eat shit", "kiss my ass", "titties", "titty", "boobs", "ballsack", "wanker", "bollocks", "bugger", "prick", "jackass", "douchebag", "douche", "crap", "shithead", "dipshit", "bullshitter", "dickwad", "dickweed", "asswipe", "dumbass", "slut", "whore", "skank", "fuckhead", "fuckface", "cocksucker", "penis", "vagina", "assfuck", "assfucker", "unclefucker", "kidfucker", "childfucker", "sisterfucker", "cousinfucker", "brotherfucker", "dadfucker", "fatherfucker", "fatherfuck", "dadfuck", "muthafucka", "muthafucker", "motherfucka", "motherfuckah", "fuckwad", "fucktard", "cuntmuffin", "slutbag", "cumdumpster", "cumdump", "cumbucket", "pooping", "vag", "vagine", "poop", "cooter", "honkers", "hooters", "funbags", "blue waffle", "fuckboy", "fuckboi", "donkey punch", "penetration", "jizz", "jism", "bussy", "ejaculate", "fartbox", "fart", "fartknocker", "shyt", "shite", "turd", "turdcutter", "terd", "terdcutter", "babyfucker", "bearfucker", "dogfucker", "catfucker", "horsefucker", "hoebag", "smartass", "shitass", "fuckass", "fuckbutt", "fatass", "scrote", "scrotum", "gooch", "swampass", "fucknugget", "myass", "fuckin",
+      "porn", "porno", "pornography", "xxx", "nsfw", "nude", "nudes", "naked pics", "send nudes", "sex tape", "blowjob", "handjob", "rimjob", "deepthroat", "orgasm", "masturbate", "masturbation", "cumshot", "semen", "dildo", "vibrator", "hentai", "onlyfans", "hook up", "hookup", "suck my", "show me your body", "send me pics", "sexual favors", "sexual favor", "rape", "molest", "groping", "pedo", "pedophile", "child porn", "underage sex", "incest", "prostitute", "milf", "anal sex", "pussy", "threesome", "sexual assault", "sexually assault", "anal", "blow job", "hand job", "rim job", "sextape", "deep throat", "blow me", "suck me", "butthole", "ass hole", "butt hole", "cum", "sperm", "hoe", "beef lips", "beef curtains", "trans", "drag queen", "dragqueen", "dragqueens", "drag queens", "gay", "butt", "butthead", "red rocket", "cumwad", "cumslut", "queef", "queefs", "jackoff", "jack off", "chocolate starfish", "asslicker", "asslick", "ass licker", "ass lick", "tarbaby", "fudge packer", "clam dip", "pussylatte", "vulva", "labia", "clit", "clitoris", "foreskin", "carpet munch", "carpet muncher", "gaywad", "fagget", "homo", "aids", "milkers", "whores", "pussies", "cocks", "penises", "anus", "tit", "tits", "pillow biter", "sex", "sexy", "cootchie", "coochie", "kum", "purdy mouth", "hot carl", "hot karl", "prolapse", "gaysex", "groupsex", "swinger", "swingers", "cockring", "scat", "tittyfuck", "moon cricket", "ham wallet", "pubic", "cocaine", "bukkake", "nipple", "reach around", "rusty trombone", "limpdick", "taint", "shithole", "suck", "sucks",
+      "kill yourself", "kys", "go kill yourself", "end your life", "you should die", "i hope you die", "i will kill", "i'll kill", "ill kill", "im going to kill", "i am going to kill", "kill you", "shoot you", "stab you", "bomb threat", "blow you up", "burn your house", "i will hurt you", "i'll hurt you", "death threat", "hang yourself", "cut yourself", "self harm", "suicide is the answer", "murder you", "beat you up", "go die", "dead", "die", "suicide", "see you next tuesday", "catch you next tuesday", "stick it in", "slit your", "just the tip", "lick my", "play with my balls",
+      "nazi", "nazis", "heil hitler", "white power", "white supremacy", "white supremacist", "gas the jews", "gas jews", "jews control", "jewish control", "race war", "ethnic cleansing", "racial purity", "go back to your country", "go back where you came from", "you don't belong here", "all muslims are terrorists", "all immigrants are criminals", "immigrants are vermin", "deport all", "ethnic inferiority", "ethnicity", "deport", "kkk", "charliekirk", "charlie kirk", "donald trump", "barack obama", "joe biden", "hitler", "palestine", "israel", "middle east", "mein kampf", "jews did", "control the banks", "twin towers", "bill clinton", "donaldtrump", "putin", "netanyahu", "jd vance",
+      "nigger", "niggers", "nigga", "niggas", "niggah", "niggaz", "chink", "chinks", "gook", "gooks", "spic", "spics", "wetback", "wetbacks", "kike", "kikes", "raghead", "ragheads", "towelhead", "towelheads", "paki", "pakis", "coon", "coons", "porch monkey", "sand nigger", "jigaboo", "beaner", "beaners", "zipperhead", "faggot", "faggots", "dyke", "tranny", "shemale", "retard", "retarded", "fagg", "fag", "twink", "fairy", "butch", "heeb", "negro", "reggin", "dike",
+      "joder", "jodido", "jodida", "mierda", "puta", "puto", "putas", "putos", "coño", "cabron", "cabrón", "pendejo", "pendeja", "chingar", "chingada", "chingado", "chingas a tu madre", "vete a la mierda", "maricon", "maricón", "negro de mierda", "mono de mierda", "te voy a matar", "ojala te mueras", "ojalá te mueras", "merde", "putain", "connard", "connasse", "enculé", "encule", "salope", "nique ta mère", "nique ta mere", "va te faire foutre", "sale arabe", "sale juif", "je vais te tuer", "scheisse", "scheiße", "arschloch", "fick dich", "hurensohn", "hure", "schlampe", "schwuchtel", "kanake", "verpiss dich", "ich bring dich um", "judensau", "porra", "caralho", "foda-se", "fodase", "vai se foder", "filho da puta", "macaco", "vou te matar", "se mata", "cazzo", "vaffanculo", "stronzo", "troia", "figlio di puttana", "negro di merda", "ti ammazzo", "kanker", "kankerlijer", "tering", "klootzak", "tyfuslijer", "neger", "ik maak je dood", "worthless piece of", "you are disgusting", "nobody likes you", "shut up loser", "you are ugly", "stupid bitch", "dumb bitch", "fat pig", "subhuman", "vermin", "filthy animal", "rape you", "i want to rape", "will rape"
     ];
 
     function showToast(message, duration = 3500) {
@@ -340,390 +186,265 @@
       toastEl.classList.add("visible");
       toastTimer = setTimeout(() => toastEl.classList.remove("visible"), duration);
     }
-
     function normalizeForModeration(value) {
-      return String(value || "")
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .replace(/[0]/g, "o")
-        .replace(/[@]/g, "a")
-        .replace(/[1!|]/g, "i")
-        .replace(/[3]/g, "e")
-        .replace(/[4]/g, "a")
-        .replace(/[5$]/g, "s")
-        .replace(/[7+]/g, "t")
-        .replace(/[8]/g, "b")
-        .replace(/[\u200B-\u200D\uFEFF\uFE0E\uFE0F]/g, "")
-        .replace(/[^a-z0-9\s]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
+      return String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+        .replace(/[0]/g, "o").replace(/[@]/g, "a").replace(/[1!|]/g, "i").replace(/[3]/g, "e")
+        .replace(/[4]/g, "a").replace(/[5$]/g, "s").replace(/[7+]/g, "t").replace(/[8]/g, "b")
+        .replace(/[\u200B-\u200D\uFEFF\uFE0E\uFE0F]/g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
     }
-
     function containsBlockedContent(value) {
       const normalized = normalizeForModeration(value);
       if (!normalized) return false;
-
       return blockedTerms.some(term => {
         const normalizedTerm = normalizeForModeration(term);
         if (!normalizedTerm) return false;
-        const pattern = normalizedTerm
-          .split(/\s+/)
-          .map(word => [...word].join("[^a-z0-9]*"))
-          .join("[^a-z0-9]+");
+        const pattern = normalizedTerm.split(/\s+/).map(word => [...word].join("[^a-z0-9]*")).join("[^a-z0-9]+");
         return new RegExp(`(^|[^a-z0-9])${pattern}($|[^a-z0-9])`, "i").test(normalized);
       });
     }
-
     function containsEmoji(value) {
-      const text = String(value || "");
-      if (!text) return false;
-
-      for (const char of [...text]) {
-        const code = char.codePointAt(0);
-        if (
-          (code >= 0x1F000 && code <= 0x1FAFF) ||
-          (code >= 0x2600 && code <= 0x27BF) ||
-          (code >= 0x2300 && code <= 0x23FF) ||
-          (code >= 0x2B00 && code <= 0x2BFF) ||
-          [0x00A9, 0x00AE, 0x203C, 0x2049, 0x2122, 0x2139, 0x2194, 0x2195, 0x2196, 0x2197, 0x2198, 0x2199,
-            0x21A9, 0x21AA, 0x231A, 0x231B, 0x2328, 0x2388, 0x23CF, 0x24C2, 0x25AA, 0x25AB, 0x25B6, 0x25C0,
-            0x25FB, 0x25FC, 0x25FD, 0x25FE, 0x2600, 0x2601, 0x2602, 0x2603, 0x2604, 0x2605, 0x2606,
-            0x2607, 0x2608, 0x2609, 0x260E, 0x2611, 0x2614, 0x2615, 0x2618, 0x261D, 0x2620, 0x2622,
-            0x2623, 0x2626, 0x262A, 0x262E, 0x262F, 0x2638, 0x2639, 0x263A, 0x263B, 0x263C, 0x2640,
-            0x2642, 0x2648, 0x2649, 0x264A, 0x264B, 0x264C, 0x264D, 0x264E, 0x264F, 0x2650, 0x2651,
-            0x2652, 0x2653, 0x265F, 0x2660, 0x2663, 0x2665, 0x2666, 0x2668, 0x267B, 0x267F, 0x2693,
-            0x2694, 0x2695, 0x2696, 0x2697, 0x2699, 0x269B, 0x269C, 0x26A0, 0x26A1, 0x26A7, 0x26AA,
-            0x26AB, 0x26B0, 0x26B1, 0x26BD, 0x26BE, 0x26C4, 0x26C5, 0x26C8, 0x26CE, 0x26CF, 0x26D1,
-            0x26D3, 0x26D4, 0x26E9, 0x26EA, 0x26F0, 0x26F1, 0x26F2, 0x26F3, 0x26F5, 0x26FA, 0x26FD,
-            0x2705, 0x2708, 0x2709, 0x270A, 0x270B, 0x270C, 0x270D, 0x270F, 0x2712, 0x2714, 0x2716,
-            0x271D, 0x2721, 0x2728, 0x2733, 0x2734, 0x2744, 0x2747, 0x274C, 0x274E, 0x2753, 0x2754,
-            0x2755, 0x2757, 0x2763, 0x2764, 0x2795, 0x2796, 0x2797, 0x27A1, 0x27B0, 0x27BF].includes(code)
-        ) {
-          return true;
-        }
-      }
-
-      return /(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})/u.test(text);
+      return /(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})/u.test(String(value || ""));
     }
-
     function validateCommunityText(value, label) {
-      if (containsBlockedContent(value)) {
-        showToast(`${label} contains language that isn't allowed. Please rephrase it respectfully.`);
-        return false;
-      }
-      if (containsEmoji(value)) {
-        showToast(`${label} cannot contain emojis. Please remove them and try again.`);
-        return false;
-      }
+      if (containsEmoji(value)) { showToast(`${label} cannot contain emojis. Please remove them and try again.`); return false; }
+      if (containsBlockedContent(value)) { showToast(`${label} contains language that isn't allowed. Please rephrase it respectfully.`); return false; }
       return true;
     }
-
-    function setHandleDisplay() {
-      handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
+    function readLocalReactions() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(REACTIONS_STORAGE_KEY) || "{}");
+        return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+      } catch { return {}; }
     }
-
+    function saveLocalReactions() {
+      try { localStorage.setItem(REACTIONS_STORAGE_KEY, JSON.stringify(localReactions)); }
+      catch (error) { console.warn("Could not persist this browser's reaction choices:", error); }
+    }
+    function isLocallyReacted(messageId) { return Boolean(localReactions[String(messageId)]); }
+    function setHandleDisplay() { handleDisplayEl.textContent = "Shinyside ID: " + shinysideId; }
     function initHandle() {
-      const stored = localStorage.getItem("shinyside_id");
+      let stored = null;
+      try { stored = localStorage.getItem("shinyside_id"); } catch { /* use temporary guest ID */ }
       shinysideId = stored || "guest_" + Math.floor(Math.random() * 9999);
-      if (containsBlockedContent(shinysideId) || containsEmoji(shinysideId)) {
-        shinysideId = "guest_" + Math.floor(Math.random() * 9999);
-      }
-      localStorage.setItem("shinyside_id", shinysideId);
+      if (containsBlockedContent(shinysideId) || containsEmoji(shinysideId)) shinysideId = "guest_" + Math.floor(Math.random() * 9999);
+      try { localStorage.setItem("shinyside_id", shinysideId); } catch { /* chat can still use this session ID */ }
       setHandleDisplay();
     }
-
     function promptHandle() {
       const next = prompt("Choose your Shinyside ID (up to 30 characters):", shinysideId);
       if (next === null) return;
       const trimmed = next.trim();
       if (!trimmed) return;
-      if (trimmed.length > 30) {
-        showToast("Shinyside IDs must be 30 characters or fewer.");
-        return;
-      }
+      if (trimmed.length > 30) { showToast("Shinyside IDs must be 30 characters or fewer."); return; }
       if (!validateCommunityText(trimmed, "Your Shinyside ID")) return;
       shinysideId = trimmed;
-      localStorage.setItem("shinyside_id", shinysideId);
+      try { localStorage.setItem("shinyside_id", shinysideId); } catch { /* retain for this session */ }
       setHandleDisplay();
     }
 
-    tabs.forEach(tab => tab.addEventListener("click", () => {
-      tabs.forEach(item => item.classList.remove("active"));
-      tab.classList.add("active");
-      currentRoom = tab.dataset.room;
-      loadMessages();
-    }));
-
-    const get24hCutoffISO = () => new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-    function getMessageCounts(messageId) {
-      const key = String(messageId);
-      const counts = reactionTotals.get(key);
-      if (counts) return counts;
-      return { like: 0, dislike: 0 };
-    }
-
+    function get24hCutoffISO() { return new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); }
+    function getMessageCounts(messageId) { return reactionTotals.get(String(messageId)) || { like: 0, dislike: 0 }; }
     function updateReactionDisplay(messageId) {
       const messageEl = chatEl.querySelector(`.message[data-id="${CSS.escape(String(messageId))}"]`);
       if (!messageEl) return;
-
       const counts = getMessageCounts(messageId);
       const likeCountEl = messageEl.querySelector('.reaction-count[data-reaction="like"]');
       const dislikeCountEl = messageEl.querySelector('.reaction-count[data-reaction="dislike"]');
-      if (likeCountEl) likeCountEl.textContent = counts.like;
-      if (dislikeCountEl) dislikeCountEl.textContent = counts.dislike;
+      if (likeCountEl) likeCountEl.textContent = counts.like.toLocaleString();
+      if (dislikeCountEl) dislikeCountEl.textContent = counts.dislike.toLocaleString();
+      const alreadyReacted = isLocallyReacted(messageId);
+      messageEl.querySelectorAll(".reaction-btn").forEach(button => {
+        const selected = alreadyReacted && localReactions[String(messageId)] === button.dataset.reaction;
+        button.setAttribute("aria-pressed", String(selected));
+        button.disabled = alreadyReacted || reactionPending.has(String(messageId));
+        button.title = alreadyReacted ? "You already reacted to this message in this browser" : "One reaction per message in this browser";
+      });
+      const hint = messageEl.querySelector(".reaction-hint");
+      if (hint) hint.textContent = alreadyReacted ? "Your reaction is saved on this browser" : "Choose one";
     }
 
-    async function loadMessageReactions(messageIds) {
-      if (!messageIds.length) return;
-
-      const { data, error } = await supabase.from("guestbook_message_reactions")
-        .select("message_id, reaction")
-        .in("message_id", messageIds);
-
-      if (error) {
-        console.error("Could not load reactions:", error);
-        return;
+    async function refreshReactions(messageIds) {
+      const ids = [...new Set(messageIds.map(String))];
+      if (!ids.length) return;
+      const totals = new Map(ids.map(id => [id, { like: 0, dislike: 0 }]));
+      // Supabase/PostgREST returns a bounded page by default; page through rows
+      // so counts remain correct even for busy messages with many reactions.
+      const pageSize = 1000;
+      for (let from = 0; ; from += pageSize) {
+        const { data, error } = await supabase.from("guestbook_message_reactions")
+          .select("message_id,reaction").in("message_id", ids).range(from, from + pageSize - 1);
+        if (error) throw error;
+        for (const row of data || []) {
+          const counts = totals.get(String(row.message_id));
+          if (counts && (row.reaction === "like" || row.reaction === "dislike")) counts[row.reaction]++;
+        }
+        if (!data || data.length < pageSize) break;
       }
-
-      reactionTotals.clear();
-      for (const messageId of messageIds) {
-        reactionTotals.set(String(messageId), { like: 0, dislike: 0 });
-      }
-
-      (data || []).forEach(row => {
-        const key = String(row.message_id);
-        const counts = reactionTotals.get(key) || { like: 0, dislike: 0 };
-        if (row.reaction === "like") counts.like += 1;
-        if (row.reaction === "dislike") counts.dislike += 1;
-        reactionTotals.set(key, counts);
-      });
-
-      messageIds.forEach(updateReactionDisplay);
+      totals.forEach((counts, id) => reactionTotals.set(id, counts));
+      ids.forEach(updateReactionDisplay);
+    }
+    function scheduleReactionRefresh(messageId) {
+      const id = String(messageId);
+      clearTimeout(reactionRefreshTimers.get(id));
+      reactionRefreshTimers.set(id, setTimeout(() => {
+        reactionRefreshTimers.delete(id);
+        refreshReactions([id]).catch(error => console.error("Could not refresh reactions:", error));
+      }, 160));
     }
 
     async function loadMessages() {
+      const sequence = ++roomLoadSequence;
       chatEl.replaceChildren();
-      const { data, error } = await supabase.from("guestbook_messages")
-        .select("*")
-        .eq("room", currentRoom)
-        .eq("is_deleted", false)
-        .gte("created_at", get24hCutoffISO())
-        .order("created_at", { ascending: true });
-
-      if (error) {
-        console.error("Could not load messages:", error);
-        return;
-      }
-
+      const { data, error } = await supabase.from("guestbook_messages").select("*")
+        .eq("room", currentRoom).eq("is_deleted", false)
+        .gte("created_at", get24hCutoffISO()).order("created_at", { ascending: true });
+      if (sequence !== roomLoadSequence) return;
+      if (error) { console.error("Could not load messages:", error); statusEl.textContent = "Could not load messages"; return; }
       const messages = data || [];
       messages.forEach(renderMessage);
-      const ids = messages.map(msg => msg.id);
-      await loadMessageReactions(ids);
-      chatEl.scrollTop = chatEl.scrollHeight;
+      try { await refreshReactions(messages.map(msg => msg.id)); }
+      catch (reactionError) { console.error("Could not load reactions:", reactionError); }
+      if (sequence === roomLoadSequence) chatEl.scrollTop = chatEl.scrollHeight;
     }
-
     async function maybePostDailyIcebreaker() {
-      const { data, error } = await supabase.from("guestbook_messages")
-        .select("id")
-        .eq("room", currentRoom)
-        .gte("created_at", get24hCutoffISO())
-        .limit(1);
-
+      const { data, error } = await supabase.from("guestbook_messages").select("id")
+        .eq("room", currentRoom).gte("created_at", get24hCutoffISO()).limit(1);
       if (!error && (!data || data.length === 0)) {
-        const { error: insertError } = await supabase.from("guestbook_messages").insert({
-          room: currentRoom,
-          username: "ShinyBot",
-          content: getRandomIcebreaker()
-        });
+        const { error: insertError } = await supabase.from("guestbook_messages").insert({ room: currentRoom, username: "ShinyBot", content: getRandomIcebreaker() });
         if (insertError) console.error("Could not post icebreaker:", insertError);
       }
     }
 
+    const reactionIcons = {
+      like: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3Zm0 0 5-8c1.5 0 2.5 1.2 2.2 2.7L13 10h5.2a2.5 2.5 0 0 1 2.4 3.2l-1.8 6A2.5 2.5 0 0 1 16.4 21H7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      dislike: '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 14V3H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3Zm0 0 5 8c1.5 0 2.5-1.2 2.2-2.7L13 14h5.2a2.5 2.5 0 0 0 2.4-3.2l-1.8-6A2.5 2.5 0 0 0 16.4 3H7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
     function renderMessage(msg) {
       const el = document.createElement("div");
-      el.className = "message";
-      el.dataset.id = msg.id;
-      el.dataset.username = msg.username;
-
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      const username = document.createElement("span");
-      username.className = "username";
-      username.textContent = msg.username;
-      const time = document.createElement("span");
-      time.textContent = ` // ${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+      el.className = "message"; el.dataset.id = String(msg.id); el.dataset.username = msg.username;
+      const meta = document.createElement("div"); meta.className = "meta";
+      const username = document.createElement("span"); username.className = "username"; username.textContent = msg.username;
+      const time = document.createElement("span"); time.textContent = ` // ${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
       meta.append(username, time);
-
-      const content = document.createElement("div");
-      content.className = "content";
-      content.textContent = msg.content;
-
-      const reactions = document.createElement("div");
-      reactions.className = "message-reactions";
-
-      const makeReactionButton = (reaction, label, emoji) => {
+      const content = document.createElement("div"); content.className = "content"; content.textContent = msg.content;
+      const reactions = document.createElement("div"); reactions.className = "message-reactions";
+      for (const reaction of ["like", "dislike"]) {
         const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "reaction-btn";
-        btn.dataset.messageId = String(msg.id);
-        btn.dataset.reaction = reaction;
-        btn.setAttribute("aria-label", `${label} this message`);
-        btn.innerHTML = `${emoji} <span class="reaction-count" data-reaction="${reaction}">0</span>`;
+        btn.type = "button"; btn.className = `reaction-btn ${reaction}`;
+        btn.dataset.messageId = String(msg.id); btn.dataset.reaction = reaction;
+        btn.setAttribute("aria-label", reaction === "like" ? "Like this message" : "Dislike this message");
+        btn.setAttribute("aria-pressed", "false");
+        btn.innerHTML = `${reactionIcons[reaction]}<span>${reaction === "like" ? "LIKE" : "DISLIKE"}</span><span class="reaction-count" data-reaction="${reaction}">0</span>`;
         btn.addEventListener("click", () => submitReaction(msg.id, reaction));
-        return btn;
-      };
-
-      reactions.append(
-        makeReactionButton("like", "Like this message", "👍"),
-        makeReactionButton("dislike", "Dislike this message", "👎")
-      );
-
-      el.append(meta, content, reactions);
-      chatEl.appendChild(el);
+        reactions.appendChild(btn);
+      }
+      const hint = document.createElement("span"); hint.className = "reaction-hint"; hint.textContent = "Choose one";
+      reactions.appendChild(hint);
+      el.append(meta, content, reactions); chatEl.appendChild(el);
+      updateReactionDisplay(msg.id);
     }
+
+    tabs.forEach(tab => tab.addEventListener("click", () => {
+      tabs.forEach(item => item.classList.remove("active")); tab.classList.add("active");
+      currentRoom = tab.dataset.room; loadMessages();
+    }));
+    window.addEventListener("storage", event => {
+      if (event.key === REACTIONS_STORAGE_KEY) {
+        localReactions = readLocalReactions();
+        chatEl.querySelectorAll(".message").forEach(message => updateReactionDisplay(message.dataset.id));
+      }
+    });
 
     function subscribeRealtime() {
       supabase.channel("guestbook_channel")
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "guestbook_messages" }, ({ new: msg }) => {
           if (msg.room === currentRoom && !msg.is_deleted && !chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`)) {
-            renderMessage(msg);
-            chatEl.scrollTop = chatEl.scrollHeight;
+            renderMessage(msg); chatEl.scrollTop = chatEl.scrollHeight;
           }
         })
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "guestbook_messages" }, ({ new: msg }) => {
-          if (msg.is_deleted) {
-            const el = chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`);
-            if (el) el.remove();
-          }
+          if (msg.is_deleted) chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`)?.remove();
         })
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "guestbook_message_reactions" }, ({ new: reaction }) => {
-          const key = String(reaction.message_id);
-          const counts = reactionTotals.get(key) || { like: 0, dislike: 0 };
-          if (reaction.reaction === "like") counts.like += 1;
-          if (reaction.reaction === "dislike") counts.dislike += 1;
-          reactionTotals.set(key, counts);
-          updateReactionDisplay(reaction.message_id);
-        })
-        .subscribe();
+          if (chatEl.querySelector(`.message[data-id="${CSS.escape(String(reaction.message_id))}"]`)) scheduleReactionRefresh(reaction.message_id);
+        }).subscribe();
     }
-
     async function isUserBlocked(username) {
       const { data, error } = await supabase.from("blocked_handles").select("username")
-        .eq("username", username)
-        .gte("blocked_until", new Date().toISOString())
-        .limit(1);
+        .eq("username", username).gte("blocked_until", new Date().toISOString()).limit(1);
       if (error) throw error;
       return data && data.length > 0;
     }
-
     async function submitReaction(messageId, reaction) {
-      if (!messageId) return;
-
+      const id = String(messageId);
+      if (!messageId || isLocallyReacted(id) || reactionPending.has(id)) return;
+      // Mark pending across same-origin tabs before starting the request.
+      reactionPending.add(id);
+      localReactions[id] = "pending";
+      saveLocalReactions();
+      updateReactionDisplay(id);
       try {
-        const { error } = await supabase.from("guestbook_message_reactions").insert({
-          message_id: messageId,
-          reaction
-        });
-
+        const { error } = await supabase.from("guestbook_message_reactions").insert({ message_id: messageId, reaction });
         if (error) throw error;
-
-        const key = String(messageId);
-        const counts = reactionTotals.get(key) || { like: 0, dislike: 0 };
-        if (reaction === "like") counts.like += 1;
-        if (reaction === "dislike") counts.dislike += 1;
-        reactionTotals.set(key, counts);
-        updateReactionDisplay(messageId);
+        localReactions[id] = reaction;
+        saveLocalReactions();
+        updateReactionDisplay(id);
+        await refreshReactions([id]);
       } catch (error) {
         console.error("Could not add reaction:", error);
+        delete localReactions[id]; saveLocalReactions(); updateReactionDisplay(id);
         showToast("This reaction could not be added. Please try again.");
+      } finally {
+        reactionPending.delete(id); updateReactionDisplay(id);
       }
     }
 
     async function sendMessage() {
       const content = messageInput.value.trim();
       if (!content || isSending || cooldownRemaining > 0) return;
-      if (content.length > 500) {
-        showToast("Messages must be 500 characters or fewer.");
-        return;
-      }
+      if (content.length > 500) { showToast("Messages must be 500 characters or fewer."); return; }
       if (!validateCommunityText(content, "Your message")) return;
-
-      isSending = true;
-      sendBtn.disabled = true;
+      isSending = true; sendBtn.disabled = true;
       try {
-        if (await isUserBlocked(shinysideId)) {
-          showToast("You are muted for the rest of the day.");
-          return;
-        }
-
-        const { error } = await supabase.from("guestbook_messages").insert({
-          room: currentRoom,
-          username: shinysideId,
-          content
-        });
-
+        if (await isUserBlocked(shinysideId)) { showToast("You are muted for the rest of the day."); return; }
+        const { error } = await supabase.from("guestbook_messages").insert({ room: currentRoom, username: shinysideId, content });
         if (error) throw error;
-        messageInput.value = "";
-        startCooldown();
+        messageInput.value = ""; startCooldown();
       } catch (error) {
         console.error("Could not send message:", error);
-        showToast("Your message could not be sent. Please try again.");
-      } finally {
-        isSending = false;
-        sendBtn.disabled = cooldownRemaining > 0;
-      }
+        const message = String(error?.message || "");
+        if (/emoji/i.test(message)) showToast("Emojis are not allowed. Please remove them and try again.");
+        else showToast("Your message could not be sent. Please try again.");
+      } finally { isSending = false; sendBtn.disabled = cooldownRemaining > 0; }
     }
-
     function startCooldown() {
-      clearInterval(cooldownTimer);
-      cooldownRemaining = 10;
-      sendBtn.disabled = true;
+      clearInterval(cooldownTimer); cooldownRemaining = 10; sendBtn.disabled = true;
       cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
       cooldownTimer = setInterval(() => {
         cooldownRemaining--;
-        if (cooldownRemaining <= 0) {
-          clearInterval(cooldownTimer);
-          cooldownText.textContent = "";
-          sendBtn.disabled = false;
-        } else {
-          cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
-        }
+        if (cooldownRemaining <= 0) { clearInterval(cooldownTimer); cooldownText.textContent = ""; sendBtn.disabled = false; }
+        else cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
       }, 1000);
     }
-
     function adjustForKeyboard() {
       const viewport = window.visualViewport;
       const keyboardInset = viewport ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
       footer.style.transform = keyboardInset ? `translateY(-${keyboardInset}px)` : "";
-      if (document.activeElement === messageInput && keyboardInset) {
-        requestAnimationFrame(() => messageInput.scrollIntoView({ block: "nearest", behavior: "smooth" }));
-      }
+      if (document.activeElement === messageInput && keyboardInset) requestAnimationFrame(() => messageInput.scrollIntoView({ block: "nearest", behavior: "smooth" }));
     }
-
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", adjustForKeyboard);
       window.visualViewport.addEventListener("scroll", adjustForKeyboard);
     }
     window.addEventListener("resize", adjustForKeyboard);
-
     (async function boot() {
-      initHandle();
-      await loadMessages();
-      await maybePostDailyIcebreaker();
-      subscribeRealtime();
-      statusEl.textContent = "Connected";
-      sendBtn.disabled = false;
+      initHandle(); await loadMessages(); await maybePostDailyIcebreaker();
+      subscribeRealtime(); statusEl.textContent = "Connected"; sendBtn.disabled = false;
     })();
-
     changeHandleBtn.addEventListener("click", promptHandle);
     sendBtn.addEventListener("click", sendMessage);
     messageInput.addEventListener("keydown", event => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        sendMessage();
-      }
+      if (event.key === "Enter") { event.preventDefault(); sendMessage(); }
     });
   </script>
 </body>
