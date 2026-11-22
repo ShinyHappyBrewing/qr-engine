@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shinyside Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <style>
+    :root { --blue:#00A9CE; --black:#0d0d0d; --alt:#161616; --white:#f3f3f3; --muted:rgba(255,255,255,.65); --red:#ff7777; --green:#4fbf8a; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"IBM Plex Mono", ui-monospace, monospace; background:var(--black); color:var(--white); font-size:14px; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px 12px; background:var(--alt); border-bottom:1px solid #333; }
+    header .brand { color:var(--blue); font-weight:bold; letter-spacing:.06em; text-transform:uppercase; font-size:13px; }
+    header .who { font-size:11px; color:var(--muted); text-align:right; }
+    main { max-width:900px; margin:0 auto; padding:12px; }
+    .card { background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.1); border-radius:6px; padding:12px; margin-bottom:12px; }
+    h2 { font-size:15px; margin:0 0 8px; color:var(--blue); text-transform:uppercase; letter-spacing:.05em; }
+    label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
+    input, select, textarea { width:100%; padding:10px; border-radius:4px; border:1px solid #333; background:#111; color:var(--white); font:inherit; font-size:16px; }
+    button { font:inherit; font-size:13px; padding:9px 12px; border-radius:4px; border:1px solid var(--blue); background:var(--blue); color:#000; font-weight:bold; cursor:pointer; min-height:40px; touch-action:manipulation; }
+    button.ghost { background:transparent; color:var(--white); border-color:#555; }
+    button.danger { background:transparent; color:var(--red); border-color:var(--red); }
+    button:disabled { opacity:.5; cursor:default; }
+    .tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+    .tabs button { background:transparent; color:var(--white); border-color:#444; font-weight:normal; text-transform:uppercase; letter-spacing:.04em; font-size:12px; }
+    .tabs button.active { background:var(--blue); color:#000; border-color:var(--blue); font-weight:bold; }
+    .row { border-top:1px solid rgba(255,255,255,.08); padding:9px 0; }
+    .row:first-child { border-top:none; }
+    .meta { font-size:11px; color:var(--muted); margin-bottom:3px; overflow-wrap:anywhere; }
+    .meta b { color:var(--blue); }
+    .content { white-space:pre-wrap; overflow-wrap:anywhere; margin-bottom:6px; }
+    .actions { display:flex; flex-wrap:wrap; gap:6px; }
+    .actions button { min-height:36px; padding:6px 10px; font-size:12px; }
+    .inline { display:flex; gap:8px; flex-wrap:wrap; } .inline > * { flex:1 1 140px; }
+    .tag { display:inline-block; font-size:10px; padding:1px 6px; border-radius:3px; border:1px solid #555; margin-left:6px; }
+    .tag.hot { border-color:var(--red); color:var(--red); }
+    .empty { color:var(--muted); font-size:12px; padding:6px 0; }
+    .toast { position:fixed; left:50%; top:12px; transform:translate(-50%,-10px); width:min(calc(100vw - 32px),520px); padding:12px 16px; border-radius:6px; border:1px solid var(--red); background:#351919; text-align:center; opacity:0; pointer-events:none; transition:opacity .16s, transform .16s; z-index:99; }
+    .toast.good { border-color:var(--green); background:#12301f; }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    [hidden] { display:none !important; }
+    .note { font-size:12px; color:var(--muted); line-height:1.45; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Shinyside // Admin</div>
+    <div class="who" id="who"></div>
+  </header>
+
+  <main>
+    <!-- Login -->
+    <section id="login" class="card" hidden>
+      <h2>Staff sign-in</h2>
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="username" />
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" />
+      <p><button id="login-btn" type="button">Sign in</button></p>
+      <div class="note">Staff only. There is no sign-up here.</div>
+    </section>
+
+    <!-- App -->
+    <section id="app" hidden>
+      <div class="tabs" id="tabs"></div>
+
+      <div id="p-messages" class="panel" hidden>
+        <div class="card">
+          <h2>Live messages</h2>
+          <div class="inline">
+            <select id="msg-room">
+              <option value="">All rooms</option>
+              <option value="main_lobby">Main Lobby</option>
+              <option value="taproom">Taproom</option>
+              <option value="beer_garden">Beer Garden</option>
+            </select>
+            <button class="ghost" id="msg-refresh" type="button">Refresh</button>
+          </div>
+          <div id="msg-list"></div>
+        </div>
+      </div>
+
+      <div id="p-review" class="panel" hidden>
+        <div class="card">
+          <h2>Review queue</h2>
+          <div class="note">Messages hidden by reports, flagged for self-harm language, or deleted by staff. Copies are kept 90 days, then purged.</div>
+          <label><input type="checkbox" id="rev-all" style="width:auto"> Show already-reviewed too</label>
+          <div id="rev-list"></div>
+        </div>
+      </div>
+
+      <div id="p-bans" class="panel" hidden>
+        <div class="card">
+          <h2>Mute or ban</h2>
+          <div class="inline">
+            <select id="ban-kind"><option value="handle">Shinyside ID</option><option value="device">Device</option><option value="ip">IP address</option></select>
+            <input id="ban-value" placeholder="ID, device code or IP" />
+            <input id="ban-hours" type="number" min="1" placeholder="Hours (blank = permanent)" />
+          </div>
+          <label for="ban-reason">Reason (kept in the change log)</label>
+          <input id="ban-reason" />
+          <p><button id="ban-add" type="button">Add</button></p>
+          <div class="note">Managers can mute up to 7 days (168 hours). Permanent bans need an admin. IP bans are best-effort: shared Wi-Fi can catch innocent people.</div>
+        </div>
+        <div class="card"><h2>Active</h2><div id="ban-list"></div></div>
+        <div class="card"><h2>Recent strikes</h2><div id="strike-list"></div></div>
+      </div>
+
+      <div id="p-words" class="panel" hidden>
+        <div class="card">
+          <h2>Word list</h2>
+          <div id="word-counts" class="note"></div>
+          <label for="word-search">Search the list (2+ letters)</label>
+          <input id="word-search" placeholder="Search…" />
+          <div id="word-list"></div>
+        </div>
+        <div class="card">
+          <h2>Add a word</h2>
+          <div class="inline">
+            <input id="word-new" placeholder="Word or phrase" />
+            <select id="word-type">
+              <option value="block">Blocked language (strike)</option>
+              <option value="scam">Links / scam bait (no strike)</option>
+              <option value="underage">Underage cue</option>
+              <option value="crisis">Crisis (posts + 988 note)</option>
+            </select>
+          </div>
+          <p><button id="word-add" type="button">Add</button></p>
+          <div class="note">The filter ignores spacing, punctuation and common letter swaps. Managers can add blocked language only.</div>
+        </div>
+      </div>
+
+      <div id="p-botd" class="panel" hidden>
+        <div class="card">
+          <h2>Beer of the Day banner</h2>
+          <div class="note">Shows at the top of chat for today only (resets around 4 AM).</div>
+          <p>Now showing: <b id="botd-now">…</b></p>
+          <label for="botd-text">New text</label>
+          <input id="botd-text" maxlength="140" placeholder="PB&J Cream Ale: crusts optional." />
+          <p><button id="botd-save" type="button">Update banner</button></p>
+        </div>
+      </div>
+
+      <div id="p-staff" class="panel" hidden>
+        <div class="card">
+          <h2>Staff</h2>
+          <div id="staff-list"></div>
+        </div>
+        <div class="card">
+          <h2>Add or change staff</h2>
+          <div class="note">The person must first have a login created in Supabase (Authentication, Users). Roles: admin = everything; manager = review, mute up to 7 days, blocked words; bartender = delete messages and set Beer of the Day.</div>
+          <div class="inline">
+            <input id="staff-email" type="email" placeholder="Email" />
+            <input id="staff-name" placeholder="Display name" />
+            <select id="staff-role"><option value="bartender">bartender</option><option value="manager">manager</option><option value="admin">admin</option></select>
+            <select id="staff-active"><option value="true">Active</option><option value="false">Turned off</option></select>
+          </div>
+          <p><button id="staff-save" type="button">Save</button></p>
+        </div>
+      </div>
+
+      <div id="p-log" class="panel" hidden>
+        <div class="card"><h2>Change log</h2><div id="log-list"></div></div>
+      </div>
+
+      <p><button class="ghost" id="logout-btn" type="button">Sign out</button></p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    const SUPABASE_URL = "https://wowdmkxuwysuihgoklki.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indvd2Rta3h1d3lzdWloZ29rbGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1OTMxMzMsImV4cCI6MjA5NDE2OTEzM30.SdWhhNazJk0-zMie8Iv-oCk-IbcF16McEr1-VXdHW6c";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const $ = id => document.getElementById(id);
+    let me = null;
+    let termsCache = [];
+    let toastTimer;
+
+    function toast(msg, good = false) {
+      clearTimeout(toastTimer);
+      const t = $("toast");
+      t.textContent = msg;
+      t.className = "toast show" + (good ? " good" : "");
+      toastTimer = setTimeout(() => t.classList.remove("show"), good ? 2500 : 5000);
+    }
+    const errText = e => (e && (e.message || e.details)) ? String(e.message || e.details) : "Something went wrong.";
+    const fmt = iso => iso ? new Date(iso).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+    const short = s => s ? (s.length > 14 ? s.slice(0, 8) + "…" : s) : "";
+
+    function el(tag, props = {}, ...kids) {
+      const n = document.createElement(tag);
+      for (const [k, v] of Object.entries(props)) {
+        if (k === "class") n.className = v;
+        else if (k === "onclick") n.addEventListener("click", v);
+        else n.setAttribute(k, v);
+      }
+      kids.flat().forEach(k => n.append(k instanceof Node ? k : document.createTextNode(String(k))));
+      return n;
+    }
+    function empty(node, text) { node.replaceChildren(el("div", { class: "empty" }, text)); }
+
+    async function rpc(name, args) {
+      const { data, error } = await supabase.rpc(name, args);
+      if (error) throw error;
+      return data;
+    }
+
+    // ---------- roles / tabs ----------
+    const TABS = [
+      ["messages", "Messages", ["admin", "manager", "bartender"]],
+      ["review", "Review", ["admin", "manager"]],
+      ["bans", "Mutes & bans", ["admin", "manager"]],
+      ["words", "Word list", ["admin", "manager"]],
+      ["botd", "Beer of the Day", ["admin", "manager", "bartender"]],
+      ["staff", "Staff", ["admin"]],
+      ["log", "Change log", ["admin"]]
+    ];
+    const LOADERS = { messages: loadMessages, review: loadReview, bans: loadBans, words: loadWords, botd: loadBotd, staff: loadStaff, log: loadLog };
+
+    function buildTabs() {
+      const bar = $("tabs");
+      bar.replaceChildren();
+      TABS.filter(t => t[2].includes(me.role)).forEach(([key, label]) => {
+        bar.append(el("button", { type: "button", "data-tab": key, onclick: () => showTab(key) }, label));
+      });
+    }
+    function showTab(key) {
+      document.querySelectorAll(".panel").forEach(p => p.hidden = p.id !== "p-" + key);
+      document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === key));
+      LOADERS[key]().catch(e => toast(errText(e)));
+    }
+
+    // ---------- auth ----------
+    async function enter() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { showLogin(); return; }
+      try { me = await rpc("admin_me"); } catch (e) { me = null; }
+      if (!me) {
+        await supabase.auth.signOut();
+        showLogin();
+        toast("That account is not set up as Shinyside staff.");
+        return;
+      }
+      $("login").hidden = true;
+      $("app").hidden = false;
+      $("who").textContent = `${me.name} (${me.role})`;
+      buildTabs();
+      showTab("messages");
+    }
+    function showLogin() {
+      me = null;
+      $("app").hidden = true;
+      $("login").hidden = false;
+      $("who").textContent = "";
+    }
+    $("login-btn").addEventListener("click", async () => {
+      const btn = $("login-btn");
+      btn.disabled = true;
+      try {
+        const { error } = await supabase.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
+        if (error) throw error;
+        $("password").value = "";
+        await enter();
+      } catch (e) {
+        toast("Sign-in failed. Check your email and password.");
+      } finally { btn.disabled = false; }
+    });
+    $("password").addEventListener("keydown", e => { if (e.key === "Enter") $("login-btn").click(); });
+    $("logout-btn").addEventListener("click", async () => { await supabase.auth.signOut(); showLogin(); });
+
+    // ---------- messages ----------
+    async function loadMessages() {
+      const box = $("msg-list");
+      const data = await rpc("admin_list_messages", { p_room: $("msg-room").value || null, p_limit: 100 });
+      if (!data.length) return empty(box, "No messages in the last 24 hours.");
+      const canMod = ["admin", "manager"].includes(me.role);
+      box.replaceChildren(...data.map(m => {
+        const row = el("div", { class: "row" });
+        row.append(
+          el("div", { class: "meta" }, el("b", {}, m.username), ` // ${fmt(m.created_at)} // ${m.room}`, canMod && m.device_id ? ` // device ${short(m.device_id)}` : ""),
+          el("div", { class: "content" }, m.content)
+        );
+        const acts = el("div", { class: "actions" });
+        acts.append(el("button", { class: "danger", type: "button", onclick: async () => {
+          const reason = prompt("Reason for deleting (optional, goes in the log):", "");
+          if (reason === null) return;
+          try { await rpc("admin_delete_message", { p_id: m.id, p_reason: reason || null }); row.remove(); toast("Deleted.", true); }
+          catch (e) { toast(errText(e)); }
+        } }, "Delete"));
+        if (canMod) {
+          acts.append(el("button", { class: "ghost", type: "button", onclick: () => quickBan("handle", m.username) }, "Mute ID"));
+          if (m.device_id) acts.append(el("button", { class: "ghost", type: "button", onclick: () => quickBan("device", m.device_id) }, "Mute device"));
+        }
+        row.append(acts);
+        return row;
+      }));
+    }
+    async function quickBan(kind, value) {
+      const h = prompt(`Mute this ${kind === "handle" ? "Shinyside ID" : "device"} for how many hours? (1 to 168)`, "24");
+      if (h === null) return;
+      const hours = parseInt(h, 10);
+      if (!hours || hours < 1) { toast("Enter a number of hours."); return; }
+      try { await rpc("admin_ban", { p_kind: kind, p_value: value, p_hours: hours, p_reason: "muted from message list" }); toast(`Muted for ${hours} hour(s).`, true); }
+      catch (e) { toast(errText(e)); }
+    }
+    $("msg-refresh").addEventListener("click", () => loadMessages().catch(e => toast(errText(e))));
+    $("msg-room").addEventListener("change", () => loadMessages().catch(e => toast(errText(e))));
+
+    // ---------- review ----------
+    async function loadReview() {
+      const box = $("rev-list");
+      let data = await rpc("admin_list_review");
+      if (!$("rev-all").checked) data = data.filter(a => !a.reviewed);
+      if (!data.length) return empty(box, "Nothing waiting for review.");
+      box.replaceChildren(...data.map(a => {
+        const row = el("div", { class: "row" });
+        const status = el("span", { class: "tag" + (a.status === "crisis_flag" ? " hot" : "") }, a.status);
+        row.append(
+          el("div", { class: "meta" }, el("b", {}, a.username), ` // ${fmt(a.created_at)} // ${a.room} // ${a.reason || ""}`, status, a.reviewed ? el("span", { class: "tag" }, "reviewed") : ""),
+          el("div", { class: "content" }, a.content)
+        );
+        if (!a.reviewed) {
+          const acts = el("div", { class: "actions" });
+          if (a.status === "auto_hidden") {
+            acts.append(el("button", { type: "button", onclick: () => reviewAct(a.id, true, "Put back in chat?") }, "Put back"));
+          }
+          acts.append(el("button", { class: "ghost", type: "button", onclick: () => reviewAct(a.id, false) }, "Dismiss (keep hidden)"));
+          row.append(acts);
+        }
+        return row;
+      }));
+    }
+    async function reviewAct(id, restore, ask) {
+      if (ask && !confirm(ask)) return;
+      try { await rpc("admin_review_archive", { p_id: id, p_restore: restore }); toast(restore ? "Restored." : "Dismissed.", true); await loadReview(); }
+      catch (e) { toast(errText(e)); }
+    }
+    $("rev-all").addEventListener("change", () => loadReview().catch(e => toast(errText(e))));
+
+    // ---------- bans ----------
+    async function loadBans() {
+      const bans = await rpc("admin_list_bans");
+      const bl = $("ban-list");
+      if (!bans.length) empty(bl, "No active mutes or bans.");
+      else bl.replaceChildren(...bans.map(b => {
+        const row = el("div", { class: "row" });
+        row.append(el("div", { class: "meta" }, el("b", {}, b.kind), ` // ${b.value}`),
+          el("div", { class: "content" }, `${b.until ? "until " + fmt(b.until) : "permanent"} // ${b.reason || ""} // by ${b.created_by || "?"}`));
+        row.append(el("div", { class: "actions" }, el("button", { class: "ghost", type: "button", onclick: async () => {
+          try { await rpc("admin_unban", { p_id: b.id }); toast("Lifted.", true); await loadBans(); } catch (e) { toast(errText(e)); }
+        } }, "Lift")));
+        return row;
+      }));
+      const strikes = await rpc("admin_list_strikes");
+      const sl = $("strike-list");
+      if (!strikes.length) empty(sl, "No strikes yet.");
+      else sl.replaceChildren(...strikes.map(s => el("div", { class: "row" },
+        el("div", { class: "meta" }, el("b", {}, s.handle), ` // ${fmt(s.created_at)} // ${s.reason}`),
+        el("div", { class: "meta" }, `device ${short(s.device_id)} // ip ${s.ip || "?"}`))));
+    }
+    $("ban-add").addEventListener("click", async () => {
+      const kind = $("ban-kind").value, value = $("ban-value").value.trim();
+      const hrsRaw = $("ban-hours").value.trim();
+      const hours = hrsRaw ? parseInt(hrsRaw, 10) : null;
+      if (!value) { toast("Enter who to mute or ban."); return; }
+      if (hours === null && !confirm("No hours entered. This will be a PERMANENT ban. Continue?")) return;
+      try {
+        await rpc("admin_ban", { p_kind: kind, p_value: value, p_hours: hours, p_reason: $("ban-reason").value.trim() || null });
+        $("ban-value").value = ""; $("ban-hours").value = ""; $("ban-reason").value = "";
+        toast("Added.", true); await loadBans();
+      } catch (e) { toast(errText(e)); }
+    });
+
+    // ---------- words ----------
+    async function loadWords() {
+      termsCache = await rpc("admin_list_terms");
+      const counts = {};
+      termsCache.forEach(t => counts[t.action] = (counts[t.action] || 0) + 1);
+      $("word-counts").textContent = "In the list: " + Object.entries(counts).map(([k, v]) => `${k} ${v}`).join(", ") + ". Search to view or remove entries.";
+      renderWords();
+    }
+    function renderWords() {
+      const q = $("word-search").value.trim().toLowerCase();
+      const box = $("word-list");
+      if (q.length < 2) return empty(box, "Type 2 or more letters to see matches.");
+      const hits = termsCache.filter(t => t.term.toLowerCase().includes(q)).slice(0, 50);
+      if (!hits.length) return empty(box, "No matches.");
+      box.replaceChildren(...hits.map(t => {
+        const row = el("div", { class: "row" });
+        row.append(el("div", { class: "content" }, t.term, el("span", { class: "tag" }, t.action)));
+        row.append(el("div", { class: "actions" }, el("button", { class: "danger", type: "button", onclick: async () => {
+          if (!confirm(`Remove "${t.term}" from the ${t.action} list?`)) return;
+          try { await rpc("admin_remove_term", { p_id: t.id }); toast("Removed.", true); await loadWords(); } catch (e) { toast(errText(e)); }
+        } }, "Remove")));
+        return row;
+      }));
+    }
+    $("word-search").addEventListener("input", renderWords);
+    $("word-add").addEventListener("click", async () => {
+      const term = $("word-new").value.trim();
+      if (!term) { toast("Enter a word or phrase."); return; }
+      try {
+        const id = await rpc("admin_add_term", { p_term: term, p_action: $("word-type").value });
+        $("word-new").value = "";
+        toast(id ? "Added." : "That one was already in the list.", true);
+        await loadWords();
+      } catch (e) { toast(errText(e)); }
+    });
+
+    // ---------- beer of the day ----------
+    async function loadBotd() { $("botd-now").textContent = await rpc("get_beer_of_the_day"); }
+    $("botd-save").addEventListener("click", async () => {
+      const text = $("botd-text").value.trim();
+      if (!text) { toast("Type the banner text first."); return; }
+      try { await rpc("set_beer_of_the_day", { p_text: text }); $("botd-text").value = ""; toast("Banner updated.", true); await loadBotd(); }
+      catch (e) { toast(errText(e)); }
+    });
+
+    // ---------- staff ----------
+    async function loadStaff() {
+      const data = await rpc("admin_list_staff");
+      $("staff-list").replaceChildren(...data.map(s => el("div", { class: "row" },
+        el("div", { class: "meta" }, el("b", {}, s.display_name), ` // ${s.email}`),
+        el("div", { class: "content" }, `${s.role} // ${s.active ? "active" : "turned off"} // ${s.linked ? "has signed in" : "login not linked yet"}`))));
+    }
+    $("staff-save").addEventListener("click", async () => {
+      const email = $("staff-email").value.trim(), name = $("staff-name").value.trim();
+      if (!email || !name) { toast("Enter an email and a display name."); return; }
+      try {
+        await rpc("admin_set_staff", { p_email: email, p_name: name, p_role: $("staff-role").value, p_active: $("staff-active").value === "true" });
+        $("staff-email").value = ""; $("staff-name").value = "";
+        toast("Saved.", true); await loadStaff();
+      } catch (e) { toast(errText(e)); }
+    });
+
+    // ---------- log ----------
+    async function loadLog() {
+      const box = $("log-list");
+      const data = await rpc("admin_list_log", { p_limit: 150 });
+      if (!data.length) return empty(box, "Nothing logged yet.");
+      box.replaceChildren(...data.map(l => el("div", { class: "row" },
+        el("div", { class: "meta" }, el("b", {}, l.actor_name || "?"), ` (${l.actor_role || ""}) // ${fmt(l.at)}`),
+        el("div", { class: "content" }, `${l.action}: ${l.target || ""} ${l.detail ? JSON.stringify(l.detail) : ""}`))));
+    }
+
+    supabase.auth.onAuthStateChange((event) => { if (event === "SIGNED_OUT") showLogin(); });
+    enter();
+  </script>
+</body>
+</html>
