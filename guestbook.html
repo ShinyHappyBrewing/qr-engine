@@ -173,6 +173,21 @@
     }
     .toast.visible { opacity: 1; transform: translate(-50%,0); }
 
+    .botd {
+      flex: 0 0 auto; padding: 7px 12px; font-size: 12px; line-height: 1.35;
+      background: #0b2f38; border-bottom: 1px solid #1d5a69; color: var(--white);
+    }
+    .botd b { color: var(--blue); letter-spacing: .06em; text-transform: uppercase; margin-right: 6px; }
+    .botd[hidden] { display: none; }
+    .report-btn {
+      appearance: none; margin-left: auto; background: none; border: none; color: var(--muted);
+      font: inherit; font-size: 10px; text-decoration: underline; cursor: pointer;
+      min-height: 34px; padding: 0 4px; touch-action: manipulation;
+    }
+    .report-btn:disabled { opacity: .5; cursor: default; text-decoration: none; }
+    .toast.good { border-color: #4fbf8a; background: #12301f; }
+    .toast.crisis { border-color: var(--blue); background: #0b2f38; }
+
     @media (max-width: 560px) {
       header { align-items: flex-start; }
       header .brand { font-size: 11px; letter-spacing: .04em; }
@@ -195,6 +210,8 @@
     <div class="tab" data-room="taproom">🍻 Taproom</div>
     <div class="tab" data-room="beer_garden">🌿 Beer Garden</div>
   </div>
+
+  <div class="botd" id="botd" hidden><b>Beer of the Day</b><span id="botd-text"></span></div>
 
   <div class="chat-container" id="chat" aria-live="polite"></div>
 
@@ -247,38 +264,27 @@
 
     let localReactions = readLocalReactions();
 
-    const ICEBREAKERS = [
-      "What beer are you starting with today?",
-      "If you could name a Shiny Happy beer, what would you call it?",
-      "What’s the best thing you’ve done today?",
-      "What band should we play next?",
-      "What’s your go-to comfort food?",
-      "What’s a random fun fact about you?",
-      "If you could teleport anywhere right now, where would you go?",
-      "What’s a movie you think everyone should watch?",
-      "What’s your favorite after work activity?",
-      "What’s something you’re looking forward to this year?",
-      "A/S/L?",
-      "Did you hear a train?",
-      "Let's get shiny, let's get happy!",
-      "Check out the Beer of the Day Board!",
-      "Play something good...",
-      "Well, well, well...",
-      "You?! Again?!",
-      "Here we go again!",
-      "Nothing average about us...",
-      "Favorite dinosaur?",
-      "Remember Gumby?",
-      "Where is your dream vacation spot?",
-      "You look like you can do long division.",
-      "Looking good today!"
-    ];
+    const MAX_MESSAGES = 300;
 
-    const getRandomIcebreaker = () => ICEBREAKERS[Math.floor(Math.random() * ICEBREAKERS.length)];
+    function getDeviceId() {
+      try {
+        let id = localStorage.getItem("shinyside_device");
+        if (!id || id.length < 8) {
+          id = (crypto.randomUUID ? crypto.randomUUID() : "d" + Date.now() + Math.random().toString(36).slice(2, 12));
+          localStorage.setItem("shinyside_device", id);
+        }
+        return id;
+      } catch {
+        if (!window.__tmpDevice) window.__tmpDevice = "tmp" + Date.now() + Math.random().toString(36).slice(2, 12);
+        return window.__tmpDevice;
+      }
+    }
+    const deviceId = getDeviceId();
 
-    function showToast(message, duration = 3500) {
+    function showToast(message, duration = 3500, kind = "") {
       clearTimeout(toastTimer);
       toastEl.textContent = message;
+      toastEl.className = "toast" + (kind ? " " + kind : "");
       toastEl.classList.add("visible");
       toastTimer = setTimeout(() => toastEl.classList.remove("visible"), duration);
     }
@@ -417,10 +423,7 @@
         showToast(`${label} cannot contain emojis. Please remove them and try again.`);
         return false;
       }
-      if (containsBlockedContent(value)) {
-        showToast(`${label} contains language that isn't allowed. Please rephrase it respectfully.`);
-        return false;
-      }
+      // Word screening now happens on the server (chat_post). Emoji check stays as a courtesy.
       return true;
     }
 
@@ -586,7 +589,8 @@
         .eq("room", currentRoom)
         .eq("is_deleted", false)
         .gte("created_at", get24hCutoffISO())
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .limit(MAX_MESSAGES);
 
       if (sequence !== roomLoadSequence) return;
 
@@ -596,7 +600,7 @@
         return;
       }
 
-      const messages = data || [];
+      const messages = (data || []).slice().reverse();
       messages.forEach(renderMessage);
 
       try {
@@ -610,21 +614,15 @@
       }
     }
 
-    async function maybePostDailyIcebreaker() {
-      const { data, error } = await supabase.from("guestbook_messages")
-        .select("id")
-        .eq("room", currentRoom)
-        .gte("created_at", get24hCutoffISO())
-        .limit(1);
-
-      if (!error && (!data || data.length === 0)) {
-        const { error: insertError } = await supabase.from("guestbook_messages").insert({
-          room: currentRoom,
-          username: "ShinyBot",
-          content: getRandomIcebreaker()
-        });
-
-        if (insertError) console.error("Could not post icebreaker:", insertError);
+    async function loadBotd() {
+      const box = document.getElementById("botd");
+      const text = document.getElementById("botd-text");
+      try {
+        const { data, error } = await supabase.rpc("get_beer_of_the_day");
+        if (error) throw error;
+        if (data) { text.textContent = data; box.hidden = false; }
+      } catch (error) {
+        console.error("Could not load Beer of the Day:", error);
       }
     }
 
@@ -685,9 +683,38 @@
 
       reactions.appendChild(hint);
 
+      const report = document.createElement("button");
+      report.type = "button";
+      report.className = "report-btn";
+      report.textContent = "Report";
+      report.setAttribute("aria-label", "Report this message");
+      report.addEventListener("click", () => reportMessage(msg.id, report));
+      reactions.appendChild(report);
+
       el.append(meta, content, reactions);
       chatEl.appendChild(el);
       updateReactionDisplay(msg.id);
+    }
+
+    function trimChat() {
+      while (chatEl.children.length > MAX_MESSAGES) chatEl.removeChild(chatEl.firstChild);
+    }
+
+    async function reportMessage(id, btn) {
+      if (btn.disabled) return;
+      if (!confirm("Report this message to the Shiny Happy team?")) return;
+      btn.disabled = true;
+      try {
+        const { data, error } = await supabase.rpc("report_message", { p_message_id: id, p_device: deviceId });
+        if (error) throw error;
+        if (data === "too_many") { btn.disabled = false; showToast("You have reported a lot of messages lately. Please try again later."); return; }
+        btn.textContent = "Reported";
+        showToast("Thanks. The team will take a look.", 3000, "good");
+      } catch (error) {
+        console.error("Could not report:", error);
+        btn.disabled = false;
+        showToast("Could not send your report. Please try again.");
+      }
     }
 
     tabs.forEach(tab => tab.addEventListener("click", () => {
@@ -709,8 +736,14 @@
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "guestbook_messages" }, ({ new: msg }) => {
           if (msg.room === currentRoom && !msg.is_deleted && !chatEl.querySelector(`[data-id="${CSS.escape(String(msg.id))}"]`)) {
             renderMessage(msg);
+            trimChat();
             chatEl.scrollTop = chatEl.scrollHeight;
           }
+        })
+        .on("postgres_changes", { event: "DELETE", schema: "public", table: "guestbook_messages" }, ({ old }) => {
+          if (!old || !old.id) return;
+          const el = chatEl.querySelector(`[data-id="${CSS.escape(String(old.id))}"]`);
+          if (el) el.remove();
         })
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "guestbook_messages" }, ({ new: msg }) => {
           if (msg.is_deleted) {
@@ -725,16 +758,6 @@
           }
         })
         .subscribe();
-    }
-
-    async function isUserBlocked(username) {
-      const { data, error } = await supabase.from("blocked_handles").select("username")
-        .eq("username", username)
-        .gte("blocked_until", new Date().toISOString())
-        .limit(1);
-
-      if (error) throw error;
-      return data && data.length > 0;
     }
 
     async function submitReaction(messageId, reaction) {
@@ -780,45 +803,52 @@
         showToast("Messages must be 500 characters or fewer.");
         return;
       }
-      if (!validateCommunityText(content, "Your message")) return;
+      if (containsEmoji(content)) {
+        showToast("Emojis are not allowed. Please remove them and try again.");
+        return;
+      }
 
       isSending = true;
       sendBtn.disabled = true;
+      let posted = false;
 
       try {
-        if (await isUserBlocked(shinysideId)) {
-          showToast("You are muted for the rest of the day.");
-          return;
-        }
-
-        const { error } = await supabase.from("guestbook_messages").insert({
-          room: currentRoom,
-          username: shinysideId,
-          content
+        const { data, error } = await supabase.rpc("chat_post", {
+          p_room: currentRoom,
+          p_username: shinysideId,
+          p_content: content,
+          p_device: deviceId
         });
 
         if (error) throw error;
 
-        messageInput.value = "";
-        startCooldown();
+        const result = data || {};
+        if (result.ok) {
+          posted = true;
+          messageInput.value = "";
+          startCooldown();
+          if (result.code === "crisis" && result.message) showToast(result.message, 12000, "crisis");
+        } else {
+          let msg = result.message || "Your message could not be sent. Please try again.";
+          if (result.code === "muted" && result.muted_hours) msg = `You are muted for about ${result.muted_hours} hour(s).`;
+          if ((result.code === "block" || result.code === "scam" || result.code === "underage") && result.muted_hours) {
+            msg += ` You are muted for about ${result.muted_hours} hour(s).`;
+          }
+          showToast(msg, 5000);
+          if (result.code === "slow") startCooldown(5);
+        }
       } catch (error) {
         console.error("Could not send message:", error);
-
-        const message = String(error?.message || "");
-        if (/emoji/i.test(message)) {
-          showToast("Emojis are not allowed. Please remove them and try again.");
-        } else {
-          showToast("Your message could not be sent. Please try again.");
-        }
+        showToast("Your message could not be sent. Please try again.");
       } finally {
         isSending = false;
         sendBtn.disabled = cooldownRemaining > 0;
       }
     }
 
-    function startCooldown() {
+    function startCooldown(seconds = 10) {
       clearInterval(cooldownTimer);
-      cooldownRemaining = 10;
+      cooldownRemaining = seconds;
       sendBtn.disabled = true;
       cooldownText.textContent = `Cooldown: ${cooldownRemaining}s`;
 
@@ -852,7 +882,7 @@
     (async function boot() {
       initHandle();
       await loadMessages();
-      await maybePostDailyIcebreaker();
+      loadBotd();
       subscribeRealtime();
       statusEl.textContent = "Connected";
       sendBtn.disabled = false;
