@@ -159,6 +159,21 @@
         </div>
       </div>
 
+      <div id="p-account" class="panel" hidden>
+        <div class="card">
+          <h2>Change my password</h2>
+          <div id="pw-banner" class="note" style="color:#f2bd55;margin-bottom:8px" hidden>Please choose your own password now. The one you were given is temporary.</div>
+          <div class="note">Use at least 10 characters with letters and numbers. A long phrase you can remember works best. Don't reuse a password from anywhere else.</div>
+          <label for="pw-cur">Current password</label>
+          <input id="pw-cur" type="password" autocomplete="current-password" />
+          <label for="pw-new">New password</label>
+          <input id="pw-new" type="password" autocomplete="new-password" />
+          <label for="pw-new2">New password again</label>
+          <input id="pw-new2" type="password" autocomplete="new-password" />
+          <p><button id="pw-save" type="button">Change password</button></p>
+        </div>
+      </div>
+
       <div id="p-log" class="panel" hidden>
         <div class="card"><h2>Change log</h2><div id="log-list"></div></div>
       </div>
@@ -218,9 +233,10 @@
       ["words", "Word list", ["admin", "manager"]],
       ["botd", "Beer of the Day", ["admin", "manager", "bartender"]],
       ["staff", "Staff", ["admin"]],
-      ["log", "Change log", ["admin"]]
+      ["log", "Change log", ["admin"]],
+      ["account", "My password", ["admin", "manager", "bartender"]]
     ];
-    const LOADERS = { messages: loadMessages, review: loadReview, bans: loadBans, words: loadWords, botd: loadBotd, staff: loadStaff, log: loadLog };
+    const LOADERS = { messages: loadMessages, review: loadReview, bans: loadBans, words: loadWords, botd: loadBotd, staff: loadStaff, log: loadLog, account: async () => {} };
 
     function buildTabs() {
       const bar = $("tabs");
@@ -250,7 +266,9 @@
       $("app").hidden = false;
       $("who").textContent = `${me.name} (${me.role})`;
       buildTabs();
-      showTab("messages");
+      const needsPw = !(session.user && session.user.user_metadata && session.user.user_metadata.pw_changed);
+      $("pw-banner").hidden = !needsPw;
+      showTab(needsPw ? "account" : "messages");
     }
     function showLogin() {
       me = null;
@@ -447,6 +465,27 @@
         el("div", { class: "meta" }, el("b", {}, l.actor_name || "?"), ` (${l.actor_role || ""}) // ${fmt(l.at)}`),
         el("div", { class: "content" }, `${l.action}: ${l.target || ""} ${l.detail ? JSON.stringify(l.detail) : ""}`))));
     }
+
+    // ---------- change password ----------
+    $("pw-save").addEventListener("click", async () => {
+      const cur = $("pw-cur").value, n1 = $("pw-new").value, n2 = $("pw-new2").value;
+      if (!cur || !n1 || !n2) { toast("Fill in all three boxes."); return; }
+      if (n1 !== n2) { toast("The new passwords don't match."); return; }
+      if (n1.length < 10 || !/[A-Za-z]/.test(n1) || !/[0-9]/.test(n1)) { toast("Use at least 10 characters, with letters and numbers."); return; }
+      if (n1 === cur) { toast("Choose a password different from your current one."); return; }
+      const btn = $("pw-save");
+      btn.disabled = true;
+      try {
+        const check = await supabase.auth.signInWithPassword({ email: me.email, password: cur });
+        if (check.error) { toast("Your current password isn't right."); return; }
+        const { error } = await supabase.auth.updateUser({ password: n1, data: { pw_changed: true } });
+        if (error) { toast(errText(error)); return; }
+        $("pw-cur").value = ""; $("pw-new").value = ""; $("pw-new2").value = "";
+        $("pw-banner").hidden = true;
+        toast("Password changed.", true);
+      } catch (e) { toast(errText(e)); }
+      finally { btn.disabled = false; }
+    });
 
     supabase.auth.onAuthStateChange((event) => { if (event === "SIGNED_OUT") showLogin(); });
     enter();
