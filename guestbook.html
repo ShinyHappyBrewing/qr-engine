@@ -147,6 +147,13 @@
       display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px;
     }
     #change-handle-btn { min-height: 36px; touch-action: manipulation; }
+    .staff-link { appearance: none; background: none; border: none; color: var(--muted); font: inherit; font-size: 10px; text-decoration: underline; cursor: pointer; min-height: 28px; padding: 0 4px; }
+    .staff-panel { display: flex; flex-direction: column; gap: 6px; padding: 8px; border: 1px solid #333; border-radius: 4px; background: #111; font-size: 12px; }
+    .staff-panel[hidden] { display: none; }
+    .staff-panel input { padding: 8px; border-radius: 3px; border: 1px solid #333; background: #0d0d0d; color: var(--white); font: inherit; font-size: 16px; }
+    .staff-panel .row { display: flex; gap: 6px; }
+    .staff-panel button { flex: 1; padding: 8px; border-radius: 3px; border: 1px solid var(--blue); background: var(--blue); color: var(--black); font: inherit; font-size: 13px; font-weight: bold; cursor: pointer; min-height: 38px; }
+    .staff-panel button.ghost { background: transparent; color: var(--white); border-color: #555; }
 
     .input-row { display: flex; gap: 6px; }
     .input-row input {
@@ -266,7 +273,26 @@
   <div class="footer" id="footer">
     <div class="footer-top">
       <span id="handle-display"></span>
-      <button id="change-handle-btn" type="button">Change Shinyside ID</button>
+      <span style="display:flex;align-items:center;gap:4px">
+        <button class="staff-link" id="staff-link" type="button">Staff</button>
+        <button id="change-handle-btn" type="button">Change Shinyside ID</button>
+      </span>
+    </div>
+
+    <div class="staff-panel" id="staff-panel" hidden>
+      <div id="staff-login">
+        <div style="margin-bottom:6px">Staff sign-in (admins can post under reserved and brand names).</div>
+        <input id="staff-email" type="email" placeholder="Email" autocomplete="username" style="width:100%;margin-bottom:6px" />
+        <input id="staff-pass" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;margin-bottom:6px" />
+        <div class="row"><button id="staff-go" type="button">Sign in</button><button class="ghost" id="staff-cancel" type="button">Cancel</button></div>
+      </div>
+      <div id="staff-on" hidden>
+        <div id="staff-who" style="margin-bottom:6px"></div>
+        <div class="row">
+          <button id="staff-brand" type="button">Post as Shiny Happy Brewing</button>
+          <button class="ghost" id="staff-out" type="button">Sign out</button>
+        </div>
+      </div>
     </div>
 
     <div class="input-row">
@@ -301,6 +327,7 @@
 
     let currentRoom = "main_lobby";
     let shinysideId = null;
+    let staffId = null; // set only while an admin is signed in
     let cooldownTimer = null;
     let cooldownRemaining = 0;
     let isSending = false;
@@ -498,7 +525,7 @@
     }
 
     function setHandleDisplay() {
-      handleDisplayEl.textContent = "Shinyside ID: " + shinysideId;
+      handleDisplayEl.textContent = staffId ? "Posting as: " + staffId + " (staff)" : "Shinyside ID: " + shinysideId;
     }
 
     function initHandle() {
@@ -525,7 +552,7 @@
     }
 
     function promptHandle() {
-      const next = prompt("Choose your Shinyside ID (up to 30 characters):", shinysideId);
+      const next = prompt("Choose your Shinyside ID (up to 30 characters):", staffId || shinysideId);
       if (next === null) return;
 
       const trimmed = next.trim();
@@ -537,6 +564,8 @@
       }
 
       if (!validateCommunityText(trimmed, "Your Shinyside ID")) return;
+
+      if (staffId) { staffId = trimmed; setHandleDisplay(); return; }
 
       shinysideId = trimmed;
 
@@ -863,7 +892,7 @@
       try {
         const { data, error } = await supabase.rpc("chat_post", {
           p_room: currentRoom,
-          p_username: shinysideId,
+          p_username: staffId || shinysideId,
           p_content: content,
           p_device: deviceId
         });
@@ -1001,12 +1030,62 @@
 
     async function boot() {
       initHandle();
+      applyStaffSession();
       await loadMessages();
       loadBotd();
       subscribeRealtime();
       statusEl.textContent = "Connected";
       sendBtn.disabled = false;
     }
+    // ---------- staff sign-in (admins only can post as brand/reserved names) ----------
+    const staffPanel = document.getElementById("staff-panel");
+    function staffUI(signedInName) {
+      document.getElementById("staff-login").hidden = !!signedInName;
+      document.getElementById("staff-on").hidden = !signedInName;
+      if (signedInName) document.getElementById("staff-who").textContent = "Signed in as " + signedInName + " (admin).";
+    }
+    async function applyStaffSession() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { staffId = null; staffUI(null); setHandleDisplay(); return; }
+        const { data: me } = await supabase.rpc("admin_me");
+        if (me && me.role === "admin") {
+          if (!staffId) staffId = me.name || "Shiny Happy Brewing";
+          staffUI(me.name);
+        } else {
+          await supabase.auth.signOut();
+          staffId = null; staffUI(null);
+          if (me) showToast("Staff posting under brand names is for admins only.");
+        }
+      } catch (error) {
+        console.error("Staff session check failed:", error);
+        staffId = null; staffUI(null);
+      }
+      setHandleDisplay();
+    }
+    document.getElementById("staff-link").addEventListener("click", () => { staffPanel.hidden = !staffPanel.hidden; });
+    document.getElementById("staff-cancel").addEventListener("click", () => { staffPanel.hidden = true; });
+    document.getElementById("staff-go").addEventListener("click", async () => {
+      const btn = document.getElementById("staff-go");
+      btn.disabled = true;
+      try {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: document.getElementById("staff-email").value.trim(),
+          password: document.getElementById("staff-pass").value
+        });
+        if (error) throw error;
+        document.getElementById("staff-pass").value = "";
+        await applyStaffSession();
+        if (staffId) showToast("Signed in. Tap Post as Shiny Happy Brewing or change your ID.", 3500, "good");
+      } catch (error) {
+        showToast("Staff sign-in failed.");
+      } finally { btn.disabled = false; }
+    });
+    document.getElementById("staff-pass").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("staff-go").click(); });
+    document.getElementById("staff-brand").addEventListener("click", () => { staffId = "Shiny Happy Brewing"; setHandleDisplay(); showToast("Now posting as Shiny Happy Brewing.", 2500, "good"); });
+    document.getElementById("staff-out").addEventListener("click", async () => { await supabase.auth.signOut(); });
+    supabase.auth.onAuthStateChange(event => { if (event === "SIGNED_OUT") { staffId = null; staffUI(null); setHandleDisplay(); staffPanel.hidden = true; } });
+
     runAgeGate(boot);
 
     changeHandleBtn.addEventListener("click", promptHandle);
