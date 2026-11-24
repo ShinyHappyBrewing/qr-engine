@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>TEST - Shiny Happy Guestbook</title>
+  <title>Shiny Happy Guestbook</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
 
   <style>
     :root {
@@ -281,7 +282,7 @@
 
     <div class="staff-panel" id="staff-panel" hidden>
       <div id="staff-login">
-        <div style="margin-bottom:6px">Staff sign-in (admins can post under reserved and brand names).</div>
+        <div style="margin-bottom:6px">Staff sign-in (post under your staff name; only the admin can post as the brand).</div>
         <input id="staff-email" type="email" placeholder="Email" autocomplete="username" style="width:100%;margin-bottom:6px" />
         <input id="staff-pass" type="password" placeholder="Password" autocomplete="current-password" style="width:100%;margin-bottom:6px" />
         <div class="row"><button id="staff-go" type="button">Sign in</button><button class="ghost" id="staff-cancel" type="button">Cancel</button></div>
@@ -1039,23 +1040,24 @@
     }
     // ---------- staff sign-in (admins only can post as brand/reserved names) ----------
     const staffPanel = document.getElementById("staff-panel");
-    function staffUI(signedInName) {
+    function staffUI(signedInName, role) {
       document.getElementById("staff-login").hidden = !!signedInName;
       document.getElementById("staff-on").hidden = !signedInName;
-      if (signedInName) document.getElementById("staff-who").textContent = "Signed in as " + signedInName + " (admin).";
+      document.getElementById("staff-brand").hidden = role !== "admin";
+      if (signedInName) document.getElementById("staff-who").textContent = "Signed in as " + signedInName + " (" + (role || "staff") + "). Use the ID button to change your posting name.";
     }
     async function applyStaffSession() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) { staffId = null; staffUI(null); setHandleDisplay(); return; }
         const { data: me } = await supabase.rpc("admin_me");
-        if (me && me.role === "admin") {
+        if (me && ["admin", "manager", "bartender"].includes(me.role)) {
           if (!staffId) staffId = me.name || "Shiny Happy Brewing";
-          staffUI(me.name);
+          staffUI(me.name, me.role);
         } else {
           await supabase.auth.signOut();
           staffId = null; staffUI(null);
-          if (me) showToast("Staff posting under brand names is for admins only.");
+          if (me) showToast("That account does not have chat staff access.");
         }
       } catch (error) {
         console.error("Staff session check failed:", error);
